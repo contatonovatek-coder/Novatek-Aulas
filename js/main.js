@@ -195,14 +195,14 @@ class MainApp {
                     <div class="progress-fill" style="width: ${overallProgress}%"></div>
                 </div>
                 
-                <div class="progress-info text-sm">
-                    <div class="flex justify-between mb-2">
-                        <span>Cursos iniciados:</span>
-                        <span>${coursesInProgress}/${totalCourses}</span>
+                <div class="progress-meta text-sm">
+                    <div class="progress-meta-item mb-2">
+                        <div class="meta-title">Cursos iniciados</div>
+                        <div class="meta-value">${coursesInProgress}/${totalCourses}</div>
                     </div>
-                    <div class="flex justify-between">
-                        <span>Próximo certificado:</span>
-                        <span>${this.getNextCertificate(user)}</span>
+                    <div class="progress-meta-item">
+                        <div class="meta-title">Próximo certificado</div>
+                        <div class="meta-value">${this.getNextCertificate(user)}</div>
                     </div>
                 </div>
                 
@@ -274,16 +274,7 @@ class MainApp {
                     <h3 class="course-title">${course.title}</h3>
                     <p class="course-description">${course.description}</p>
                     
-                    ${instructor ? `
-                        <div class="course-instructor flex items-center gap-3 mt-4">
-                            <img src="${instructor.avatar}" alt="${instructor.name}" 
-                                 class="w-8 h-8 rounded-full">
-                            <div>
-                                <p class="text-sm font-medium">${instructor.name}</p>
-                                <p class="text-xs text-gray">${instructor.role}</p>
-                            </div>
-                        </div>
-                    ` : ''}
+                    <!-- instructor removed per design request -->
                     
                     ${progress ? `
                         <div class="course-progress mt-4">
@@ -436,16 +427,7 @@ class MainApp {
                         </span>
                     </div>
                     
-                    ${instructor ? `
-                        <div class="course-instructor flex items-center gap-3 mt-4">
-                            <img src="${instructor.avatar}" alt="${instructor.name}" 
-                                 class="w-8 h-8 rounded-full">
-                            <div>
-                                <p class="text-sm font-medium">${instructor.name}</p>
-                                <p class="text-xs text-gray">${instructor.role}</p>
-                            </div>
-                        </div>
-                    ` : ''}
+                    <!-- instructor removed per design request -->
                     
                     ${progress ? `
                         <div class="course-progress mt-4">
