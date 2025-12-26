@@ -11,8 +11,8 @@ class MainApp {
     }
 
     initRoutes() {
-        router.registerRoute('dashboard', this.renderDashboard.bind(this));
-        router.registerRoute('courses', this.renderCourses.bind(this));
+        router.registerRoute('painel-do-aluno', this.renderPainelDoAluno.bind(this));
+        // rota 'courses' removida (página 'Meus Cursos' excluída)
         router.registerRoute('lessons', this.renderLessons.bind(this));
         router.registerRoute('certificates', this.renderCertificates.bind(this));
         router.registerRoute('profile', this.renderProfile.bind(this));
@@ -21,7 +21,7 @@ class MainApp {
         router.registerRoute('settings', this.renderSettings.bind(this));
         
         // Admin routes
-        router.registerRoute('admin-dashboard', () => admin.renderAdminDashboard());
+        router.registerRoute('admin-painel-do-aluno', () => admin.renderAdminPainelDoAluno());
         router.registerRoute('admin-courses', () => admin.renderAdminCourses());
         router.registerRoute('admin-users', () => admin.renderAdminUsers());
         router.registerRoute('admin-lessons', () => admin.renderAdminLessons());
@@ -29,7 +29,7 @@ class MainApp {
 
     checkAuth() {
         if (auth.isAuthenticated()) {
-            ui.updateUIAfterLogin();
+            auth.updateUIAfterLogin();
             
             if (auth.currentUser.status === 'pending_payment') {
                 router.navigateTo('payment');
@@ -47,7 +47,7 @@ class MainApp {
         });
     }
 
-    renderDashboard() {
+    renderPainelDoAluno() {
         if (!auth.isAuthenticated() || !auth.hasActiveSubscription()) {
             if (auth.currentUser?.status === 'pending_payment') {
                 router.navigateTo('payment');
@@ -55,14 +55,14 @@ class MainApp {
             }
         }
 
-        const content = document.getElementById('dashboard-content');
+        const content = document.getElementById('painel-do-aluno-content');
         const courses = database.getFeaturedCourses();
         const user = auth.getCurrentUser();
 
         content.innerHTML = `
-            <div class="dashboard-home">
-                <div class="dashboard-header mb-8">
-                    <h1 class="text-3xl font-bold">Dashboard</h1>
+            <div class="painel-do-aluno-home">
+                <div class="painel-do-aluno-header mb-8">
+                    <h1 class="text-3xl font-bold">Painel do Aluno</h1>
                     <p class="text-gray mt-2">Bem-vindo de volta! Aqui está seu resumo.</p>
                 </div>
                 
@@ -70,11 +70,11 @@ class MainApp {
                     <!-- Estatísticas serão carregadas aqui -->
                 </div>
                 
-                <div class="dashboard-grid grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div class="painel-do-aluno-grid grid grid-cols-1 lg:grid-cols-2 gap-8">
                     <div>
                         <div class="section-header mb-6">
                             <h2 class="text-xl font-bold">Cursos em Destaque</h2>
-                            <a href="#" class="text-primary font-medium" data-route="courses">
+                            <a href="#" class="text-primary font-medium" data-route="painel-do-aluno">
                                 Ver todos <i class="fas fa-arrow-right ml-1"></i>
                             </a>
                         </div>
@@ -95,12 +95,12 @@ class MainApp {
             </div>
         `;
 
-        this.loadDashboardStats();
+        this.loadPainelDoAlunoStats();
         this.loadProgressData();
-        this.addDashboardEvents();
+        this.addPainelDoAlunoEvents();
     }
 
-    loadDashboardStats() {
+    loadPainelDoAlunoStats() {
         const user = auth.getCurrentUser();
         if (!user) return;
 
@@ -227,7 +227,7 @@ class MainApp {
                     <div class="empty-state-small text-center py-6">
                         <i class="fas fa-book text-gray mb-3"></i>
                         <p class="text-gray">Você ainda não começou nenhum curso</p>
-                        <button class="btn btn-sm btn-primary mt-3" data-route="courses">
+                        <button class="btn btn-sm btn-primary mt-3" data-route="painel-do-aluno">
                             Explorar Cursos
                         </button>
                     </div>
@@ -311,7 +311,7 @@ class MainApp {
         `;
     }
 
-    addDashboardEvents() {
+    addPainelDoAlunoEvents() {
         document.querySelectorAll('[data-start-course]').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 const courseId = parseInt(e.currentTarget.dataset.startCourse);
@@ -349,149 +349,10 @@ class MainApp {
         }
     }
 
-    renderCourses() {
-        const content = document.getElementById('dashboard-content');
-        const courses = database.getAllCourses();
-        const categories = database.getAllCategories();
-        const user = auth.getCurrentUser();
-
-        content.innerHTML = `
-            <div class="courses-page">
-                <div class="courses-header mb-8">
-                    <h1 class="text-3xl font-bold">Todos os Cursos</h1>
-                    <p class="text-gray mt-2">Aprenda programação com nossos cursos especializados</p>
-                </div>
-                
-                <div class="courses-filters mb-8">
-                    <div class="filter-group">
-                        <label for="category-filter">Filtrar por categoria:</label>
-                        <select id="category-filter" class="filter-select">
-                            <option value="all">Todas as categorias</option>
-                            ${categories.map(cat => `
-                                <option value="${cat.id}">${cat.name}</option>
-                            `).join('')}
-                        </select>
-                        
-                        <label for="level-filter">Nível:</label>
-                        <select id="level-filter" class="filter-select">
-                            <option value="all">Todos os níveis</option>
-                            <option value="beginner">Iniciante</option>
-                            <option value="intermediate">Intermediário</option>
-                            <option value="advanced">Avançado</option>
-                        </select>
-                    </div>
-                </div>
-                
-                <div class="courses-grid-page grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="courses-grid">
-                    ${courses.map(course => this.renderCourseCardFull(course)).join('')}
-                </div>
-            </div>
-        `;
-
-        this.addCourseFilters();
-        this.addCourseEvents();
-    }
-
-    renderCourseCardFull(course) {
-        const category = database.getCategoryById(course.categoryId);
-        const instructor = database.getInstructorById(course.instructorId);
-        const user = auth.getCurrentUser();
-        const progress = user ? database.getUserProgress(user.id, course.id) : null;
-
-        return `
-            <div class="course-card hover-lift" data-category="${course.categoryId}" data-level="${course.level}">
-                <div class="course-image">
-                    <img src="${course.image}" alt="${course.title}">
-                    ${category ? `
-                        <span class="course-category" style="background: ${category.color}20; color: ${category.color}">
-                            ${category.name}
-                        </span>
-                    ` : ''}
-                    <span class="course-level ${course.level}">
-                        ${this.getLevelText(course.level)}
-                    </span>
-                </div>
-                <div class="course-content">
-                    <h3 class="course-title">${course.title}</h3>
-                    <p class="course-description">${course.description}</p>
-                    
-                    <div class="course-meta flex items-center gap-4 mt-4">
-                        <span class="text-sm text-gray">
-                            <i class="fas fa-clock mr-1"></i> ${course.duration}h
-                        </span>
-                        <span class="text-sm text-gray">
-                            <i class="fas fa-play-circle mr-1"></i> ${course.lessons} aulas
-                        </span>
-                        <span class="text-sm text-gray">
-                            <i class="fas fa-star mr-1"></i> ${course.rating}
-                        </span>
-                    </div>
-                    
-                    <!-- instructor removed per design request -->
-                    
-                    ${progress ? `
-                        <div class="course-progress mt-4">
-                            <div class="progress-info flex justify-between text-sm mb-1">
-                                <span>Progresso</span>
-                                <span>${progress.progress}%</span>
-                            </div>
-                            <div class="progress-bar">
-                                <div class="progress-fill" style="width: ${progress.progress}%"></div>
-                            </div>
-                        </div>
-                    ` : ''}
-                    
-                    <div class="course-actions mt-6">
-                        ${user ? `
-                            <button class="btn btn-sm ${progress?.progress > 0 ? 'btn-primary' : 'btn-outline'} btn-block"
-                                    data-start-course="${course.id}">
-                                ${progress?.progress > 0 ? 'Continuar Curso' : progress?.progress === 100 ? 'Revisar' : 'Começar Agora'}
-                            </button>
-                        ` : `
-                            <button class="btn btn-sm btn-primary btn-block" onclick="ui.showAlert('Faça login para acessar os cursos', 'info')">
-                                Acessar Curso
-                            </button>
-                        `}
-                    </div>
-                </div>
-            </div>
-        `;
-    }
-
-    addCourseFilters() {
-        const categoryFilter = document.getElementById('category-filter');
-        const levelFilter = document.getElementById('level-filter');
-
-        const applyFilters = () => {
-            const selectedCategory = categoryFilter.value;
-            const selectedLevel = levelFilter.value;
-            
-            document.querySelectorAll('.course-card').forEach(card => {
-                const category = card.dataset.category;
-                const level = card.dataset.level;
-                
-                const categoryMatch = selectedCategory === 'all' || category === selectedCategory;
-                const levelMatch = selectedLevel === 'all' || level === selectedLevel;
-                
-                card.style.display = categoryMatch && levelMatch ? 'block' : 'none';
-            });
-        };
-
-        if (categoryFilter) categoryFilter.addEventListener('change', applyFilters);
-        if (levelFilter) levelFilter.addEventListener('change', applyFilters);
-    }
-
-    addCourseEvents() {
-        document.querySelectorAll('[data-start-course]').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const courseId = parseInt(e.currentTarget.dataset.startCourse);
-                this.startCourse(courseId);
-            });
-        });
-    }
+    // Página 'Meus Cursos' removida — renderCourses() excluído
 
     renderLessons() {
-        const content = document.getElementById('dashboard-content');
+        const content = document.getElementById('painel-do-aluno-content');
         const user = auth.getCurrentUser();
 
         content.innerHTML = `
@@ -500,52 +361,42 @@ class MainApp {
                     <h1 class="text-3xl font-bold">Minhas Aulas</h1>
                     <p class="text-gray mt-2">Acompanhe seu progresso em cada curso</p>
                 </div>
-                
                 ${user ? `
                     <div class="lessons-container">
                         ${database.getAllCourses().map(course => {
                             const lessons = database.getLessonsByCourseId(course.id);
                             const userProgress = database.getUserProgress(user.id, course.id);
                             const completedLessons = userProgress?.completedLessons || [];
-                            
                             if (lessons.length === 0) return '';
-                            
                             return `
                                 <div class="course-section mb-8">
                                     <div class="section-header mb-4">
                                         <h2 class="text-xl font-bold">${course.title}</h2>
-                                        <span class="text-primary font-bold">
-                                            ${completedLessons.length}/${lessons.length} aulas
-                                        </span>
+                                        <span class="text-primary font-bold">${completedLessons.length}/${lessons.length} aulas</span>
                                     </div>
-                                    
                                     <div class="lessons-list">
-                                        ${lessons.map(lesson => {
-                                            const isCompleted = completedLessons.includes(lesson.id);
-                                            return `
-                                                <div class="lesson-item ${isCompleted ? 'completed' : ''}">
-                                                    <div class="flex items-center justify-between p-4 bg-white rounded-lg shadow">
-                                                        <div class="flex items-center gap-4">
-                                                            <div class="lesson-status ${isCompleted ? 'completed' : ''}">
-                                                                <i class="fas fa-${isCompleted ? 'check-circle' : 'play-circle'}"></i>
-                                                            </div>
-                                                            <div>
-                                                                <h4 class="mb-1 font-medium">${lesson.order}. ${lesson.title}</h4>
-                                                                <p class="text-sm text-gray">${lesson.description || 'Sem descrição'}</p>
-                                                            </div>
+                                        ${lessons.map(lesson => `
+                                            <div class="lesson-item ${completedLessons.includes(lesson.id) ? 'completed' : ''}">
+                                                <div class="flex items-center justify-between p-4 bg-white rounded-lg shadow">
+                                                    <div class="flex items-center gap-4">
+                                                        <div class="lesson-status ${completedLessons.includes(lesson.id) ? 'completed' : ''}">
+                                                            <i class="fas fa-${completedLessons.includes(lesson.id) ? 'check-circle' : 'play-circle'}"></i>
                                                         </div>
-                                                        <div class="flex items-center gap-4">
-                                                            <span class="text-sm text-gray">${lesson.duration} min</span>
-                                                            <button class="btn btn-sm ${isCompleted ? 'btn-outline' : 'btn-primary'}" 
-                                                                    data-watch-lesson="${lesson.id}">
-                                                                <i class="fas fa-${isCompleted ? 'redo' : 'play'}"></i>
-                                                                ${isCompleted ? 'Revisar' : 'Assistir'}
-                                                            </button>
+                                                        <div>
+                                                            <h4 class="mb-1 font-medium">${lesson.order}. ${lesson.title}</h4>
+                                                            <p class="text-sm text-gray">${lesson.description || 'Sem descrição'}</p>
                                                         </div>
                                                     </div>
+                                                    <div class="flex items-center gap-4">
+                                                        <span class="text-sm text-gray">${lesson.duration} min</span>
+                                                        <button class="btn btn-sm ${completedLessons.includes(lesson.id) ? 'btn-outline' : 'btn-primary'}" data-watch-lesson="${lesson.id}">
+                                                            <i class="fas fa-${completedLessons.includes(lesson.id) ? 'redo' : 'play'}"></i>
+                                                            ${completedLessons.includes(lesson.id) ? 'Revisar' : 'Assistir'}
+                                                        </button>
+                                                    </div>
                                                 </div>
-                                            `;
-                                        }).join('')}
+                                            </div>
+                                        `).join('')}
                                     </div>
                                 </div>
                             `;
@@ -556,9 +407,7 @@ class MainApp {
                         <i class="fas fa-sign-in-alt text-gray mb-4"></i>
                         <h3 class="text-xl font-bold mb-2">Faça login para ver suas aulas</h3>
                         <p class="text-gray mb-6">Acesse sua conta para acompanhar seu progresso nas aulas.</p>
-                        <button class="btn btn-primary" onclick="ui.openModal('login-screen')">
-                            Fazer Login
-                        </button>
+                        <button class="btn btn-primary" onclick="ui.openModal('login-screen')">Fazer Login</button>
                     </div>
                 `}
             </div>
@@ -577,7 +426,7 @@ class MainApp {
     }
 
     renderCertificates() {
-        const content = document.getElementById('dashboard-content');
+        const content = document.getElementById('painel-do-aluno-content');
         const user = auth.getCurrentUser();
 
         content.innerHTML = `
@@ -616,7 +465,7 @@ class MainApp {
                         <i class="fas fa-graduation-cap text-gray mb-4"></i>
                         <h3 class="text-xl font-bold mb-2">Nenhum certificado ainda</h3>
                         <p class="text-gray mb-6">Complete seus cursos para obter certificados.</p>
-                        <button class="btn btn-primary" data-route="courses">
+                        <button class="btn btn-primary" data-route="painel-do-aluno">
                             <i class="fas fa-book mr-2"></i> Ver Cursos
                         </button>
                     </div>
@@ -656,7 +505,7 @@ class MainApp {
     }
 
     renderProfile() {
-        const content = document.getElementById('dashboard-content');
+        const content = document.getElementById('painel-do-aluno-content');
         const user = auth.getCurrentUser();
 
         content.innerHTML = `
@@ -673,9 +522,6 @@ class MainApp {
                         <div class="profile-avatar-section">
                             <div class="profile-avatar-large">
                                 <img src="${user.avatar}" alt="${user.name}">
-                                <button class="btn-change-avatar" id="change-avatar-btn">
-                                    <i class="fas fa-camera"></i>
-                                </button>
                             </div>
                             <div class="profile-info-section">
                                 <h2 class="text-2xl font-bold">${user.name}</h2>
@@ -821,7 +667,7 @@ class MainApp {
     }
 
     renderSubscription() {
-        const content = document.getElementById('dashboard-content');
+        const content = document.getElementById('painel-do-aluno-content');
         const user = auth.getCurrentUser();
 
         content.innerHTML = `
@@ -924,11 +770,11 @@ class MainApp {
     }
 
     renderPayment() {
-        const content = document.getElementById('dashboard-content');
+        const content = document.getElementById('painel-do-aluno-content');
         const user = auth.getCurrentUser();
 
         if (!user || user.status !== 'pending_payment') {
-            router.navigateTo('dashboard');
+            router.navigateTo('painel-do-aluno');
             return;
         }
 
@@ -1030,111 +876,121 @@ class MainApp {
     }
 
     renderSettings() {
-        const content = document.getElementById('dashboard-content');
+        const content = document.getElementById('painel-do-aluno-content');
         const user = auth.getCurrentUser();
 
         content.innerHTML = `
             <div class="settings-page">
-                <div class="settings-header mb-8">
-                    <h1 class="text-3xl font-bold">Configurações</h1>
-                    <p class="text-gray mt-2">Personalize sua experiência na plataforma</p>
+                <div class="settings-header-hero">
+                    <div style="font-size:28px; color:var(--primary-color);"><i class="fas fa-cog"></i></div>
+                    <div>
+                        <div class="settings-hero-title">Configurações</div>
+                        <div class="settings-hero-sub">Personalize sua experiência, segurança e privacidade</div>
+                    </div>
                 </div>
                 
                 ${user ? `
                     <div class="settings-sections">
-                        <div class="settings-section mb-8">
-                            <h3 class="text-xl font-bold mb-4">Configurações da Conta</h3>
-                            <div class="settings-grid">
+                        <div class="settings-grid">
+                            <div class="settings-card">
+                                <h3 class="text-lg font-bold mb-3">Conta & Notificações</h3>
                                 <div class="setting-item">
-                                    <i class="fas fa-bell text-primary"></i>
+                                    <i class="fas fa-bell"></i>
                                     <div>
                                         <h4 class="font-bold">Notificações</h4>
-                                        <p class="text-sm text-gray">Gerencie suas preferências de notificação</p>
+                                        <p class="text-sm text-gray">Ative ou desative notificações em tempo real</p>
                                     </div>
                                     <div class="toggle-switch">
                                         <input type="checkbox" id="notifications-toggle" ${user.preferences?.notifications ? 'checked' : ''}>
-                                        <label for="notifications-toggle"></label>
                                     </div>
                                 </div>
-                                
+
                                 <div class="setting-item">
-                                    <i class="fas fa-envelope text-primary"></i>
+                                    <i class="fas fa-envelope"></i>
                                     <div>
                                         <h4 class="font-bold">E-mails</h4>
-                                        <p class="text-sm text-gray">Controle os e-mails que você recebe</p>
+                                        <p class="text-sm text-gray">Receba atualizações e promoções por e-mail</p>
                                     </div>
                                     <div class="toggle-switch">
                                         <input type="checkbox" id="emails-toggle" ${user.preferences?.emails ? 'checked' : ''}>
-                                        <label for="emails-toggle"></label>
                                     </div>
                                 </div>
-                                
+
                                 <div class="setting-item">
-                                    <i class="fas fa-lock text-primary"></i>
+                                    <i class="fas fa-user-cog"></i>
                                     <div>
-                                        <h4 class="font-bold">Privacidade</h4>
-                                        <p class="text-sm text-gray">Gerencie sua privacidade e dados</p>
+                                        <h4 class="font-bold">Gerenciar Perfil</h4>
+                                        <p class="text-sm text-gray">Atualize informações públicas da sua conta</p>
                                     </div>
-                                    <button class="btn btn-outline">Configurar</button>
+                                    <div class="setting-actions">
+                                        <button class="btn btn-outline" id="edit-profile-btn-small">Editar</button>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                        
-                        <div class="settings-section mb-8">
-                            <h3 class="text-xl font-bold mb-4">Segurança</h3>
-                            <div class="settings-grid">
+
+                            <div class="settings-card">
+                                <h3 class="text-lg font-bold mb-3">Segurança</h3>
                                 <div class="setting-item">
-                                    <i class="fas fa-key text-primary"></i>
+                                    <i class="fas fa-key"></i>
                                     <div>
                                         <h4 class="font-bold">Alterar Senha</h4>
-                                        <p class="text-sm text-gray">Atualize sua senha periodicamente</p>
+                                        <p class="text-sm text-gray">Altere sua senha com segurança</p>
                                     </div>
-                                    <button class="btn btn-outline" id="change-password-btn">Alterar</button>
+                                    <div class="setting-actions">
+                                        <button class="btn btn-outline" id="change-password-btn">Alterar</button>
+                                    </div>
                                 </div>
-                                
+
                                 <div class="setting-item">
-                                    <i class="fas fa-shield-alt text-primary"></i>
+                                    <i class="fas fa-shield-alt"></i>
                                     <div>
                                         <h4 class="font-bold">Autenticação de Dois Fatores</h4>
-                                        <p class="text-sm text-gray">Adicione uma camada extra de segurança</p>
+                                        <p class="text-sm text-gray">Proteja sua conta com 2FA</p>
                                     </div>
                                     <div class="toggle-switch">
-                                        <input type="checkbox" id="2fa-toggle">
-                                        <label for="2fa-toggle"></label>
+                                        <input type="checkbox" id="2fa-toggle" ${user.preferences?.twoFactor ? 'checked' : ''}>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                        
-                        <div class="settings-section mb-8">
-                            <h3 class="text-xl font-bold mb-4">Aparência</h3>
-                            <div class="theme-options">
-                                <button class="theme-option ${ui.currentTheme === 'light' ? 'active' : ''}" data-theme="light">
-                                    <i class="fas fa-sun"></i>
-                                    <span>Claro</span>
-                                </button>
-                                <button class="theme-option ${ui.currentTheme === 'dark' ? 'active' : ''}" data-theme="dark">
-                                    <i class="fas fa-moon"></i>
-                                    <span>Escuro</span>
-                                </button>
-                                <button class="theme-option ${ui.currentTheme === 'auto' ? 'active' : ''}" data-theme="auto">
-                                    <i class="fas fa-adjust"></i>
-                                    <span>Automático</span>
-                                </button>
+
+                            <div class="settings-card">
+                                <h3 class="text-lg font-bold mb-3">Aparência</h3>
+                                <div class="theme-options">
+                                    <button class="theme-option ${ui.currentTheme === 'light' ? 'active' : ''}" data-theme="light">
+                                        <div class="swatch light"></div>
+                                        <div class="label">
+                                            <span>Claro</span>
+                                            <small>Visual claro e luminoso</small>
+                                        </div>
+                                    </button>
+                                    <button class="theme-option ${ui.currentTheme === 'dark' ? 'active' : ''}" data-theme="dark">
+                                        <div class="swatch dark"></div>
+                                        <div class="label">
+                                            <span>Escuro</span>
+                                            <small>Ótimo para ambientes com pouca luz</small>
+                                        </div>
+                                    </button>
+                                    <button class="theme-option ${ui.currentTheme === 'auto' ? 'active' : ''}" data-theme="auto">
+                                        <div class="swatch auto"></div>
+                                        <div class="label">
+                                            <span>Automático</span>
+                                            <small>Seleciona conforme o sistema</small>
+                                        </div>
+                                    </button>
+                                </div>
                             </div>
-                        </div>
-                        
-                        <div class="danger-zone mt-12 p-6 bg-white rounded-lg border-2 border-danger">
-                            <h3 class="text-danger mb-4 flex items-center gap-2">
-                                <i class="fas fa-exclamation-triangle"></i> Zona de Perigo
-                            </h3>
-                            <div class="danger-actions flex gap-4">
-                                <button class="btn btn-outline-danger" id="export-data-btn">
-                                    <i class="fas fa-download mr-2"></i> Exportar Meus Dados
-                                </button>
-                                <button class="btn btn-danger" id="delete-account-btn">
-                                    <i class="fas fa-trash mr-2"></i> Excluir Minha Conta
-                                </button>
+
+                            <div class="settings-card danger-zone">
+                                <h3 class="text-lg font-bold mb-3 text-danger">Zona de Perigo</h3>
+                                <p class="text-sm text-gray mb-3">Ações nesta área são irreversíveis. Faça backup antes de prosseguir.</p>
+                                <div style="display:flex;gap:10px;flex-wrap:wrap;">
+                                    <button class="btn btn-outline-danger" id="export-data-btn">
+                                        <i class="fas fa-download"></i> Exportar Meus Dados
+                                    </button>
+                                    <button class="btn btn-danger" id="delete-account-btn">
+                                        <i class="fas fa-trash"></i> Excluir Minha Conta
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -1160,12 +1016,12 @@ class MainApp {
         });
 
         document.getElementById('export-data-btn')?.addEventListener('click', () => {
-            ui.showAlert('Exportação de dados iniciada!', 'success');
+            this.exportUserData();
         });
 
         document.getElementById('delete-account-btn')?.addEventListener('click', () => {
             if (confirm('Tem certeza que deseja excluir sua conta? Esta ação não pode ser desfeita.')) {
-                ui.showAlert('Conta marcada para exclusão', 'warning');
+                this.deleteAccount();
             }
         });
 
@@ -1197,6 +1053,54 @@ class MainApp {
             });
             ui.showAlert(`E-mails ${isChecked ? 'ativados' : 'desativados'}`, 'success');
         });
+    }
+
+    exportUserData() {
+        const user = auth.getCurrentUser();
+        if (!user) {
+            ui.showAlert('Faça login para exportar seus dados', 'warning');
+            return;
+        }
+
+        const data = {
+            user: { ...user },
+            progress: database.data.userProgress.filter(p => p.userId === user.id),
+            certificates: database.getCertificatesByUserId(user.id),
+            payments: database.getPaymentsByUserId(user.id),
+            notifications: database.getUserNotifications(user.id)
+        };
+
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `novatek-data-${user.id}.json`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+
+        ui.showAlert('Exportação concluída: arquivo JSON gerado', 'success');
+    }
+
+    deleteAccount() {
+        const user = auth.getCurrentUser();
+        if (!user) {
+            ui.showAlert('Faça login para excluir sua conta', 'warning');
+            return;
+        }
+
+        // Soft-delete: marcar status e limpar dados sensíveis
+        database.updateUser(user.id, {
+            status: 'deleted',
+            email: `deleted+${user.id}@novatek.local`,
+            name: 'Conta excluída',
+            avatar: '',
+            preferences: {}
+        });
+
+        ui.showAlert('Conta marcada como excluída. Você será deslogado.', 'info');
+        auth.logout();
     }
 
     showChangePasswordForm() {

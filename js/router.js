@@ -8,10 +8,7 @@ class Router {
 
     init() {
         this.mapNavigation();
-        
-        if (auth.isAuthenticated()) {
-            this.navigateTo('dashboard');
-        }
+        // Não navegar automaticamente aqui - a aplicação principal fará a navegação
     }
 
     mapNavigation() {

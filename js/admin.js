@@ -5,25 +5,36 @@ class AdminSystem {
     }
 
     init() {
-        router.registerRoute('admin-dashboard', this.renderAdminDashboard.bind(this));
+        router.registerRoute('admin-painel-do-aluno', this.renderAdminPainelDoAluno.bind(this));
         router.registerRoute('admin-courses', this.renderAdminCourses.bind(this));
         router.registerRoute('admin-users', this.renderAdminUsers.bind(this));
         router.registerRoute('admin-lessons', this.renderAdminLessons.bind(this));
     }
 
-    renderAdminDashboard() {
+    renderAdminPainelDoAluno() {
         if (!auth.isAdmin()) {
-            router.navigateTo('dashboard');
+            router.navigateTo('painel-do-aluno');
             return;
         }
 
-        const content = document.getElementById('dashboard-content');
+        const content = document.getElementById('painel-do-aluno-content');
         const stats = database.getAdminStats();
 
         content.innerHTML = `
-            <div class="admin-dashboard">
-                <h1 class="mb-6">Painel Administrativo</h1>
-                
+            <div class="admin-painel-do-aluno">
+                <div class="admin-hero">
+                    <div class="hero-left">
+                        <h1>Painel Administrativo</h1>
+                        <p class="hero-sub">Visão geral rápida dos principais indicadores</p>
+                    </div>
+                    <div class="hero-right">
+                        <div class="search-quick">
+                            <input type="text" id="admin-search" placeholder="Pesquisar usuários, cursos...">
+                            <button class="btn btn-primary" id="create-report-btn"><i class="fas fa-file-alt"></i> Relatório</button>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="admin-stats">
                     <div class="admin-stat-card">
                         <div class="stat-icon">
@@ -176,12 +187,12 @@ class AdminSystem {
 
     renderAdminCourses() {
         if (!auth.isAdmin()) {
-            router.navigateTo('dashboard');
+            router.navigateTo('painel-do-aluno');
             return;
         }
 
         const courses = database.getAllCourses();
-        const content = document.getElementById('dashboard-content');
+        const content = document.getElementById('painel-do-aluno-content');
 
         content.innerHTML = `
             <div class="admin-courses">
@@ -260,12 +271,12 @@ class AdminSystem {
 
     renderAdminUsers() {
         if (!auth.isAdmin()) {
-            router.navigateTo('dashboard');
+            router.navigateTo('painel-do-aluno');
             return;
         }
 
         const users = database.getAllUsers();
-        const content = document.getElementById('dashboard-content');
+        const content = document.getElementById('painel-do-aluno-content');
 
         content.innerHTML = `
             <div class="admin-users">
@@ -356,13 +367,13 @@ class AdminSystem {
 
     renderAdminLessons() {
         if (!auth.isAdmin()) {
-            router.navigateTo('dashboard');
+            router.navigateTo('painel-do-aluno');
             return;
         }
 
         const lessons = database.data.lessons;
         const courses = database.getAllCourses();
-        const content = document.getElementById('dashboard-content');
+        const content = document.getElementById('painel-do-aluno-content');
 
         content.innerHTML = `
             <div class="admin-lessons">
@@ -430,6 +441,11 @@ class AdminSystem {
                 const route = e.currentTarget.dataset.route;
                 router.navigateTo(route);
             });
+        });
+
+        // Quick report button from hero
+        document.getElementById('create-report-btn')?.addEventListener('click', () => {
+            this.handleQuickAction('view-reports');
         });
     }
 

@@ -139,10 +139,10 @@ class AuthSystem {
             loginScreen.classList.add('hidden');
         }
         
-        // Mostrar dashboard
-        const dashboard = document.getElementById('dashboard');
-        if (dashboard) {
-            dashboard.classList.remove('hidden');
+        // Mostrar Painel do Aluno
+        const painel = document.getElementById('painel-do-aluno');
+        if (painel) {
+            painel.classList.remove('hidden');
         }
         
         if (this.currentUser) {
@@ -154,9 +154,9 @@ class AuthSystem {
                     router.navigateTo('payment');
                 }, 100);
             } else {
-                // Se já pagou, ir para dashboard
+                // Se já pagou, ir para Painel do Aluno
                 setTimeout(() => {
-                    router.navigateTo('dashboard');
+                    router.navigateTo('painel-do-aluno');
                 }, 100);
             }
         }
@@ -174,10 +174,10 @@ class AuthSystem {
             }
         }
         
-        // Esconder dashboard
-        const dashboard = document.getElementById('dashboard');
-        if (dashboard) {
-            dashboard.classList.add('hidden');
+        // Esconder Painel do Aluno
+        const painel = document.getElementById('painel-do-aluno');
+        if (painel) {
+            painel.classList.add('hidden');
         }
         
         // Resetar sidebar mobile
