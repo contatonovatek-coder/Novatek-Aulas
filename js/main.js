@@ -8,6 +8,7 @@ class MainApp {
         this.initRoutes();
         this.checkAuth();
         this.initThemeToggle();
+        this.initAuthEvents();
     }
 
     initRoutes() {
@@ -44,6 +45,25 @@ class MainApp {
                 const newTheme = currentTheme === 'light' ? 'dark' : 'light';
                 ui.setTheme(newTheme);
             }
+        });
+    }
+
+    initAuthEvents() {
+        document.addEventListener('click', (e) => {
+            const btn = e.target.closest('#logout-btn, #logout-menu-btn');
+            if (!btn) return;
+            e.preventDefault();
+            auth.logout();
+
+            // Garantir que a tela de login (tela inicial) esteja visível
+            const loginScreen = document.getElementById('login-screen');
+            const painel = document.getElementById('painel-do-aluno');
+            if (loginScreen) loginScreen.classList.remove('hidden');
+            if (painel) painel.classList.add('hidden');
+
+            // Resetar rota atual e rolar ao topo
+            if (window.router) router.currentRoute = null;
+            window.scrollTo(0, 0);
         });
     }
 

@@ -1980,6 +1980,97 @@ img {
     margin-bottom: 0;
 }
 
+/* =========================
+   REGISTER MODAL (visual only)
+   ======================== */
+#register-modal .modal-content {
+    max-width: 520px;
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: 0 18px 40px rgba(2,6,23,0.12);
+    border: 1px solid rgba(15,23,42,0.06);
+    background: linear-gradient(180deg, #ffffff 0%, #fbfbff 100%);
+}
+
+#register-modal .modal-header {
+    padding: 1.25rem 1.5rem;
+    background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+    color: #fff;
+    border-bottom: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#register-modal .modal-header h2 {
+    font-size: 1.45rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin: 0;
+}
+
+#register-modal .modal-header .modal-close {
+    position: absolute;
+    right: 12px;
+    top: 12px;
+    background: rgba(255,255,255,0.12);
+    color: #fff;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    transition: background-color .15s ease, transform .12s ease;
+}
+
+#register-modal .modal-header .modal-close:hover {
+    background: rgba(255,255,255,0.18);
+    transform: translateY(-2px);
+}
+
+#register-modal .modal-body {
+    padding: 1.25rem 1.5rem 1.75rem 1.5rem;
+}
+
+#register-modal .form-group input[type="text"],
+#register-modal .form-group input[type="email"],
+#register-modal .form-group input[type="password"] {
+    width: 100%;
+    padding: 0.9rem 1rem;
+    border: 1.5px solid rgba(15,23,42,0.06);
+    border-radius: 10px;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.6);
+    transition: border-color .12s ease, box-shadow .12s ease;
+}
+
+#register-modal .form-group input:focus {
+    outline: none;
+    border-color: rgba(79,70,229,0.9);
+    box-shadow: 0 6px 18px rgba(79,70,229,0.08);
+}
+
+#register-modal .plans-selection { display: flex; gap: 0.75rem; flex-wrap: wrap; }
+
+#register-modal .btn-register {
+    width: 100%;
+    padding: 0.95rem;
+    border-radius: 10px;
+    font-weight: 700;
+    background: linear-gradient(90deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+    color: #fff;
+    border: none;
+    box-shadow: 0 12px 30px rgba(124,58,237,0.12);
+    transition: transform .14s ease, box-shadow .14s ease;
+}
+
+#register-modal .btn-register:hover { transform: translateY(-3px); box-shadow: 0 20px 40px rgba(124,58,237,0.16); }
+
+@media (max-width: 560px) {
+    #register-modal .modal-content { margin: 0 0.5rem; }
+    #register-modal .modal-header h2 { font-size: 1.2rem; }
+}
+
 /* Estilos específicos para modal de gerenciamento de usuários (seguir design do site) */
 .admin-user-modal .modal-body .form-row {
     align-items: flex-start;
