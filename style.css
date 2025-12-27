@@ -560,7 +560,7 @@ img {
 
 .input-with-icon input {
     width: 100%;
-    padding: 0.875rem 1rem 0.875rem 3rem;
+    padding: 0.875rem 3rem 0.875rem 3rem; /* espaço à direita para o botão de olho */
     border: 2px solid var(--gray-light);
     border-radius: var(--radius);
     font-size: 1rem;
@@ -584,16 +584,30 @@ img {
 
 .toggle-password {
     position: absolute;
-    right: 1rem;
-    background: none;
+    right: 0.6rem;
+    top: 50%;
+    transform: translateY(-50%);
+    background: transparent;
     color: var(--gray-color);
-    font-size: 1.125rem;
-    padding: 0.25rem;
+    font-size: 1.05rem;
+    width: 36px;
+    height: 36px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border-radius: 9999px; /* circular */
+    line-height: 0;
+    transition: var(--transition-fast);
 }
 
 .toggle-password:hover {
     color: var(--primary-color);
+    background: rgba(79,70,229,0.08);
+    box-shadow: 0 6px 14px rgba(79,70,229,0.06);
 }
+
+.toggle-password i { display: block; }
 
 .form-options {
     display: flex;
@@ -732,16 +746,22 @@ img {
     border-color: var(--primary-color);
     color: var(--primary-color);
     transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+    background-color: rgba(79,70,229,0.03);
 }
 
 .btn-google:hover {
     border-color: #DB4437;
     color: #DB4437;
+    background-color: rgba(219,68,55,0.06);
+    box-shadow: 0 6px 18px rgba(219,68,55,0.06);
 }
 
 .btn-github:hover {
     border-color: var(--dark-color);
     color: var(--dark-color);
+    background-color: rgba(17,24,39,0.06);
+    box-shadow: 0 6px 18px rgba(17,24,39,0.06);
 }
 
 .register-link {
@@ -1980,11 +2000,9 @@ img {
     margin-bottom: 0;
 }
 
-/* =========================
-   REGISTER MODAL (visual only)
-   ======================== */
 #register-modal .modal-content {
-    max-width: 520px;
+    max-width: 1100px; /* aumento para mais espaço */
+    width: 100%;
     border-radius: 14px;
     overflow: hidden;
     box-shadow: 0 18px 40px rgba(2,6,23,0.12);
@@ -3960,3 +3978,234 @@ img {
     .settings-header-hero { flex-direction: column; align-items: flex-start; }
     .swatch { width: 36px; height: 22px; }
 }
+
+/* =========================
+   ESTILOS ADICIONAIS - MODAL CRIAR CONTA
+   ========================= */
+#register-modal .register-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+}
+
+#register-modal .register-hero {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1rem;
+    border-radius: 10px;
+    background: linear-gradient(180deg, rgba(79,70,229,0.04), rgba(139,92,246,0.02));
+    border: 1px solid rgba(79,70,229,0.04);
+}
+
+#register-modal .register-hero .hero-text h3 {
+    margin: 0 0 0.25rem 0;
+    font-size: 1.125rem;
+    color: var(--dark-color);
+}
+
+#register-modal .register-hero .muted { color: var(--gray-color); margin-bottom: 0.5rem; }
+
+#register-modal .benefits-list { display: flex; flex-direction: column; gap: 0.4rem; margin: 0; padding: 0; }
+#register-modal .benefit-item { display: flex; gap: 0.6rem; align-items: center; color: var(--gray-dark); font-size: 0.95rem; }
+#register-modal .benefit-item i { color: var(--primary-color); width: 22px; text-align: center; }
+
+#register-modal .hero-badge { display: flex; align-items: center; justify-content: center; }
+#register-modal .trial-badge { background: linear-gradient(90deg, var(--primary-color), var(--secondary-color)); color: #fff; padding: 0.45rem 0.9rem; border-radius: 999px; font-weight: 800; font-size: 0.85rem; box-shadow: var(--shadow); }
+
+/* Form grid: 2 col on wide, 1 col on small */
+#register-modal .register-form .form-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.75rem; margin-bottom: 0.75rem; }
+#register-modal .register-form .form-group { margin-bottom: 0; }
+
+/* Plan cards */
+#register-modal .plan-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0.75rem; }
+
+#register-modal .plan-card {
+    background: var(--white);
+    border: 1.5px solid rgba(15,23,42,0.04);
+    border-radius: 12px;
+    padding: 0.95rem;
+    box-shadow: 0 8px 26px rgba(2,6,23,0.04);
+    transition: transform .22s ease, box-shadow .22s ease, border-color .18s ease, background-color .18s ease;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+}
+
+#register-modal .plan-card:hover { transform: translateY(-6px); box-shadow: var(--shadow-lg); border-color: rgba(79,70,229,0.12); }
+
+#register-modal .plan-card-header { display: flex; justify-content: space-between; align-items: baseline; gap: 0.5rem; }
+#register-modal .plan-card-header h4 { margin: 0; font-size: 1rem; color: var(--dark-color); }
+#register-modal .plan-price { font-weight: 800; color: var(--primary-color); font-size: 1.05rem; }
+#register-modal .plan-price span { font-weight: 500; color: var(--gray-color); font-size: 0.85rem; margin-left: 6px; }
+
+#register-modal .plan-desc { color: var(--gray-dark); font-size: 0.88rem; margin: 0; }
+
+#register-modal .plan-features { list-style: none; padding: 0; margin: 0.4rem 0; color: var(--gray-dark); font-size: 0.9rem; }
+#register-modal .plan-features li { display: flex; gap: 0.5rem; align-items: center; margin-bottom: 0.25rem; }
+#register-modal .plan-features li i { color: var(--accent-color); }
+
+#register-modal .select-plan { margin-top: auto; align-self: start; padding: 0.55rem 0.85rem; border-radius: 10px; font-weight: 700; transition: var(--transition); }
+
+/* selected visual state */
+#register-modal .plan-card.selected { border-color: var(--primary-color); background-color: rgba(79,70,229,0.045); box-shadow: 0 18px 40px rgba(79,70,229,0.06); }
+#register-modal .plan-card.selected .select-plan { background: linear-gradient(90deg, var(--primary-color), var(--secondary-color)); color: #fff; border: none; }
+
+/* replace button label visually when selected (keeps HTML text intact) */
+#register-modal .plan-card .select-plan { position: relative; color: var(--primary-color); background: transparent; border: 1.5px solid rgba(79,70,229,0.12); }
+#register-modal .plan-card .select-plan::after { content: '' ; position: absolute; inset: 0; display: none; align-items: center; justify-content: center; font-weight: 700; }
+#register-modal .plan-card.selected .select-plan::after { display: flex; content: 'Plano Selecionado'; color: #fff; background: transparent; }
+#register-modal .plan-card.selected .select-plan span { visibility: hidden; }
+
+/* Input focus subtle enhancement */
+#register-modal .form-group input:focus { transform: translateY(-1px); }
+
+/* Responsive adjustments */
+@media (min-width: 900px) {
+    /* reduzir largura do hero para liberar mais espaço para formulários e cards */
+    #register-modal .register-grid { grid-template-columns: 340px 1fr; align-items: start; }
+    #register-modal .register-hero { flex-direction: column; align-items: flex-start; }
+}
+
+/* For plan cards show 2 columns on medium screens and up */
+@media (min-width: 700px) {
+    #register-modal .plan-cards { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (min-width: 1000px) {
+    #register-modal .plan-cards { grid-template-columns: repeat(3, 1fr); }
+}
+
+/* If the modal still appears narrow on some screens, allow horizontal scroll for plan-cards */
+#register-modal .plan-cards { min-width: 0; }
+#register-modal .plan-cards::-webkit-scrollbar { height: 6px; }
+
+@media (max-width: 560px) {
+    #register-modal .register-form .form-grid { grid-template-columns: 1fr; }
+    #register-modal .plan-cards { grid-template-columns: 1fr; }
+    #register-modal .register-grid { grid-template-columns: 1fr; }
+}
+
+/* Smooth focus outline for accessibility */
+#register-modal .form-group input:focus, #register-modal .select-plan:focus { outline: none; box-shadow: 0 8px 24px rgba(79,70,229,0.08); border-color: rgba(79,70,229,0.9); }
+
+/* ---- Enhancements para modal 'Criar Conta' e planos ---- */
+
+/* Garantir cards de mesma altura e espaçamento consistente */
+#register-modal .plan-card { min-height: 300px; border-radius: 14px; }
+
+/* Destaque do preço e hierarquia visual */
+#register-modal .plan-card-header h4 { font-size: 0.95rem; font-weight: 600; color: var(--gray-dark); }
+#register-modal .plan-price { font-size: 1.35rem; font-weight: 900; color: var(--primary-dark); }
+
+/* Badge 'Mais Popular' visível para o plano Pleno */
+.plan-badge { display: inline-block; margin-left: 0.6rem; padding: 0.25rem 0.6rem; font-size: 0.72rem; font-weight: 800; color: #fff; border-radius: 999px; background: linear-gradient(90deg, var(--primary-color), var(--secondary-color)); box-shadow: 0 8px 20px rgba(139,92,246,0.18); }
+
+/* Card Pleno levemente maior e com sombra mais forte */
+.plan-card--featured { transform-origin: center; border: 1.8px solid rgba(139,92,246,0.14); box-shadow: 0 26px 60px rgba(79,70,229,0.10); }
+.plan-card--featured:hover { transform: translateY(-8px) scale(1.02); box-shadow: 0 36px 80px rgba(79,70,229,0.14); }
+
+/* Suporte para renderização dinâmica que usa a classe 'featured' */
+.plan-card.featured { transform-origin: center; border: 1.8px solid rgba(139,92,246,0.14); box-shadow: 0 26px 60px rgba(79,70,229,0.10); }
+.plan-card.featured:hover { transform: translateY(-8px) scale(1.02); box-shadow: 0 36px 80px rgba(79,70,229,0.14); }
+
+/* Seleção clara do card: borda roxa forte, fundo destacado e ícone de check */
+#register-modal .plan-card.selected { border: 2.5px solid var(--primary-color); background: linear-gradient(180deg, rgba(79,70,229,0.04), rgba(79,70,229,0.02)); }
+#register-modal .plan-card.selected::after { content: '\2713'; position: absolute; top: 12px; right: 12px; background: var(--primary-color); color: #fff; width: 36px; height: 36px; border-radius: 999px; display: flex; align-items: center; justify-content: center; font-weight: 800; box-shadow: 0 6px 18px rgba(79,70,229,0.18); }
+
+/* Badge 'Mais Popular' posicionada mais alta e com cor viva */
+#register-modal .plan-badge { position: absolute; top: -12px; right: 12px; padding: 0.35rem 0.7rem; font-size: 0.72rem; font-weight: 800; color: #fff; border-radius: 999px; background: linear-gradient(90deg, #7C3AED, #6D28D9); box-shadow: 0 10px 30px rgba(99,102,241,0.12); }
+
+/* Preço com hierarquia: valor maior, período menor e com menor contraste */
+#register-modal .plan-price { display: flex; align-items: baseline; gap: 0.4rem; }
+#register-modal .plan-price .currency { font-size: 0.95rem; font-weight: 700; color: var(--gray-color); }
+#register-modal .plan-price .amount, #register-modal .plan-price { font-size: 1.6rem; font-weight: 900; color: var(--primary-dark); }
+#register-modal .plan-price .period { font-size: 0.78rem; color: var(--gray-color); margin-left: 4px; }
+
+/* Forçar alinhamento interno dos cards (títulos/descrições) */
+#register-modal .plan-card-header { min-height: 48px; align-items: center; }
+#register-modal .plan-desc { min-height: 38px; }
+#register-modal .plan-features { margin-top: 0.25rem; }
+
+/* Padronizar botões 'Selecionar Plano' - outline roxo por padrão */
+#register-modal .plan-card .select-plan { border: 2px solid rgba(79,70,229,0.18); color: var(--primary-dark); background: transparent; padding: 0.6rem 0.85rem; border-radius: 10px; font-weight: 700; }
+#register-modal .plan-card .select-plan:hover { background: linear-gradient(90deg, rgba(79,70,229,0.12), rgba(139,92,246,0.08)); color: #fff; border-color: transparent; }
+#register-modal .plan-card.selected .select-plan { background: linear-gradient(90deg, var(--primary-color), var(--secondary-color)); color: #fff; border: none; }
+
+/* Diminuir peso visual da coluna esquerda (benefícios) */
+#register-modal .register-hero .benefits-list .benefit-item { color: rgba(55,65,81,0.65); font-size: 0.9rem; }
+#register-modal .register-hero .benefit-item i { font-size: 0.9rem; color: rgba(79,70,229,0.9); }
+
+/* Bloco de termos: checkbox maior, área clicável ampliada */
+.terms-block { background: rgba(15,23,42,0.02); padding: 0.65rem; border-radius: 10px; display: flex; align-items: center; gap: 0.75rem; }
+.terms-block input[type="checkbox"] { width: 1.4rem; height: 1.4rem; margin: 0; accent-color: var(--primary-color); }
+.terms-block label { font-size: 0.86rem; color: var(--gray-color); cursor: pointer; }
+
+/* Botão 'Criar Conta' refinamentos: hover glow, disabled and loading */
+.btn-register { padding: 0.95rem 1.25rem; font-size: 1.05rem; border-radius: 12px; background: linear-gradient(90deg, #6D28D9, #4F46E5); box-shadow: 0 12px 30px rgba(79,70,229,0.18); border: none; color: #fff; transition: transform .18s ease, box-shadow .18s ease; }
+.btn-register:hover { transform: translateY(-3px); box-shadow: 0 22px 44px rgba(79,70,229,0.26), 0 6px 18px rgba(79,70,229,0.12); }
+.btn-register:disabled, .btn-register.btn-disabled { opacity: 0.5; cursor: not-allowed; box-shadow: none; transform: none; }
+.btn-register.loading { pointer-events: none; opacity: 0.9; }
+.btn-register.loading i.fa-spinner { margin-right: 0.5rem; }
+
+/* Microinteractions: elevação mais sutil no hover dos cards e animação ao selecionar */
+#register-modal .plan-card { transition: transform 220ms ease, box-shadow 220ms ease, border-color 180ms ease; }
+#register-modal .plan-card:hover { transform: translateY(-6px); box-shadow: 0 18px 48px rgba(2,6,23,0.06), 0 8px 24px rgba(79,70,229,0.06); }
+#register-modal .plan-card.selected { animation: plan-select-pop 320ms ease; }
+
+/* Garantir que badges e check não quebrem o layout em telas pequenas */
+@media (max-width: 560px) {
+    #register-modal .plan-badge { position: static; margin-top: 0.5rem; }
+    #register-modal .plan-card.selected::after { top: 8px; right: 8px; width: 32px; height: 32px; }
+}
+
+/* Botão sempre fixo na base do card */
+#register-modal .plan-card .select-plan { margin-top: auto; align-self: stretch; display: inline-flex; justify-content: center; }
+
+/* Hover e seleção: elevação + glow roxo sutil */
+#register-modal .plan-card:hover { box-shadow: 0 18px 48px rgba(79,70,229,0.06), 0 3px 8px rgba(2,6,23,0.04); }
+#register-modal .plan-card.selected { transform: translateY(-6px); box-shadow: 0 28px 72px rgba(79,70,229,0.14); border-color: rgba(79,70,229,0.18); }
+
+/* Animação ao selecionar plano (microinteraction) */
+@keyframes plan-select-pop { 0% { transform: scale(0.995); } 50% { transform: scale(1.02); } 100% { transform: scale(1); } }
+#register-modal .plan-card.selected { animation: plan-select-pop 360ms ease; }
+
+/* Diminuir peso visual da coluna esquerda (benefícios) */
+#register-modal .register-hero { background: transparent; color: var(--gray-dark); opacity: 0.95; }
+#register-modal .register-hero .hero-text h3 { font-size: 1.05rem; font-weight: 600; }
+#register-modal .register-hero .muted { color: var(--gray-color); }
+
+/* Inputs e foco com destaque roxo mais forte */
+#register-modal .form-group input { border: 2px solid var(--gray-light); border-radius: 10px; padding: 0.75rem; }
+#register-modal .form-group input:focus { border-color: var(--primary-color); box-shadow: 0 8px 30px rgba(79,70,229,0.12); }
+
+/* Agrupamento visual das senhas */
+.password-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; }
+@media (max-width: 560px) { .password-pair { grid-template-columns: 1fr; } }
+
+/* Botão principal Criar Conta: maior e com gradiente mais forte */
+.btn-register { padding: 0.95rem 1.25rem; font-size: 1.05rem; border-radius: 12px; background: linear-gradient(90deg, #6D28D9, #4F46E5); box-shadow: 0 12px 30px rgba(79,70,229,0.18); border: none; color: #fff; }
+.btn-register:hover { transform: translateY(-3px); box-shadow: 0 18px 36px rgba(79,70,229,0.22); }
+.btn-register:disabled, .btn-register.btn-disabled { opacity: 0.6; cursor: not-allowed; box-shadow: none; }
+
+/* Termos em bloco sutil */
+.terms-block { background: rgba(15,23,42,0.02); padding: 0.6rem; border-radius: 10px; display: flex; align-items: center; gap: 0.75rem; }
+.terms-block input[type="checkbox"] { width: 1.25rem; height: 1.25rem; margin: 0; accent-color: var(--primary-color); }
+.terms-block label { font-size: 0.85rem; color: var(--gray-color); }
+
+/* Modal abrir com animação suave */
+#register-modal .modal-content { transform: translateY(10px) scale(0.995); opacity: 0; transition: transform 320ms ease, opacity 260ms ease; }
+#register-modal:not(.hidden) .modal-content { transform: translateY(0) scale(1); opacity: 1; }
+
+/* Microinteraction hover no botão selecionar do card */
+#register-modal .plan-card .select-plan:hover { transform: translateY(-3px); }
+
+/* Ajuste espaçamento vertical geral dentro do modal */
+#register-modal .modal-body { padding: 1rem 1.25rem; }
+#register-modal .register-grid { gap: 1rem; }
+
+/* Acessibilidade: foco visível para cards navegáveis */
+#register-modal .plan-card:focus { outline: 3px solid rgba(79,70,229,0.14); outline-offset: 4px; }
+
+

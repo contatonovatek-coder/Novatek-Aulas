@@ -274,45 +274,105 @@
                 <button class="modal-close" id="modal-close">&times;</button>
             </div>
             <div class="modal-body">
-                <form id="register-form">
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="register-name">Nome Completo *</label>
-                            <input type="text" id="register-name" placeholder="Seu nome" required>
+                <div class="register-grid">
+                    <!-- Hero / destaque -->
+                    <div class="register-hero">
+                        <div class="hero-text">
+                            <h3>Comece hoje – escolha o plano ideal</h3>
+                            <p class="muted">Aprenda com aulas atualizadas, obtenha certificados e receba suporte prioritário.</p>
+                            <ul class="benefits-list">
+                                <li class="benefit-item"><i class="fas fa-play-circle"></i> Aulas atualizadas</li>
+                                <li class="benefit-item"><i class="fas fa-certificate"></i> Certificado</li>
+                                <li class="benefit-item"><i class="fas fa-headset"></i> Suporte prioritário</li>
+                                <li class="benefit-item"><i class="fas fa-project-diagram"></i> Projetos e mentorias</li>
+                            </ul>
                         </div>
-                        <div class="form-group">
-                            <label for="register-email">E-mail *</label>
-                            <input type="email" id="register-email" placeholder="seu@email.com" required>
-                        </div>
-                    </div>
-                    
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="register-password">Senha *</label>
-                            <input type="password" id="register-password" placeholder="Mínimo 8 caracteres" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="register-confirm">Confirmar Senha *</label>
-                            <input type="password" id="register-confirm" placeholder="Digite novamente" required>
+                        <div class="hero-badge">
+                            <span class="trial-badge">30 dias grátis</span>
                         </div>
                     </div>
-                    
-                    <div class="form-group">
-                        <label for="register-plan">Escolha seu Plano *</label>
-                        <div class="plans-selection" id="plans-selection">
-                            <!-- Planos serão carregados aqui -->
+
+                    <!-- Formulário -->
+                    <form id="register-form" class="register-form">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="register-name">Nome Completo *</label>
+                                <input type="text" id="register-name" placeholder="Seu nome" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="register-email">E-mail *</label>
+                                <input type="email" id="register-email" placeholder="seu@email.com" required>
+                            </div>
+                            <div class="password-pair">
+                                <div class="form-group">
+                                    <label for="register-password">Senha *</label>
+                                    <input type="password" id="register-password" placeholder="Mínimo 8 caracteres" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="register-confirm">Confirmar Senha *</label>
+                                    <input type="password" id="register-confirm" placeholder="Digite novamente" required>
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                    
-                    <div class="form-group checkbox-group">
-                        <input type="checkbox" id="terms" required>
-                        <label for="terms">Concordo com os <a href="#" data-modal="terms">Termos de Uso</a> e <a href="#" data-modal="privacy">Política de Privacidade</a></label>
-                    </div>
-                    
-                    <button type="submit" class="btn btn-primary btn-register">
-                        <i class="fas fa-user-plus"></i> Criar Conta
-                    </button>
-                </form>
+
+                        <div class="form-group">
+                            <label for="register-plan">Escolha seu Plano *</label>
+                            <div class="plan-cards" id="plans-selection">
+                                <div class="plan-card" data-plan="junior">
+                                    <div class="plan-card-header">
+                                        <h4>Júnior</h4>
+                                        <div class="plan-price">R$ 100<span>/mês</span></div>
+                                    </div>
+                                    <p class="plan-desc">Acesso às aulas principais e materiais.</p>
+                                    <ul class="plan-features">
+                                        <li><i class="fas fa-check"></i> Aulas atualizadas</li>
+                                        <li><i class="fas fa-check"></i> Certificado</li>
+                                    </ul>
+                                    <button type="button" class="btn btn-outline select-plan">Selecionar</button>
+                                </div>
+
+                                <div class="plan-card plan-card--featured" data-plan="pleno">
+                                    <div class="plan-card-header">
+                                        <h4>Pleno</h4>
+                                        <div class="plan-price">R$ 125<span>/mês</span></div>
+                                        <span class="plan-badge">Mais Popular</span>
+                                    </div>
+                                    <p class="plan-desc">Conteúdo expandido e projetos práticos.</p>
+                                    <ul class="plan-features">
+                                        <li><i class="fas fa-check"></i> Aulas atualizadas</li>
+                                        <li><i class="fas fa-check"></i> Certificado</li>
+                                        <li><i class="fas fa-check"></i> Suporte prioritário</li>
+                                    </ul>
+                                    <button type="button" class="btn btn-outline select-plan">Selecionar</button>
+                                </div>
+
+                                <div class="plan-card" data-plan="senior">
+                                    <div class="plan-card-header">
+                                        <h4>Sênior</h4>
+                                        <div class="plan-price">R$160/mês</div>
+                                    </div>
+                                    <p class="plan-desc">Mentorias, projetos e suporte completo.</p>
+                                    <ul class="plan-features">
+                                        <li><i class="fas fa-check"></i> Aulas atualizadas</li>
+                                        <li><i class="fas fa-check"></i> Certificado</li>
+                                        <li><i class="fas fa-check"></i> Suporte prioritário</li>
+                                        <li><i class="fas fa-check"></i> Projetos e mentorias</li>
+                                    </ul>
+                                    <button type="button" class="btn btn-outline select-plan">Selecionar</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group checkbox-group terms-block">
+                            <input type="checkbox" id="terms" required>
+                            <label for="terms">Concordo com os <a href="#" data-modal="terms">Termos de Uso</a> e <a href="#" data-modal="privacy">Política de Privacidade</a></label>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary btn-register">
+                            <i class="fas fa-user-plus"></i> Criar Conta
+                        </button>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
@@ -444,19 +504,7 @@
             </div>
         </div>
     </div>
-    <script>
-const btn = document.getElementById("toggle-password");
-const input = document.getElementById("password");
-
-btn.addEventListener("click", () => {
-    const isPassword = input.type === "password";
-    input.type = isPassword ? "text" : "password";
-
-    btn.innerHTML = isPassword
-        ? '<i class="fas fa-eye-slash"></i>'
-        : '<i class="fas fa-eye"></i>';
-});
-</script>
+    <!-- Password toggle handled centrally in js/ui.js -->
 
     <!-- Scripts -->
     <script src="/js/auth.js"></script>

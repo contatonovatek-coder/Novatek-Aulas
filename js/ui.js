@@ -186,6 +186,55 @@ class UI {
                 }
             });
         }
+
+        // Registro: gerenciar loading do botão sem alterar lógica de validação
+        const registerForm = document.getElementById('register-form');
+        if (registerForm) {
+            registerForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+
+                const name = document.getElementById('register-name')?.value.trim();
+                const email = document.getElementById('register-email')?.value.trim();
+                const password = document.getElementById('register-password')?.value;
+                const confirmPassword = document.getElementById('register-confirm')?.value;
+
+                // Determinar plano selecionado (localStorage ou card selecionado)
+                let plan = localStorage.getItem('selected-plan');
+                if (!plan) {
+                    const selectedCard = document.querySelector('#plans-selection .plan-card.selected');
+                    plan = selectedCard?.dataset.plan || selectedCard?.dataset.selectPlan || null;
+                }
+
+                const submitBtn = registerForm.querySelector('.btn-register');
+                if (submitBtn) {
+                    submitBtn.classList.add('loading');
+                    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Criando...';
+                    submitBtn.disabled = true;
+                }
+
+                try {
+                    const result = await auth.register({ name, email, password, confirmPassword, plan });
+                    if (result.success && result.redirectToPayment) {
+                        this.showAlert('Cadastro efetuado. Redirecionando para pagamento...', 'info');
+                        this.closeModal('register-modal');
+                        this.showPaymentScreen(result.user, plan);
+                    } else if (result.success) {
+                        this.showAlert(result.message || 'Cadastro realizado!', 'success');
+                        this.closeModal('register-modal');
+                    } else {
+                        this.showAlert(result.message || 'Erro no cadastro', 'danger');
+                    }
+                } catch (err) {
+                    this.showAlert('Erro ao criar conta. Tente novamente.', 'danger');
+                } finally {
+                    if (submitBtn) {
+                        submitBtn.classList.remove('loading');
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = '<i class="fas fa-user-plus"></i> Criar Conta';
+                    }
+                }
+            });
+        }
     }
 
     initNavigation() {
