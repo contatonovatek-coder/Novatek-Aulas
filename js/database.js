@@ -276,9 +276,9 @@ class Database {
         const newUser = {
             id: newId,
             ...userData,
-            role: 'student',
-            status: 'pending_payment',
-            avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(userData.name)}&background=4F46E5&color=fff`,
+            role: userData.role || 'student',
+            status: userData.status || 'pending_payment',
+            avatar: userData.avatar && userData.avatar.length > 0 ? userData.avatar : `https://ui-avatars.com/api/?name=${encodeURIComponent(userData.name)}&background=4F46E5&color=fff`,
             joinDate: new Date().toISOString(),
             lastLogin: new Date().toISOString(),
             preferences: {

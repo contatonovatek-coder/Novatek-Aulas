@@ -1980,6 +1980,263 @@ img {
     margin-bottom: 0;
 }
 
+/* Estilos específicos para modal de gerenciamento de usuários (seguir design do site) */
+.admin-user-modal .modal-body .form-row {
+    align-items: flex-start;
+}
+.admin-user-modal .avatar-column {
+    width: 180px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+}
+.admin-user-modal .avatar-preview {
+    width: 140px;
+    height: 140px;
+    border-radius: 12px;
+    overflow: hidden;
+    background: linear-gradient(135deg, rgba(79,70,229,0.06), rgba(139,92,246,0.04));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: var(--shadow);
+}
+.admin-user-modal .avatar-preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+.admin-user-modal .form-column {
+    flex: 1;
+}
+.admin-user-modal .input-with-icon {
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    border: 2px solid var(--gray-light);
+    border-radius: 8px;
+    background: var(--white);
+}
+.admin-user-modal #generate-avatar {
+    width: 100%;
+}
+
+/* Upload de avatar */
+.admin-user-modal .avatar-uploader {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+}
+.admin-user-modal .avatar-upload-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    border-radius: 8px;
+    border: 2px solid var(--gray-light);
+    color: var(--gray-dark);
+}
+.admin-user-modal .avatar-upload-btn:hover {
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+}
+.admin-user-modal .muted {
+    color: var(--gray-color);
+    font-size: 0.85rem;
+}
+
+/* Melhorias visuais do modal */
+.admin-user-modal .modal-header h2 {
+    font-size: 1.25rem;
+    letter-spacing: -0.2px;
+}
+.admin-user-modal .modal-content {
+    border-radius: 14px;
+}
+.admin-user-modal .modal-actions .btn {
+    min-width: 110px;
+}
+
+/* Inputs com visual preenchido como na imagem */
+.admin-user-modal input[type="text"],
+.admin-user-modal input[type="email"],
+.admin-user-modal input[type="password"],
+.admin-user-modal select {
+    background: #eef6ff;
+    border: 1px solid transparent;
+    padding: 0.9rem 1rem;
+    border-radius: 10px;
+    box-shadow: none;
+}
+.admin-user-modal .input-with-icon {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+.admin-user-modal .input-with-icon input {
+    width: 100%;
+    border: none;
+    background: #eef6ff;
+}
+.admin-user-modal .password-toggle {
+    position: absolute;
+    right: 10px;
+    background: transparent;
+    border: none;
+    color: var(--gray-color);
+    font-size: 1rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.25rem;
+}
+.admin-user-modal .password-toggle:hover {
+    color: var(--primary-color);
+}
+
+/* Header com gradiente roxo e subtítulo */
+.admin-user-modal .modal-header {
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    color: #fff;
+    border-radius: 12px 12px 0 0;
+    padding: 1.25rem 1.5rem;
+}
+.admin-user-modal .modal-header h2 {
+    margin: 0;
+    font-size: 1.25rem;
+}
+.admin-user-modal .modal-header .modal-close {
+    color: rgba(255,255,255,0.85);
+}
+/* Corrigir hover do botão de fechar no header roxo: manter ícone visível */
+.admin-user-modal .modal-header .modal-close:hover {
+    background-color: rgba(255,255,255,0.12);
+    color: #ffffff; /* manter o X branco sobre o fundo levemente esbranquiçado */
+}
+
+/* Estilizar textarea para seguir o mesmo visual dos inputs preenchidos */
+.admin-user-modal textarea,
+.admin-user-modal .input-with-icon textarea {
+    background: #eef6ff;
+    border: 1px solid transparent;
+    padding: 0.9rem 1rem;
+    border-radius: 10px;
+    box-shadow: none;
+    width: 100%;
+    min-height: 110px;
+    resize: vertical;
+    font-size: 0.95rem;
+    color: var(--dark-color);
+    outline: none;
+}
+.admin-user-modal textarea:focus,
+.admin-user-modal .input-with-icon textarea:focus {
+    box-shadow: none;
+    border-color: transparent;
+}
+
+/* Estilo para coluna de avaliação (num + estrela) */
+.rating {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+.rating-value {
+    font-weight: 700;
+    color: var(--dark-color);
+    font-size: 0.95rem;
+}
+.rating-icon {
+    color: #FFC107; /* amber */
+    text-shadow: 0 1px 0 rgba(0,0,0,0.05);
+    font-size: 0.95rem;
+}
+.admin-user-modal .modal-body {
+    padding: 1.5rem;
+    background: #fff;
+    border-radius: 0 0 12px 12px;
+}
+
+.admin-user-modal .avatar-column {
+    align-items: center;
+    padding-right: 1rem;
+}
+.admin-user-modal .avatar-preview {
+    width: 96px;
+    height: 96px;
+    border-radius: 9999px;
+    overflow: hidden;
+    background: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 8px 20px rgba(31,41,55,0.08);
+    margin-bottom: 0.5rem;
+}
+.admin-user-modal .avatar-preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+.admin-user-modal .avatar-column .muted {
+    margin-top: 4px;
+}
+
+/* Estilo específico apenas para o campo de senha (visual como na imagem anexada) */
+.admin-user-modal .form-group label[for="user-password"] {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+}
+.admin-user-modal .form-group .input-with-icon {
+    background: transparent; /* tornar wrapper transparente para eliminar camada dupla */
+    padding: 0; /* remover padding para que só o input tenha o preenchimento */
+    border-radius: 0;
+    position: relative;
+    box-shadow: none;
+    border: none; /* remover borda residual que criava o quadrado cinza */
+}
+.admin-user-modal .form-group .input-with-icon input {
+    background: #eef6ff; /* deixar igual aos outros inputs */
+    border: none;
+    padding: 0.9rem 3rem 0.9rem 1rem; /* espaço para o ícone à direita */
+    border-radius: 10px;
+    width: 100%;
+    box-shadow: none;
+    font-size: 0.95rem;
+    color: var(--dark-color);
+    outline: none;
+}
+.admin-user-modal .form-group .input-with-icon input:focus {
+    border-color: transparent;
+    box-shadow: none; /* aparência limpa sem sombra */
+}
+.admin-user-modal .form-group .password-toggle {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 40px;
+    height: 36px;
+    border-radius: 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    color: var(--gray-dark);
+}
+.admin-user-modal .form-group .password-toggle i {
+    font-size: 1.05rem;
+}
+.admin-user-modal .form-group .password-toggle:hover {
+    color: var(--primary-color);
+}
+
+
+
 .checkbox-group {
     display: flex;
     align-items: flex-start;
@@ -2964,6 +3221,48 @@ img {
     padding: 0.375rem 0.75rem;
     font-size: 0.75rem;
 }
+
+/* Ajustes para botões de ação na tabela: ícones centralizados e tamanhos uniformes */
+.admin-table .actions .btn {
+    min-width: 36px;
+    height: 36px;
+    padding: 0; /* ícone centralizado, sem padding lateral */
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+}
+.admin-table .actions .btn i { margin: 0; font-size: 1rem; }
+.admin-table .actions .btn.btn-outline { background: transparent; border: 1px solid transparent; }
+.admin-table .actions .btn.btn-danger { background: transparent; border: 1px solid rgba(239,68,68,0.12); color: #ef4444; }
+.admin-table .actions .btn.btn-danger:hover { background: rgba(239,68,68,0.06); }
+
+/* Override geral de hover para botões de ação na tabela: não transformar ícone em branco */
+.admin-table .actions .btn:hover {
+    /* ligeiro destaque de fundo, sem mudar a cor do ícone */
+    background: rgba(79,70,229,0.06);
+    color: var(--primary-color);
+    border-color: transparent;
+}
+.admin-table .actions .btn:hover i {
+    color: var(--primary-color);
+}
+.admin-table .actions .btn:focus {
+    outline: none;
+    box-shadow: none;
+}
+
+/* Priorizar estilo de hover para botão de excluir (manter vermelho) */
+.admin-table .actions .btn.btn-danger:hover {
+    background: rgba(239,68,68,0.06) !important;
+    color: #ef4444 !important;
+    border-color: rgba(239,68,68,0.12) !important;
+}
+.admin-table .actions .btn.btn-danger:hover i {
+    color: #ef4444 !important;
+}
+
+
 
 /* Formulários Admin */
 .admin-form {
