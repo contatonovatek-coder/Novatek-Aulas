@@ -16,11 +16,10 @@ const CONFIG = {
             price: 100,
             description: 'Ideal para iniciantes',
             features: [
-                'Acesso a cursos básicos',
-                'Suporte por e-mail',
-                'Certificados inclusos',
-                '1 projeto prático',
-                'Comunidade de alunos'
+                'Fundamentos de front-end e back-end',
+                'Lógica de programação + HTML, CSS, JavaScript',
+                'Projetos simples para portfólio',
+                'Git e boas práticas básicas'
             ]
         },
         PLENO: {
@@ -29,12 +28,10 @@ const CONFIG = {
             price: 125,
             description: 'Para quem quer evoluir rapidamente',
             features: [
-                'Todos os recursos do Júnior',
-                'Acesso a cursos intermediários',
-                'Suporte prioritário',
-                '3 projetos práticos',
-                'Code reviews',
-                'Webinars mensais'
+                'Aplicações completas e escaláveis',
+                'Arquitetura de projetos e APIs',
+                'Banco de dados e autenticação',
+                'Qualidade de código e manutenção'
             ]
         },
         SENIOR: {
@@ -43,13 +40,10 @@ const CONFIG = {
             price: 160,
             description: 'Experiência completa de aprendizado',
             features: [
-                'Todos os recursos do Pleno',
-                'Acesso a todos os cursos',
-                'Suporte 24/7',
-                'Mentoria individual',
-                'Projetos avançados',
-                'Workshops exclusivos',
-                'Acesso antecipado a novos cursos'
+                'Arquitetura de sistemas e design patterns',
+                'Performance, segurança e escalabilidade',
+                'Liderança técnica e mentoria',
+                'Visão de negócio e estratégia de software'
             ]
         }
     }

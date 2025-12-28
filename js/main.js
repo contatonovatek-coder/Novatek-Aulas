@@ -79,17 +79,49 @@ class MainApp {
         const courses = database.getFeaturedCourses();
         const user = auth.getCurrentUser();
 
+        // personalized summary data
+        let greeting = '';
+        let lastActivityText = 'Nenhuma atividade recente';
+        if (user) {
+            const progresses = database.data.userProgress.filter(p => p.userId === user.id);
+            if (progresses.length > 0) {
+                const last = progresses.slice().sort((a, b) => new Date(b.lastAccessed) - new Date(a.lastAccessed))[0];
+                const lastCourse = last ? database.getCourseById(last.courseId) : null;
+                const lessons = last ? database.getLessonsByCourseId(last.courseId) || [] : [];
+                const nextLesson = last ? lessons.find(l => !last.completedLessons?.includes(l.id)) : null;
+                if (lastCourse) {
+                    greeting = `Olá, ${user.name.split(' ')[0]}! Você parou em <strong>${lastCourse.title}</strong>`;
+                } else {
+                    greeting = `Olá, ${user.name.split(' ')[0]}! Pronto para começar um novo curso?`;
+                }
+                if (nextLesson) {
+                    lastActivityText = `Próxima aula: ${nextLesson.order}. ${nextLesson.title}`;
+                } else if (lastCourse) {
+                    lastActivityText = `Curso concluído`;
+                } else {
+                    lastActivityText = 'Nenhuma atividade recente';
+                }
+            } else {
+                greeting = `Olá, ${user.name.split(' ')[0]}! Pronto para começar um novo curso?`;
+            }
+        }
+
         content.innerHTML = `
             <div class="painel-do-aluno-home">
-                <div class="painel-do-aluno-header mb-8">
-                    <h1 class="text-3xl font-bold">Painel do Aluno</h1>
-                    <p class="text-gray mt-2">Bem-vindo de volta! Aqui está seu resumo.</p>
+                <div class="painel-do-aluno-header mb-6">
+                    <div class="header-left">
+                        <h1 class="text-3xl font-bold">Painel do Aluno</h1>
+                        <p class="text-gray mt-2 greeting">${greeting || 'Bem-vindo de volta!'}<span class="greeting-sub"> — ${lastActivityText}</span></p>
+                    </div>
+                    <div class="header-actions">
+                        <button class="btn btn-outline" id="btn-resume-overall">Continuar último curso</button>
+                    </div>
                 </div>
-                
+
                 <div class="stats-cards grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8" id="stats-container">
                     <!-- Estatísticas serão carregadas aqui -->
                 </div>
-                
+
                 <div class="painel-do-aluno-grid grid grid-cols-1 lg:grid-cols-2 gap-8">
                     <div>
                         <div class="section-header mb-6">
@@ -102,7 +134,7 @@ class MainApp {
                             ${courses.slice(0, 2).map(course => this.renderCourseCard(course)).join('')}
                         </div>
                     </div>
-                    
+
                     <div>
                         <div class="section-header mb-6">
                             <h2 class="text-xl font-bold">Progresso Geral</h2>
@@ -127,56 +159,74 @@ class MainApp {
         const statsContainer = document.getElementById('stats-container');
         if (!statsContainer) return;
 
+        // build more useful stats: horas estudadas, última atividade, próxima aula, cursos em andamento
+        const progresses = (database.data.userProgress || []).filter(p => p.userId === user.id);
         const courses = database.getAllCourses();
-        const userProgress = courses.map(course => 
-            database.getUserProgress(user.id, course.id)
-        ).filter(Boolean);
 
-        const totalProgress = userProgress.length > 0 
-            ? Math.round(userProgress.reduce((acc, p) => acc + p.progress, 0) / userProgress.length)
-            : 0;
+        // horas estudadas = soma das durações das aulas completadas
+        let minutesStudied = 0;
+        progresses.forEach(p => {
+            const lessons = database.getLessonsByCourseId(p.courseId) || [];
+            (p.completedLessons || []).forEach(lessonId => {
+                const lesson = lessons.find(l => l.id === lessonId);
+                if (lesson && lesson.duration) minutesStudied += lesson.duration;
+            });
+        });
+        const hoursStudied = (minutesStudied / 60).toFixed(1);
 
-        const certificates = database.getCertificatesByUserId(user.id);
-        const activeDays = Math.ceil((new Date() - new Date(user.joinDate)) / (1000 * 60 * 60 * 24));
+        // last activity
+        let lastActivity = null;
+        if (progresses.length > 0) {
+            lastActivity = progresses.slice().sort((a, b) => new Date(b.lastAccessed) - new Date(a.lastAccessed))[0];
+        }
+
+        let nextLessonText = 'Nenhuma';
+        if (lastActivity) {
+            const lessons = database.getLessonsByCourseId(lastActivity.courseId) || [];
+            const next = lessons.find(l => !lastActivity.completedLessons?.includes(l.id));
+            if (next) nextLessonText = `${next.order}. ${next.title}`;
+        }
+
+        const coursesInProgress = progresses.length;
 
         statsContainer.innerHTML = `
             <div class="stat-card">
                 <div class="stat-icon">
-                    <i class="fas fa-book-open"></i>
+                    <i class="fas fa-clock"></i>
                 </div>
                 <div class="stat-info">
-                    <h3>${userProgress.length}</h3>
+                    <h3>${hoursStudied}</h3>
+                    <p>Horas Estudadas</p>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-history"></i>
+                </div>
+                <div class="stat-info">
+                    <h3>${lastActivity ? new Date(lastActivity.lastAccessed).toLocaleDateString() : '—'}</h3>
+                    <p>Última Atividade</p>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-book-reader"></i>
+                </div>
+                <div class="stat-info">
+                    <h3>${nextLessonText}</h3>
+                    <p>Próxima Aula</p>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-layer-group"></i>
+                </div>
+                <div class="stat-info">
+                    <h3>${coursesInProgress}</h3>
                     <p>Cursos em Andamento</p>
-                </div>
-            </div>
-            
-            <div class="stat-card">
-                <div class="stat-icon">
-                    <i class="fas fa-chart-line"></i>
-                </div>
-                <div class="stat-info">
-                    <h3>${totalProgress}%</h3>
-                    <p>Progresso Médio</p>
-                </div>
-            </div>
-            
-            <div class="stat-card">
-                <div class="stat-icon">
-                    <i class="fas fa-certificate"></i>
-                </div>
-                <div class="stat-info">
-                    <h3>${certificates.length}</h3>
-                    <p>Certificados</p>
-                </div>
-            </div>
-            
-            <div class="stat-card">
-                <div class="stat-icon">
-                    <i class="fas fa-calendar-alt"></i>
-                </div>
-                <div class="stat-info">
-                    <h3>${activeDays}</h3>
-                    <p>Dias Ativo</p>
                 </div>
             </div>
         `;
@@ -293,37 +343,37 @@ class MainApp {
                 <div class="course-content">
                     <h3 class="course-title">${course.title}</h3>
                     <p class="course-description">${course.description}</p>
-                    
-                    <!-- instructor removed per design request -->
-                    
+
                     ${progress ? `
                         <div class="course-progress mt-4">
-                            <div class="progress-info flex justify-between text-sm mb-1">
-                                <span>Progresso</span>
-                                <span>${progress.progress}%</span>
+                            <div class="progress-info flex justify-between text-sm mb-2">
+                                <span class="progress-label">Progresso</span>
+                                <span class="progress-percent">${progress.progress}%</span>
                             </div>
                             <div class="progress-bar">
                                 <div class="progress-fill" style="width: ${progress.progress}%"></div>
                             </div>
                         </div>
                     ` : ''}
-                    
+
                     <div class="course-footer mt-6 pt-6 border-t border-gray-light">
-                        <div class="flex items-center justify-between">
-                            <div class="flex items-center gap-4">
-                                <span class="text-sm text-gray">
-                                    <i class="fas fa-clock mr-1"></i> ${course.duration}h
-                                </span>
-                                <span class="text-sm text-gray">
-                                    <i class="fas fa-play-circle mr-1"></i> ${course.lessons} aulas
-                                </span>
+                        <div class="course-meta">
+                            <div class="course-meta-left">
+                                <span class="course-duration"><i class="fas fa-clock mr-1"></i> ${course.duration}h</span>
+                                <span class="course-lessons"><i class="fas fa-play-circle mr-1"></i> ${course.lessons} aulas</span>
                             </div>
-                            ${user ? `
-                                <button class="btn btn-sm ${progress?.progress > 0 ? 'btn-primary' : 'btn-outline'}"
-                                        data-start-course="${course.id}">
-                                    ${progress?.progress > 0 ? 'Continuar' : 'Começar'}
-                                </button>
-                            ` : ''}
+                            <div class="course-meta-right">
+                                            ${user ? `
+                                                ${progress && progress.progress >= 100 ? `
+                                                    <div class="completed-actions">
+                                                        <button class="btn btn-primary btn-continue" data-start-course="${course.id}">Rever aulas</button>
+                                                        ${database.getCertificatesByUserId(user.id).some(c => c.courseId === course.id) ? `<a href="#" class="certificate-link text-primary ml-3" data-route="certificates">Ver certificado</a>` : ''}
+                                                    </div>
+                                                ` : `
+                                                    <button class="btn btn-primary btn-continue" data-start-course="${course.id}">${progress?.progress > 0 ? 'Continuar' : 'Começar'}</button>
+                                                `}
+                                            ` : ''}
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -338,6 +388,26 @@ class MainApp {
                 this.startCourse(courseId);
             });
         });
+
+        // resume overall last course CTA
+        const resumeBtn = document.getElementById('btn-resume-overall');
+        if (resumeBtn) {
+            resumeBtn.addEventListener('click', (e) => {
+                const user = auth.getCurrentUser();
+                if (!user) { ui.showAlert('Faça login para acessar os cursos', 'info'); return; }
+                const progresses = (database.data.userProgress || []).filter(p => p.userId === user.id);
+                if (progresses.length === 0) {
+                    ui.showAlert('Nenhum curso em andamento', 'info');
+                    return;
+                }
+                const last = progresses.slice().sort((a, b) => new Date(b.lastAccessed) - new Date(a.lastAccessed))[0];
+                if (last && last.courseId) {
+                    this.startCourse(last.courseId);
+                } else {
+                    ui.showAlert('Nenhuma atividade recente encontrada', 'info');
+                }
+            });
+        }
 
         document.querySelectorAll('[data-route]').forEach(link => {
             link.addEventListener('click', (e) => {
@@ -377,7 +447,7 @@ class MainApp {
 
         content.innerHTML = `
             <div class="lessons-page">
-                <div class="lessons-header mb-8">
+                <div class="lessons-header mb-6">
                     <h1 class="text-3xl font-bold">Minhas Aulas</h1>
                     <p class="text-gray mt-2">Acompanhe seu progresso em cada curso</p>
                 </div>
@@ -385,38 +455,61 @@ class MainApp {
                     <div class="lessons-container">
                         ${database.getAllCourses().map(course => {
                             const lessons = database.getLessonsByCourseId(course.id);
-                            const userProgress = database.getUserProgress(user.id, course.id);
-                            const completedLessons = userProgress?.completedLessons || [];
+                            const userProgress = database.getUserProgress(user.id, course.id) || { completedLessons: [] };
+                            const completedLessons = userProgress.completedLessons || [];
                             if (lessons.length === 0) return '';
+                            const nextLesson = lessons.find(l => !completedLessons.includes(l.id));
+                            const percent = Math.round((completedLessons.length / lessons.length) * 100);
                             return `
-                                <div class="course-section mb-8">
-                                    <div class="section-header mb-4">
-                                        <h2 class="text-xl font-bold">${course.title}</h2>
-                                        <span class="text-primary font-bold">${completedLessons.length}/${lessons.length} aulas</span>
+                                <div class="course-section mb-6">
+                                    <div class="section-header mb-3">
+                                        <h2 class="course-section-title">${course.title}</h2>
+                                        <div class="course-header-sub text-sm text-gray">${completedLessons.length}/${lessons.length} aulas — ${percent}%</div>
+                                        <div class="course-progress-inline mt-2">
+                                            <div class="progress-bar-large" aria-hidden>
+                                                <div class="progress-fill" style="width: ${percent}%;"></div>
+                                            </div>
+                                        </div>
                                     </div>
                                     <div class="lessons-list">
-                                        ${lessons.map(lesson => `
-                                            <div class="lesson-item ${completedLessons.includes(lesson.id) ? 'completed' : ''}">
-                                                <div class="flex items-center justify-between p-4 bg-white rounded-lg shadow">
-                                                    <div class="flex items-center gap-4">
-                                                        <div class="lesson-status ${completedLessons.includes(lesson.id) ? 'completed' : ''}">
-                                                            <i class="fas fa-${completedLessons.includes(lesson.id) ? 'check-circle' : 'play-circle'}"></i>
+                                        ${lessons.map(lesson => {
+                                            const isCompleted = completedLessons.includes(lesson.id);
+                                            const isNext = nextLesson && lesson.id === nextLesson.id;
+                                            const lessonType = lesson.videoUrl ? 'Vídeo' : (lesson.resources && lesson.resources.length ? 'Recurso' : 'Link');
+                                            const pausedBadge = isNext && userProgress.lastAccessed ? true : false;
+                                            return `
+                                                <div class="lesson-item ${isCompleted ? 'completed' : isNext ? 'next' : ''}">
+                                                    <div class="lesson-card ${isNext ? 'next-bg' : ''}">
+                                                        <div class="lesson-left">
+                                                            <div class="lesson-status ${isCompleted ? 'completed' : ''}">
+                                                                <i class="fas fa-${isCompleted ? 'check-circle' : 'play-circle'}"></i>
+                                                            </div>
+                                                            <div class="lesson-info">
+                                                                <h4 class="lesson-title">${lesson.order}. ${lesson.title}</h4>
+                                                                <p class="text-sm text-gray lesson-desc">${lesson.description || 'Sem descrição'}</p>
+                                                                <div class="lesson-meta text-sm text-gray mt-1">
+                                                                    <span class="lesson-type-badge">${lessonType}</span>
+                                                                    <span class="lesson-duration ml-2">${lesson.duration} min</span>
+                                                                </div>
+                                                            </div>
                                                         </div>
-                                                        <div>
-                                                            <h4 class="mb-1 font-medium">${lesson.order}. ${lesson.title}</h4>
-                                                            <p class="text-sm text-gray">${lesson.description || 'Sem descrição'}</p>
+                                                        <div class="lesson-actions">
+                                                            ${isNext ? `<span class="lesson-pill next-pill">Próxima aula</span>` : ''}
+                                                            ${pausedBadge ? `<span class="lesson-pill paused-pill">Você parou aqui</span>` : ''}
+                                                            ${isCompleted ? `
+                                                                <button class="btn btn-sm btn-outline" data-watch-lesson="${lesson.id}">
+                                                                    <i class="fas fa-redo mr-1"></i> Revisar
+                                                                </button>
+                                                            ` : `
+                                                                <button class="btn btn-sm btn-primary" data-watch-lesson="${lesson.id}">
+                                                                    <i class="fas fa-play mr-1"></i> Assistir aula
+                                                                </button>
+                                                            `}
                                                         </div>
-                                                    </div>
-                                                    <div class="flex items-center gap-4">
-                                                        <span class="text-sm text-gray">${lesson.duration} min</span>
-                                                        <button class="btn btn-sm ${completedLessons.includes(lesson.id) ? 'btn-outline' : 'btn-primary'}" data-watch-lesson="${lesson.id}">
-                                                            <i class="fas fa-${completedLessons.includes(lesson.id) ? 'redo' : 'play'}"></i>
-                                                            ${completedLessons.includes(lesson.id) ? 'Revisar' : 'Assistir'}
-                                                        </button>
                                                     </div>
                                                 </div>
-                                            </div>
-                                        `).join('')}
+                                            `;
+                                        }).join('')}
                                     </div>
                                 </div>
                             `;
@@ -528,70 +621,71 @@ class MainApp {
         const content = document.getElementById('painel-do-aluno-content');
         const user = auth.getCurrentUser();
 
+        // compact paddings to avoid vertical scroll on 100% zoom
         content.innerHTML = `
             <div class="profile-page">
-                <div class="profile-header-page mb-8">
-                    <h1 class="text-3xl font-bold">Meu Perfil</h1>
-                    <button class="btn btn-primary" id="edit-profile-btn">
-                        <i class="fas fa-edit mr-2"></i> Editar Perfil
-                    </button>
+                <div class="profile-header-page mb-6">
+                    <div class="container flex justify-between items-center">
+                        <div>
+                            <h1 class="text-3xl font-bold">${user ? user.name : 'Meu Perfil'}</h1>
+                            <p class="text-gray mt-1">${user ? user.email : ''}</p>
+                        </div>
+                        <div class="profile-header-actions">
+                            <button class="btn btn-primary btn-sm" id="edit-profile-btn"><i class="fas fa-user-edit mr-2"></i>Editar Perfil</button>
+                        </div>
+                    </div>
                 </div>
-                
+
                 ${user ? `
-                    <div class="profile-card-page">
-                        <div class="profile-avatar-section">
-                            <div class="profile-avatar-large">
-                                <img src="${user.avatar}" alt="${user.name}">
-                            </div>
-                            <div class="profile-info-section">
-                                <h2 class="text-2xl font-bold">${user.name}</h2>
-                                <p class="profile-email-page text-gray">${user.email}</p>
-                                <span class="profile-plan-badge">Plano ${this.getPlanText(user.plan)}</span>
-                            </div>
-                        </div>
-                        
-                        <div class="profile-stats-page grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-                            <div class="profile-stat-item">
-                                <h3 class="text-2xl font-bold">${database.getAllCourses().filter(c => {
-                                    const progress = database.getUserProgress(user.id, c.id);
-                                    return progress && progress.progress > 0;
-                                }).length}</h3>
-                                <p class="text-sm text-gray">Cursos Iniciados</p>
-                            </div>
-                            <div class="profile-stat-item">
-                                <h3 class="text-2xl font-bold">${database.getCertificatesByUserId(user.id).length}</h3>
-                                <p class="text-sm text-gray">Certificados</p>
-                            </div>
-                            <div class="profile-stat-item">
-                                <h3 class="text-2xl font-bold">${Math.ceil((new Date() - new Date(user.joinDate)) / (1000 * 60 * 60 * 24))}</h3>
-                                <p class="text-sm text-gray">Dias na plataforma</p>
-                            </div>
-                            <div class="profile-stat-item">
-                                <h3 class="text-2xl font-bold">${user.role === 'admin' ? 'Administrador' : 'Estudante'}</h3>
-                                <p class="text-sm text-gray">Tipo de Conta</p>
-                            </div>
-                        </div>
-                        
-                        <div class="profile-details">
-                            <h3 class="text-xl font-bold mb-4">Informações da Conta</h3>
-                            <div class="info-grid grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div class="info-item">
-                                    <span class="info-label">Data de Cadastro</span>
-                                    <span class="info-value">${new Date(user.joinDate).toLocaleDateString('pt-BR')}</span>
+                    <div class="profile-card-page p-5 bg-white rounded-lg shadow mb-6">
+                        <div class="profile-grid">
+                            <div class="profile-left profile-left-fixed">
+                                <div class="profile-avatar-wrap">
+                                    <div class="profile-avatar-circle">
+                                        <img id="profile-avatar-img" src="${user.avatar}" alt="${user.name}">
+                                    </div>
+                                    <div class="avatar-edit-overlay" id="avatar-edit-overlay" title="Alterar foto">
+                                        <i class="fas fa-pencil-alt"></i>
+                                    </div>
+                                    <input id="avatar-file-input" type="file" accept="image/*" class="hidden" />
                                 </div>
-                                <div class="info-item">
-                                    <span class="info-label">Último Login</span>
-                                    <span class="info-value">${new Date(user.lastLogin).toLocaleDateString('pt-BR')}</span>
+                                <div class="mt-4 profile-badges">
+                                    <span class="badge badge-primary">${this.getPlanText(user.plan)}</span>
                                 </div>
-                                <div class="info-item">
-                                    <span class="info-label">Status da Conta</span>
-                                    <span class="info-value badge ${user.status === 'active' ? 'badge-accent' : 'badge-warning'}">
-                                        ${this.getStatusText(user.status)}
-                                    </span>
+                                <div class="mt-6 profile-metrics">
+                                    <div class="metrics-grid">
+                                        <div class="metric-card">
+                                            <div class="metric-icon"><i class="fas fa-play-circle"></i></div>
+                                            <div class="metric-value">${database.getAllCourses().filter(c => {
+                                                const progress = database.getUserProgress(user.id, c.id);
+                                                return progress && progress.progress > 0;
+                                            }).length}</div>
+                                            <div class="metric-label">Cursos</div>
+                                        </div>
+                                        <div class="metric-card">
+                                            <div class="metric-icon"><i class="fas fa-certificate"></i></div>
+                                            <div class="metric-value">${database.getCertificatesByUserId(user.id).length}</div>
+                                            <div class="metric-label">Certificados</div>
+                                        </div>
+                                        <div class="metric-card">
+                                            <div class="metric-icon"><i class="fas fa-calendar-day"></i></div>
+                                            <div class="metric-value">${Math.ceil((new Date() - new Date(user.joinDate)) / (1000 * 60 * 60 * 24))}</div>
+                                            <div class="metric-label">Dias</div>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div class="info-item">
-                                    <span class="info-label">Plano Atual</span>
-                                    <span class="info-value">${this.getPlanText(user.plan)}</span>
+                            </div>
+
+                            <div class="profile-right">
+                                <div class="section">
+                                    <h3 class="section-title">Informações da Conta</h3>
+                                    <ul class="account-info-list">
+                                        <li><span class="info-key">Data de cadastro</span><span class="info-val">${new Date(user.joinDate).toLocaleDateString('pt-BR')}</span></li>
+                                        <li><span class="info-key">Último login</span><span class="info-val">${user.lastLogin ? new Date(user.lastLogin).toLocaleString('pt-BR') : '-'}</span></li>
+                                        <li><span class="info-key">Status</span><span class="info-val"><span class="status-badge ${user.status === 'active' ? 'status-active' : 'status-inactive'}">${user.status === 'active' ? '<i class="fas fa-check-circle"></i> Ativo' : '<i class="fas fa-clock"></i> Inativo'}</span></span></li>
+                                        <li><span class="info-key">Tipo de conta</span><span class="info-val">${user.role === 'admin' ? 'Administrador' : 'Estudante'}</span></li>
+                                        <li><span class="info-key">Plano atual</span><span class="info-val">${this.getPlanText(user.plan)}</span></li>
+                                    </ul>
                                 </div>
                             </div>
                         </div>
@@ -613,47 +707,92 @@ class MainApp {
     }
 
     addProfileEvents() {
-        document.getElementById('edit-profile-btn')?.addEventListener('click', () => {
-            this.showEditProfileForm();
+        // Primary edit button
+        document.getElementById('edit-profile-btn')?.addEventListener('click', () => this.showEditProfileForm());
+        // Secondary actions
+        document.getElementById('btn-edit-profile')?.addEventListener('click', () => this.showEditProfileForm());
+        document.getElementById('btn-change-password')?.addEventListener('click', () => ui.openModal('change-password'));
+        document.getElementById('btn-manage-plan')?.addEventListener('click', () => ui.openRoute ? ui.openRoute('subscription') : router.navigateTo('subscription'));
+        document.getElementById('btn-logout')?.addEventListener('click', () => {
+            auth.logout();
+            ui.showAlert('Você saiu da conta', 'info');
+            this.renderDashboard();
         });
 
-        document.getElementById('change-avatar-btn')?.addEventListener('click', () => {
-            ui.showAlert('Funcionalidade de alterar avatar em desenvolvimento', 'info');
+        // Avatar edit overlay + file input
+        const avatarOverlay = document.getElementById('avatar-edit-overlay');
+        const avatarInput = document.getElementById('avatar-file-input');
+        const avatarImg = document.getElementById('profile-avatar-img');
+
+        avatarOverlay?.addEventListener('click', () => avatarInput?.click());
+        avatarInput?.addEventListener('change', (e) => {
+            const file = e.target.files && e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(ev) {
+                const dataUrl = ev.target.result;
+                if (avatarImg) avatarImg.src = dataUrl;
+                const user = auth.getCurrentUser();
+                if (user) {
+                    try { auth.updateUserProfile({ avatar: dataUrl }); } catch (err) { /* noop if not available */ }
+                    ui.showAlert('Foto de perfil atualizada', 'success');
+                }
+            };
+            reader.readAsDataURL(file);
         });
     }
 
     showEditProfileForm() {
         const user = auth.getCurrentUser();
         if (!user) return;
-
         const modal = document.createElement('div');
         modal.className = 'modal';
         modal.innerHTML = `
-            <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-content profile-modal">
                 <div class="modal-header">
                     <h2>Editar Perfil</h2>
                     <button class="modal-close">&times;</button>
                 </div>
                 <div class="modal-body">
-                    <form id="edit-profile-form">
-                        <div class="form-group">
-                            <label for="edit-name">Nome Completo</label>
-                            <input type="text" id="edit-name" value="${user.name}" required>
+                    <form id="edit-profile-form" class="modal-form">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="edit-name">Nome completo</label>
+                                <input type="text" id="edit-name" value="${user.name}" required>
+                            </div>
                         </div>
-                        
-                        <div class="form-group">
-                            <label for="edit-email">E-mail</label>
-                            <input type="email" id="edit-email" value="${user.email}" required>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="edit-email">E‑mail</label>
+                                <input type="email" id="edit-email" value="${user.email}" required>
+                            </div>
                         </div>
-                        
-                        <div class="form-group">
-                            <label for="edit-avatar">URL do Avatar</label>
-                            <input type="text" id="edit-avatar" value="${user.avatar}" placeholder="URL da imagem">
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="edit-password">Nova senha (opcional)</label>
+                                <div class="input-with-icon">
+                                    <input type="password" id="edit-password" placeholder="Deixe em branco para manter a senha">
+                                    <button type="button" class="toggle-password" data-target="edit-password"><i class="fas fa-eye"></i></button>
+                                </div>
+                            </div>
                         </div>
-                        
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="edit-password-confirm">Confirmar senha</label>
+                                <div class="input-with-icon">
+                                    <input type="password" id="edit-password-confirm" placeholder="Digite novamente">
+                                    <button type="button" class="toggle-password" data-target="edit-password-confirm"><i class="fas fa-eye"></i></button>
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="modal-actions">
-                            <button type="button" class="btn btn-outline modal-close">Cancelar</button>
-                            <button type="submit" class="btn btn-primary">Salvar Alterações</button>
+                            <div class="actions-right">
+                                <button type="submit" class="btn btn-primary">Salvar alterações</button>
+                            </div>
                         </div>
                     </form>
                 </div>
@@ -661,28 +800,45 @@ class MainApp {
         `;
 
         document.body.appendChild(modal);
-        
-        modal.querySelector('.modal-close').addEventListener('click', () => {
-            modal.remove();
-        });
-        
-        modal.addEventListener('click', (e) => {
-            if (e.target === modal) {
-                modal.remove();
-            }
+
+        // close handlers
+        modal.querySelectorAll('.modal-close').forEach(btn => btn.addEventListener('click', () => modal.remove()));
+        modal.addEventListener('click', (e) => { if (e.target === modal) modal.remove(); });
+
+        // password toggle
+        modal.querySelectorAll('.toggle-password').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const targetId = btn.dataset.target;
+                const input = modal.querySelector(`#${targetId}`);
+                if (!input) return;
+                if (input.type === 'password') { input.type = 'text'; btn.querySelector('i').classList.replace('fa-eye', 'fa-eye-slash'); }
+                else { input.type = 'password'; btn.querySelector('i').classList.replace('fa-eye-slash', 'fa-eye'); }
+            });
         });
 
         const form = modal.querySelector('#edit-profile-form');
         form.addEventListener('submit', (e) => {
             e.preventDefault();
-            
-            const name = modal.querySelector('#edit-name').value;
-            const email = modal.querySelector('#edit-email').value;
-            const avatar = modal.querySelector('#edit-avatar').value;
-            
-            auth.updateUserProfile({ name, email, avatar });
-            ui.showAlert('Perfil atualizado com sucesso!', 'success');
-            modal.remove();
+            const name = modal.querySelector('#edit-name').value.trim();
+            const email = modal.querySelector('#edit-email').value.trim();
+            const password = modal.querySelector('#edit-password').value;
+            const confirm = modal.querySelector('#edit-password-confirm').value;
+
+            if (!name || !email) { ui.showAlert('Nome e e‑mail são obrigatórios', 'warning'); return; }
+            if (password && password !== confirm) { ui.showAlert('As senhas não coincidem', 'warning'); return; }
+
+            const payload = { name, email };
+            if (password) payload.password = password;
+
+            try {
+                auth.updateUserProfile(payload);
+                ui.showAlert('Perfil atualizado com sucesso!', 'success');
+                modal.remove();
+                // re-render profile to reflect changes
+                this.renderProfile();
+            } catch (err) {
+                ui.showAlert('Não foi possível atualizar o perfil', 'danger');
+            }
         });
     }
 
@@ -692,79 +848,110 @@ class MainApp {
 
         content.innerHTML = `
             <div class="subscription-page">
-                <div class="subscription-header mb-8">
-                    <h1 class="text-3xl font-bold">Minha Assinatura</h1>
-                    <p class="text-gray mt-2">Gerencie seu plano de assinatura</p>
+                <div class="subscription-header mb-6">
+                    <div class="container">
+                        <h1 class="text-3xl font-bold">Minha Assinatura</h1>
+                        <p class="text-gray mt-2">Gerencie seu plano de assinatura</p>
+                    </div>
                 </div>
-                
+
                 ${user ? `
-                    <div class="subscription-content">
-                        <div class="current-plan mb-8">
-                            <div class="section-header mb-4">
-                                <h2 class="text-xl font-bold">Plano Atual</h2>
-                                <span class="text-accent font-bold">${this.getPlanText(user.plan)}</span>
-                            </div>
-                            <div class="current-plan-details p-6 bg-white rounded-lg shadow">
-                                <div class="flex items-center justify-between mb-4">
+                    <div class="subscription-content container">
+                        <div class="subscription-grid" style="display:flex;gap:1.25rem;align-items:flex-start;flex-wrap:wrap;">
+                            <div class="plan-card">
+                                <div class="plan-card-head">
                                     <div>
-                                        <h3 class="text-xl font-bold">Plano ${this.getPlanText(user.plan)}</h3>
-                                        <p class="text-gray">Válido até ${new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString('pt-BR')}</p>
+                                        <h3 class="text-xl font-bold">${this.getPlanText(user.plan)}</h3>
+                                        <div class="text-gray text-sm" style="margin-top:4px;">Plano Ativo <span class="badge badge-accent" style="margin-left:8px;">Plano Ativo</span></div>
                                     </div>
-                                    <div class="text-right">
-                                        <div class="text-2xl font-bold">R$ ${CONFIG.PLANS[user.plan.toUpperCase()]?.price || 0}</div>
-                                        <p class="text-gray">por mês</p>
+                                    <div class="plan-price">
+                                        <div class="plan-price-amount">R$ ${CONFIG.PLANS[user.plan.toUpperCase()]?.price || 0}</div>
+                                        <div class="plan-price-period">por mês</div>
                                     </div>
                                 </div>
-                                ${user.status === 'active' ? `
-                                    <button class="btn btn-danger" id="cancel-subscription-btn">
-                                        <i class="fas fa-ban mr-2"></i> Cancelar Assinatura
-                                    </button>
-                                ` : `
-                                    <button class="btn btn-primary" data-route="payment">
-                                        <i class="fas fa-credit-card mr-2"></i> Ativar Assinatura
-                                    </button>
-                                `}
+                                <div class="plan-validity">
+                                    <i class="fas fa-calendar-alt"></i>
+                                    <div class="plan-validity-text">Válido até <strong class="plan-validity-date">${user.renewalDate ? new Date(user.renewalDate).toLocaleDateString('pt-BR') : new Date(Date.now() + 30*24*60*60*1000).toLocaleDateString('pt-BR')}</strong></div>
+                                </div>
+
+                                <div class="plan-actions">
+                                    <div class="plan-actions-row">
+                                        <button class="btn btn-danger" id="cancel-subscription-btn"><i class="fas fa-ban mr-2"></i>Cancelar Assinatura</button>
+                                    </div>
+                                    <div class="plan-actions-note">Você continuará com acesso até o final do período vigente.</div>
+                                </div>
                             </div>
-                        </div>
-                        
-                        <div class="payment-history">
-                            <h3 class="text-xl font-bold mb-4">Histórico de Pagamentos</h3>
-                            <div class="admin-table-container">
-                                <table class="admin-table">
-                                    <thead>
-                                        <tr>
-                                            <th>Data</th>
-                                            <th>Valor</th>
-                                            <th>Plano</th>
-                                            <th>Status</th>
-                                            <th>Ações</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr>
-                                            <td>${new Date().toLocaleDateString('pt-BR')}</td>
-                                            <td>R$ ${CONFIG.PLANS[user.plan.toUpperCase()]?.price || 0}</td>
-                                            <td>${this.getPlanText(user.plan)}</td>
-                                            <td><span class="badge badge-accent">${user.status === 'active' ? 'Ativo' : 'Pendente'}</span></td>
-                                            <td>
-                                                ${user.status === 'active' ? `
-                                                    <button class="btn btn-sm btn-outline">Comprovante</button>
-                                                ` : ''}
-                                            </td>
-                                        </tr>
-                                    </tbody>
-                                </table>
+
+                            <div class="payments-column" style="flex:1;min-width:320px;">
+                                <div class="payment-history bg-white rounded-lg shadow p-4">
+                                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                                        <h3 class="text-lg font-bold">Histórico de Pagamentos</h3>
+                                    </div>
+                                    <div class="admin-table-container">
+                                        ${database.getPaymentsForUser ? `
+                                            ${(() => {
+                                                const payments = database.getPaymentsForUser(user.id) || [];
+                                                if (payments.length === 0) return `
+                                                    <div class="empty-payments text-gray">Nenhum pagamento encontrado.</div>
+                                                `;
+                                                return `
+                                                    <table class="admin-table payments-table">
+                                                        <thead>
+                                                            <tr>
+                                                                <th>Data</th>
+                                                                <th>Valor</th>
+                                                                <th>Plano</th>
+                                                                <th>Status</th>
+                                                                <th>Ações</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            ${payments.map(p => `
+                                                                <tr>
+                                                                    <td>${new Date(p.date).toLocaleDateString('pt-BR')}</td>
+                                                                    <td>R$ ${p.amount.toFixed(2)}</td>
+                                                                    <td>${p.planName}</td>
+                                                                    <td><span class="badge ${p.status === 'paid' ? 'badge-accent' : 'badge-warning'}">${p.status === 'paid' ? 'Pago' : p.status}</span></td>
+                                                                    <td>${p.receiptUrl ? `<button class="btn btn-sm btn-outline btn-receipt" data-url="${p.receiptUrl}"><i class="fas fa-file-alt mr-1"></i>Comprovante</button>` : ''}</td>
+                                                                </tr>
+                                                            `).join('')}
+                                                        </tbody>
+                                                    </table>
+                                                `;
+                                            })()}
+                                        ` : `
+                                            <table class="admin-table payments-table">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Data</th>
+                                                        <th>Valor</th>
+                                                        <th>Plano</th>
+                                                        <th>Status</th>
+                                                        <th>Ações</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <tr>
+                                                        <td>${new Date().toLocaleDateString('pt-BR')}</td>
+                                                        <td>R$ ${CONFIG.PLANS[user.plan.toUpperCase()]?.price || 0}</td>
+                                                        <td>${this.getPlanText(user.plan)}</td>
+                                                        <td><span class="badge badge-accent">${user.status === 'active' ? 'Pago' : 'Pendente'}</span></td>
+                                                        <td>${user.status === 'active' ? `<button class="btn btn-sm btn-outline btn-receipt"><i class="fas fa-file-alt mr-1"></i>Comprovante</button>` : ''}</td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        `}
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
                 ` : `
-                    <div class="empty-state">
+                    <div class="empty-state container">
                         <i class="fas fa-sign-in-alt text-gray mb-4"></i>
                         <h3 class="text-xl font-bold mb-2">Faça login para ver sua assinatura</h3>
                         <p class="text-gray mb-6">Acesse sua conta para gerenciar seu plano de assinatura.</p>
-                        <button class="btn btn-primary" onclick="ui.openModal('login-screen')">
-                            Fazer Login
-                        </button>
+                        <button class="btn btn-primary" onclick="ui.openModal('login-screen')">Fazer Login</button>
                     </div>
                 `}
             </div>
@@ -774,12 +961,53 @@ class MainApp {
     }
 
     addSubscriptionEvents() {
+        // Cancel subscription -> open confirmation modal
         document.getElementById('cancel-subscription-btn')?.addEventListener('click', () => {
-            if (confirm('Tem certeza que deseja cancelar sua assinatura?')) {
-                ui.showAlert('Assinatura cancelada com sucesso!', 'success');
-            }
+            const modal = document.createElement('div');
+            modal.className = 'modal admin-user-modal';
+            modal.innerHTML = `
+                <div class="modal-content" style="max-width:520px;">
+                    <div class="modal-header">
+                        <h2>Cancelar Assinatura</h2>
+                        <button class="modal-close">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="modal-text-content">
+                            <h3>Tem certeza que deseja cancelar sua assinatura?</h3>
+                            <p>O cancelamento não remove o acesso imediatamente. Você continuará com acesso até a data final do seu plano.</p>
+                        </div>
+                        <div class="modal-actions">
+                            <button type="button" class="btn btn-outline modal-close">Voltar</button>
+                            <button type="button" class="btn btn-danger" id="confirm-cancel-subscription"><i class="fas fa-ban mr-2"></i> Confirmar Cancelamento</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+            modal.querySelectorAll('.modal-close').forEach(b => b.addEventListener('click', () => modal.remove()));
+            modal.addEventListener('click', (e) => { if (e.target === modal) modal.remove(); });
+
+            modal.querySelector('#confirm-cancel-subscription')?.addEventListener('click', () => {
+                // Keep business logic unchanged: show alert and close modal
+                ui.showAlert('Assinatura cancelada. Você manterá acesso até o fim do período vigente.', 'success');
+                modal.remove();
+            });
         });
 
+        // Alterar plano
+        document.getElementById('change-plan-btn')?.addEventListener('click', () => {
+            if (router && router.navigateTo) router.navigateTo('subscription');
+        });
+
+        // Receipt buttons
+        document.querySelectorAll('.btn-receipt').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const url = e.currentTarget.dataset.url;
+                if (url) window.open(url, '_blank'); else ui.showAlert('Comprovante indisponível', 'warning');
+            });
+        });
+
+        // data-route navigation
         document.querySelectorAll('[data-route]').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 e.preventDefault();
@@ -970,33 +1198,6 @@ class MainApp {
                                     <div class="toggle-switch">
                                         <input type="checkbox" id="2fa-toggle" ${user.preferences?.twoFactor ? 'checked' : ''}>
                                     </div>
-                                </div>
-                            </div>
-
-                            <div class="settings-card">
-                                <h3 class="text-lg font-bold mb-3">Aparência</h3>
-                                <div class="theme-options">
-                                    <button class="theme-option ${ui.currentTheme === 'light' ? 'active' : ''}" data-theme="light">
-                                        <div class="swatch light"></div>
-                                        <div class="label">
-                                            <span>Claro</span>
-                                            <small>Visual claro e luminoso</small>
-                                        </div>
-                                    </button>
-                                    <button class="theme-option ${ui.currentTheme === 'dark' ? 'active' : ''}" data-theme="dark">
-                                        <div class="swatch dark"></div>
-                                        <div class="label">
-                                            <span>Escuro</span>
-                                            <small>Ótimo para ambientes com pouca luz</small>
-                                        </div>
-                                    </button>
-                                    <button class="theme-option ${ui.currentTheme === 'auto' ? 'active' : ''}" data-theme="auto">
-                                        <div class="swatch auto"></div>
-                                        <div class="label">
-                                            <span>Automático</span>
-                                            <small>Seleciona conforme o sistema</small>
-                                        </div>
-                                    </button>
                                 </div>
                             </div>
 
