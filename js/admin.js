@@ -2,6 +2,8 @@
 class AdminSystem {
     constructor() {
         this.init();
+        this._lessonAddHandlerAttached = false;
+        this._lessonActionDelegated = false;
     }
 
     init() {
@@ -1070,36 +1072,251 @@ class AdminSystem {
         });
     }
 
-    addLessonManagementListeners() {
-        document.getElementById('add-lesson-btn')?.addEventListener('click', () => {
-            this.showLessonForm();
+    renderAdminLessons() {
+        if (!auth.isAdmin()) { router.navigateTo('painel-do-aluno'); return; }
+
+        const content = document.getElementById('painel-do-aluno-content');
+        const courses = database.getAllCourses();
+
+        content.innerHTML = `
+            <div class="admin-lessons">
+                <div class="settings-header-hero">
+                    <div style="font-size:28px; color:var(--primary-color);"><i class="fas fa-video"></i></div>
+                    <div>
+                        <div class="settings-hero-title">Gerenciar Aulas</div>
+                        <div class="settings-hero-sub">Visualize cursos e gerencie as aulas sem trocar de página.</div>
+                    </div>
+                </div>
+
+                <div class="admin-lessons-grid container">
+                    <aside class="courses-list">
+                        ${courses.map(c => `
+                            <div class="course-card-admin" data-course-id="${c.id}">
+                                <div class="course-card-title">${c.title}</div>
+                                <div class="course-card-meta">${database.getLessonsByCourseId(c.id).length} aulas</div>
+                                <div class="course-card-action"><i class="fas fa-chevron-right"></i></div>
+                            </div>
+                        `).join('')}
+                    </aside>
+
+                    <section class="lessons-drawer" data-course-id="" aria-hidden="true">
+                        <div class="drawer-inner">
+                            <div class="drawer-header">
+                                <div class="drawer-title">Selecione um curso</div>
+                                <div class="drawer-actions">
+                                    <button class="btn btn-outline" id="drawer-close"><i class="fas fa-times"></i></button>
+                                </div>
+                            </div>
+
+                            <div class="drawer-body">
+                                <div class="drawer-toolbar">
+                                    <button class="btn btn-primary" id="add-lesson-btn"><i class="fas fa-plus"></i> Criar Aula</button>
+                                    <div class="drawer-order-hint text-gray">Arraste para reordenar ou use as setas</div>
+                                </div>
+
+                                <ul class="lessons-list" id="lessons-list">
+                                    <!-- aulas carregadas aqui -->
+                                </ul>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+            </div>
+        `;
+
+        // wire up course click and maintain courses-list reference
+        const coursesListEl = document.querySelector('.courses-list');
+        if (coursesListEl) coursesListEl.classList.remove('compact');
+
+        document.querySelectorAll('.course-card-admin').forEach(card => {
+            card.addEventListener('click', (e) => {
+                const id = parseInt(card.dataset.courseId);
+                this.openCourseDrawer(id);
+            });
         });
 
-        document.querySelectorAll('[data-action]').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const action = e.currentTarget.dataset.action;
-                const id = parseInt(e.currentTarget.dataset.id);
-                
-                switch(action) {
-                    case 'edit-lesson':
-                        this.editLesson(id);
-                        break;
-                    case 'view-lesson':
-                        this.viewLesson(id);
-                        break;
-                    case 'delete-lesson':
-                        this.deleteLesson(id);
-                        break;
-                }
-            });
+        document.getElementById('drawer-close')?.addEventListener('click', () => {
+            const drawer = document.querySelector('.lessons-drawer');
+            drawer.classList.remove('visible');
+            drawer.setAttribute('aria-hidden', 'true');
+            // restore courses list size
+            const cl = document.querySelector('.courses-list');
+            if (cl) cl.classList.remove('compact');
+            const adminRoot = document.querySelector('.admin-lessons');
+            if (adminRoot) adminRoot.classList.remove('drawer-open');
+            document.body.classList.remove('dragging-mode');
         });
     }
 
-    showLessonForm(lesson = null) {
+    openCourseDrawer(courseId) {
+        const course = database.getCourseById(courseId);
+        if (!course) return;
+
+        const drawer = document.querySelector('.lessons-drawer');
+        drawer.dataset.courseId = courseId;
+        drawer.querySelector('.drawer-title').textContent = course.title;
+        drawer.classList.add('visible');
+        drawer.setAttribute('aria-hidden', 'false');
+
+        const adminRoot = document.querySelector('.admin-lessons');
+        if (adminRoot) adminRoot.classList.add('drawer-open');
+
+        // compact course cards to keep layout organized
+        const cl = document.querySelector('.courses-list');
+        if (cl) cl.classList.add('compact');
+
+        const lessons = database.getLessonsByCourseId(courseId);
+        const list = drawer.querySelector('#lessons-list');
+        list.innerHTML = lessons.map(lesson => `
+            <li class="lesson-item" draggable="true" data-lesson-id="${lesson.id}">
+                <div class="lesson-handle" aria-hidden="true"><i class="fas fa-grip-vertical"></i></div>
+                <div class="lesson-info">
+                    <div class="lesson-title">${lesson.order}. ${lesson.title}</div>
+                    <div class="lesson-meta text-gray">${lesson.duration || '-'} min • ${lesson.videoUrl ? 'Vídeo' : 'Link / Ao vivo'}</div>
+                </div>
+                <div class="lesson-actions">
+                    <button class="btn btn-sm btn-outline" data-action="edit-lesson" data-id="${lesson.id}"><i class="fas fa-edit"></i></button>
+                    <button class="btn btn-sm btn-danger" data-action="delete-lesson" data-id="${lesson.id}"><i class="fas fa-trash"></i></button>
+                </div>
+            </li>
+        `).join('');
+
+        // improved drag & drop: allow reorder within same list, visual feedback, persist on drop
+        let dragged = null;
+
+        const onDragStart = (e) => {
+            dragged = e.currentTarget;
+            e.dataTransfer.effectAllowed = 'move';
+            try { e.dataTransfer.setData('text/plain', dragged.dataset.lessonId); } catch (err) {}
+            dragged.classList.add('dragging');
+            document.body.classList.add('dragging-mode');
+        };
+
+        const onDragEnd = (e) => {
+            if (dragged) dragged.classList.remove('dragging');
+            dragged = null;
+            document.body.classList.remove('dragging-mode');
+        };
+
+        const getDragAfterElement = (container, y) => {
+            const draggableElements = [...container.querySelectorAll('.lesson-item:not(.dragging)')];
+            return draggableElements.reduce((closest, child) => {
+                const box = child.getBoundingClientRect();
+                const offset = y - box.top - box.height / 2;
+                if (offset < 0 && offset > closest.offset) {
+                    return { offset: offset, element: child };
+                } else {
+                    return closest;
+                }
+            }, { offset: Number.NEGATIVE_INFINITY }).element;
+        };
+
+        list.querySelectorAll('.lesson-item').forEach(item => {
+            item.addEventListener('dragstart', onDragStart);
+            item.addEventListener('dragend', onDragEnd);
+            item.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                const afterElement = getDragAfterElement(list, e.clientY);
+                if (!afterElement) {
+                    list.appendChild(dragged);
+                } else {
+                    list.insertBefore(dragged, afterElement);
+                }
+            });
+        });
+
+        // Persist order on drop (listen on list)
+        list.addEventListener('drop', (e) => {
+            e.preventDefault();
+            // recompute order based on DOM
+            const ids = Array.from(list.querySelectorAll('.lesson-item')).map(li => parseInt(li.dataset.lessonId));
+            ids.forEach((lid, idx) => {
+                const l = database.getLessonById(lid);
+                if (l) l.order = idx + 1;
+            });
+            database.saveDatabase();
+            // re-render to normalize display numbers
+            this.openCourseDrawer(courseId);
+        });
+
+        // attach action handlers (edit/delete/create)
+        this.addLessonManagementListeners();
+
+        // (add button handled via single delegated handler in addLessonManagementListeners)
+    }
+
+    showDeleteLessonModal(lesson) {
         const modal = document.createElement('div');
         modal.className = 'modal';
         modal.innerHTML = `
-            <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-content" style="max-width:520px;">
+                <div class="modal-header">
+                    <h2>Excluir Aula</h2>
+                    <button class="modal-close">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="modal-text-content">
+                        <h3>Deseja realmente excluir esta aula?</h3>
+                        <p>"${lesson.title}"</p>
+                    </div>
+                    <div class="modal-actions">
+                        <button type="button" class="btn btn-outline modal-close">Cancelar</button>
+                        <button type="button" class="btn btn-danger" id="confirm-delete-lesson"><i class="fas fa-trash-alt"></i> Excluir</button>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(modal);
+        modal.querySelectorAll('.modal-close').forEach(btn => btn.addEventListener('click', () => modal.remove()));
+        modal.addEventListener('click', (e) => { if (e.target === modal) modal.remove(); });
+
+        modal.querySelector('#confirm-delete-lesson').addEventListener('click', () => {
+            database.data.lessons = database.data.lessons.filter(l => l.id !== lesson.id);
+            database.saveDatabase();
+            ui.showAlert('Aula excluída com sucesso!', 'success');
+            modal.remove();
+            // refresh drawer
+            const currentCourseId = parseInt(document.querySelector('.lessons-drawer').dataset.courseId);
+            if (currentCourseId) this.openCourseDrawer(currentCourseId);
+        });
+    }
+
+    addLessonManagementListeners() {
+        // Attach add-lesson handler only once to avoid duplicate modals
+        const addBtn = document.getElementById('add-lesson-btn');
+        if (addBtn && !this._lessonAddHandlerAttached) {
+            addBtn.addEventListener('click', () => {
+                const currentCourseId = document.querySelector('.lessons-drawer')?.dataset.courseId;
+                this.showLessonForm(null, currentCourseId ? parseInt(currentCourseId) : null);
+            });
+            this._lessonAddHandlerAttached = true;
+        }
+
+        // Delegate lesson action buttons to the drawer container (attach once)
+        const drawer = document.querySelector('.lessons-drawer');
+        if (drawer && !this._lessonActionDelegated) {
+            drawer.addEventListener('click', (e) => {
+                if (document.body.classList.contains('dragging-mode')) return;
+                const btn = e.target.closest('[data-action]');
+                if (!btn) return;
+                const action = btn.dataset.action;
+                const id = parseInt(btn.dataset.id);
+                switch(action) {
+                    case 'edit-lesson': this.editLesson(id); break;
+                    case 'view-lesson': this.viewLesson(id); break;
+                    case 'delete-lesson': this.deleteLesson(id); break;
+                }
+            });
+            this._lessonActionDelegated = true;
+        }
+    }
+
+    showLessonForm(lesson = null, preselectCourseId = null) {
+        const modal = document.createElement('div');
+        modal.className = 'modal';
+        modal.innerHTML = `
+            <div class="modal-content">
                 <div class="modal-header">
                     <h2>${lesson ? 'Editar Aula' : 'Adicionar Nova Aula'}</h2>
                     <button class="modal-close">&times;</button>
@@ -1107,7 +1324,7 @@ class AdminSystem {
                 <div class="modal-body">
                     <form id="lesson-form">
                         <div class="form-group">
-                            <label for="lesson-course">Curso *</label>
+                            <label for="lesson-course">Nome do Curso *</label>
                             <select id="lesson-course" required>
                                 <option value="">Selecione um curso</option>
                                 ${database.getAllCourses().map(course => `
@@ -1115,33 +1332,50 @@ class AdminSystem {
                                 `).join('')}
                             </select>
                         </div>
-                        
+
                         <div class="form-group">
-                            <label for="lesson-title">Título *</label>
+                            <label for="lesson-title">Nome da Aula *</label>
                             <input type="text" id="lesson-title" value="${lesson?.title || ''}" required>
                         </div>
-                        
+
                         <div class="form-group">
                             <label for="lesson-description">Descrição</label>
                             <textarea id="lesson-description" rows="3">${lesson?.description || ''}</textarea>
                         </div>
-                        
+
                         <div class="form-row">
                             <div class="form-group">
-                                <label for="lesson-duration">Duração (minutos) *</label>
-                                <input type="number" id="lesson-duration" value="${lesson?.duration || ''}" required>
+                                <label for="lesson-duration">Duração (min)</label>
+                                <input type="number" id="lesson-duration" value="${lesson?.duration || ''}">
                             </div>
                             <div class="form-group">
-                                <label for="lesson-order">Ordem *</label>
-                                <input type="number" id="lesson-order" value="${lesson?.order || ''}" required>
+                                <label for="lesson-order">Ordem</label>
+                                <input type="number" id="lesson-order" value="${lesson?.order || ''}">
                             </div>
                         </div>
-                        
+
                         <div class="form-group">
-                            <label for="lesson-video">URL do Vídeo</label>
-                            <input type="text" id="lesson-video" value="${lesson?.videoUrl || ''}" placeholder="https://www.youtube.com/embed/...">
+                            <label for="lesson-type">Tipo da Aula *</label>
+                            <select id="lesson-type" required>
+                                <option value="video" ${lesson && (lesson.videoUrl) ? 'selected' : ''}>Vídeo gravado</option>
+                                <option value="link" ${lesson && (lesson.link) ? 'selected' : ''}>Link externo</option>
+                                <option value="live" ${lesson && (lesson.liveUrl) ? 'selected' : ''}>Aula ao vivo</option>
+                            </select>
                         </div>
-                        
+
+                        <div class="form-group" id="field-url-group">
+                            <label for="lesson-url">URL (obrigatório para Link/Ao vivo)</label>
+                            <input type="text" id="lesson-url" value="${(lesson && (lesson.link || lesson.liveUrl || lesson.videoUrl)) || ''}" placeholder="https://">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="lesson-status">Status</label>
+                            <select id="lesson-status">
+                                <option value="active" ${lesson && lesson.status === 'active' ? 'selected' : ''}>Ativa</option>
+                                <option value="inactive" ${lesson && lesson.status === 'inactive' ? 'selected' : ''}>Inativa</option>
+                            </select>
+                        </div>
+
                         <div class="modal-actions">
                             <button type="button" class="btn btn-outline modal-close">Cancelar</button>
                             <button type="submit" class="btn btn-primary">${lesson ? 'Atualizar' : 'Salvar'}</button>
@@ -1152,24 +1386,97 @@ class AdminSystem {
         `;
 
         document.body.appendChild(modal);
-        
-        modal.querySelector('.modal-close').addEventListener('click', () => {
+
+        const closeModal = () => {
             modal.remove();
-        });
-        
-        modal.addEventListener('click', (e) => {
-            if (e.target === modal) {
-                modal.remove();
+            document.body.classList.remove('modal-open');
+        };
+
+        modal.querySelectorAll('.modal-close').forEach(btn => btn.addEventListener('click', closeModal));
+        modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+
+        const form = modal.querySelector('#lesson-form');
+        const typeField = modal.querySelector('#lesson-type');
+        const urlGroup = modal.querySelector('#field-url-group');
+        const urlInput = modal.querySelector('#lesson-url');
+
+        const syncUrlVisibility = () => {
+            const t = typeField.value;
+            if (t === 'video') {
+                urlGroup.querySelector('label').textContent = 'URL do Vídeo (opcional)';
+                urlInput.placeholder = 'https://www.youtube.com/embed/... (opcional)';
+            } else {
+                urlGroup.querySelector('label').textContent = 'URL (obrigatório para Link/Ao vivo)';
+                urlInput.placeholder = 'https://';
+            }
+        };
+
+        typeField.addEventListener('change', syncUrlVisibility);
+        syncUrlVisibility();
+
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+
+            const courseId = parseInt(modal.querySelector('#lesson-course').value);
+            const title = modal.querySelector('#lesson-title').value.trim();
+            const description = modal.querySelector('#lesson-description').value.trim();
+            const duration = parseInt(modal.querySelector('#lesson-duration').value) || 0;
+            const order = parseInt(modal.querySelector('#lesson-order').value) || 1;
+            const type = typeField.value;
+            const url = urlInput.value.trim();
+            const status = modal.querySelector('#lesson-status').value || 'active';
+
+            if (!courseId) { ui.showAlert('Selecione o curso', 'warning'); return; }
+            if (!title) { ui.showAlert('Preencha o nome da aula', 'warning'); return; }
+            if ((type === 'link' || type === 'live') && !url) { ui.showAlert('URL é obrigatória para o tipo selecionado', 'warning'); return; }
+
+            if (lesson) {
+                const l = database.getLessonById(lesson.id);
+                if (l) {
+                    l.courseId = courseId;
+                    l.title = title;
+                    l.description = description;
+                    l.duration = duration;
+                    l.order = order;
+                    if (type === 'video') l.videoUrl = url || l.videoUrl;
+                    if (type === 'link') l.link = url;
+                    if (type === 'live') l.liveUrl = url;
+                    l.status = status;
+                    database.saveDatabase();
+                    ui.showAlert('Aula atualizada com sucesso!', 'success');
+                }
+            } else {
+                const newId = database.data.lessons.length > 0 ? Math.max(...database.data.lessons.map(x => x.id)) + 1 : 1;
+                const newLesson = { id: newId, courseId, title, description, duration, order, status };
+                if (type === 'video') newLesson.videoUrl = url || '';
+                if (type === 'link') newLesson.link = url;
+                if (type === 'live') newLesson.liveUrl = url;
+                database.data.lessons.push(newLesson);
+                database.saveDatabase();
+                ui.showAlert('Aula criada com sucesso!', 'success');
+            }
+
+            closeModal();
+            if (document.querySelector('.lessons-drawer.visible')) {
+                const currentCourseId = parseInt(document.querySelector('.lessons-drawer').dataset.courseId);
+                if (currentCourseId) this.openCourseDrawer(currentCourseId);
             }
         });
 
-        const form = modal.querySelector('#lesson-form');
-        form.addEventListener('submit', (e) => {
-            e.preventDefault();
-            
-            ui.showAlert(lesson ? 'Aula atualizada com sucesso!' : 'Aula criada com sucesso!', 'success');
-            modal.remove();
-        });
+        // disable background scroll while modal is open
+        document.body.classList.add('modal-open');
+
+        // focus first input and set preselect course if provided
+        setTimeout(() => {
+            const first = modal.querySelector('#lesson-title') || modal.querySelector('#lesson-course');
+            if (first) first.focus();
+            if (preselectCourseId) {
+                const sel = modal.querySelector('#lesson-course'); if (sel) sel.value = preselectCourseId;
+            } else {
+                const currentCourse = document.querySelector('.lessons-drawer')?.dataset.courseId;
+                if (currentCourse) { const sel = modal.querySelector('#lesson-course'); if (sel) sel.value = currentCourse; }
+            }
+        }, 60);
     }
 
     editLesson(id) {
@@ -1184,9 +1491,9 @@ class AdminSystem {
     }
 
     deleteLesson(id) {
-        if (confirm('Tem certeza que deseja excluir esta aula?')) {
-            ui.showAlert('Aula excluída com sucesso!', 'success');
-        }
+        const lesson = database.getLessonById(id);
+        if (!lesson) return;
+        this.showDeleteLessonModal(lesson);
     }
 }
 

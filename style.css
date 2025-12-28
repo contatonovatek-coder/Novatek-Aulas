@@ -399,6 +399,62 @@ img {
     box-shadow: none !important;
 }
 
+/* =========================
+   Admin - Gerenciar Aulas
+   ========================= */
+.admin-lessons .section-header { margin-bottom: 1rem; }
+.admin-lessons-grid { display: grid; grid-template-columns: 1fr; gap: 1.5rem; align-items: start; }
+.admin-lessons.drawer-open .admin-lessons-grid { grid-template-columns: 360px 1fr; }
+.courses-list { background: var(--white); border-radius: var(--radius); padding: 0.75rem; box-shadow: var(--shadow); max-height: calc(100vh - 220px); overflow: auto; width:100%; }
+.course-card-admin { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:0.75rem; border-radius:8px; cursor:pointer; border:1px solid var(--gray-light); margin-bottom:0.5rem; transition:var(--transition); }
+.course-card-admin { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:1rem; border-radius:10px; cursor:pointer; border:1px solid var(--gray-light); margin-bottom:0.6rem; transition:var(--transition); }
+.course-card-admin:hover { background: var(--light-color); transform: translateY(-4px); }
+.course-card-title { font-weight:700; font-size:1rem; color:var(--dark-color); }
+.course-card-meta { font-size:0.95rem; color:var(--gray-color); }
+.course-card-action { color:var(--gray-color); }
+
+.lessons-drawer { background: linear-gradient(180deg, var(--white), var(--light-color)); border-radius: var(--radius); box-shadow: var(--shadow-lg); padding: 0.5rem; min-height: 320px; transform: translateX(12px); opacity:0; visibility:hidden; transition:var(--transition); }
+.lessons-drawer.visible { opacity:1; visibility:visible; transform: translateX(0); }
+.drawer-inner { display:flex; flex-direction:column; height:100%; }
+.drawer-header { display:flex; justify-content:space-between; align-items:center; padding:0.5rem 0.75rem; border-bottom:1px solid var(--gray-light); }
+.drawer-title { font-size:1.05rem; font-weight:700; }
+.drawer-body { padding:0.75rem; overflow:auto; }
+.drawer-toolbar { display:flex; align-items:center; gap:12px; margin-bottom:0.75rem; }
+.lessons-list { display:flex; flex-direction:column; gap:0.5rem; }
+.lesson-item { display:flex; align-items:center; gap:12px; padding:0.6rem; border-radius:8px; background:var(--white); border:1px solid var(--gray-light); }
+.lesson-item.dragging { opacity:0.6; }
+.lesson-handle { color:var(--gray-color); padding:6px; }
+.lesson-info { flex:1; }
+.lesson-title { font-weight:600; }
+.lesson-meta { font-size:0.9rem; }
+.lesson-actions { display:flex; gap:8px; }
+
+@media (max-width: 900px) {
+    .admin-lessons-grid { grid-template-columns: 1fr; }
+    .courses-list { max-height: 240px; }
+}
+
+/* Compact state for course cards when drawer open */
+.courses-list.compact .course-card-admin { padding:0.6rem; border-radius:8px; font-size:0.95rem; }
+
+/* Modal form improvements */
+.modal .modal-content { max-width:720px; width:100%; border-radius:12px; overflow:hidden; }
+.modal .modal-content .modal-body { padding:1rem 1.25rem; }
+.modal .form-group { margin-bottom:0.75rem; display:flex; flex-direction:column; }
+.modal .form-group label { font-weight:600; margin-bottom:0.35rem; }
+.modal .form-row { display:flex; gap:0.75rem; }
+.modal input[type="text"], .modal input[type="number"], .modal select, .modal textarea { padding:0.6rem 0.75rem; border:1px solid var(--gray-light); border-radius:8px; font-size:0.98rem; }
+.modal .modal-actions { display:flex; gap:0.75rem; justify-content:flex-end; padding-top:0.75rem; }
+.modal .modal-actions .btn { min-width:110px; }
+
+/* prevent background scroll while modal open */
+.modal-open { overflow: hidden; }
+
+/* Dragging mode - avoid accidental scroll/clicks */
+.dragging-mode { touch-action: none; user-select: none; }
+
+
+
 /* Badges */
 .badge {
     display: inline-block;
