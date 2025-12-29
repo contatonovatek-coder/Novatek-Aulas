@@ -1316,69 +1316,127 @@ class AdminSystem {
         const modal = document.createElement('div');
         modal.className = 'modal';
         modal.innerHTML = `
-            <div class="modal-content profile-modal">
-                <div class="modal-header">
-                    <h2>${lesson ? 'Editar Aula' : 'Adicionar Nova Aula'}</h2>
-                    <button class="modal-close">&times;</button>
+            <div class="modal-content lesson-modal" style="max-width:920px;">
+                <div class="modal-header compact">
+                    <h2 class="modal-title">${lesson ? 'Editar Aula' : 'Adicionar Aula'}</h2>
+                    <button class="modal-close" aria-label="Fechar">&times;</button>
                 </div>
+
                 <div class="modal-body">
-                    <form id="lesson-form">
-                        <div class="form-group">
-                            <label for="lesson-course">Nome do Curso *</label>
-                            <select id="lesson-course" required>
-                                <option value="">Selecione um curso</option>
-                                ${database.getAllCourses().map(course => `
-                                    <option value="${course.id}" ${lesson?.courseId === course.id ? 'selected' : ''}>${course.title}</option>
-                                `).join('')}
-                            </select>
-                        </div>
+                    <form id="lesson-form" class="lesson-form" novalidate>
 
-                        <div class="form-group">
-                            <label for="lesson-title">Nome da Aula *</label>
-                            <input type="text" id="lesson-title" value="${lesson?.title || ''}" required>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="lesson-description">Descrição</label>
-                            <textarea id="lesson-description" rows="3">${lesson?.description || ''}</textarea>
-                        </div>
-
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="lesson-duration">Duração (min)</label>
-                                <input type="number" id="lesson-duration" value="${lesson?.duration || ''}">
+                        <!-- Layout em grade: Informações (esq) + Conteúdo (dir) -->
+                        <div class="lesson-grid">
+                        <!-- Seção 1 — Informações da Aula (simples e estática) -->
+                        <section class="form-section card-section info-section">
+                            <h3 class="section-title">Informações da Aula</h3>
+                            <div class="form-row">
+                                <div class="form-group" style="flex:1;">
+                                    <label for="lesson-course">Nome do Curso</label>
+                                    <select id="lesson-course" ${lesson ? 'disabled' : ''} required>
+                                        <option value="">Selecione um curso</option>
+                                        ${database.getAllCourses().map(course => `
+                                            <option value="${course.id}" ${lesson?.courseId === course.id ? 'selected' : ''}>${course.title}</option>
+                                        `).join('')}
+                                    </select>
+                                </div>
                             </div>
-                            <div class="form-group">
-                                <label for="lesson-order">Ordem</label>
-                                <input type="number" id="lesson-order" value="${lesson?.order || ''}">
+
+                            <div class="form-row">
+                                <div class="form-group" style="flex:2;">
+                                    <label for="lesson-title">Nome da aula *</label>
+                                    <input type="text" id="lesson-title" value="${lesson?.title || ''}" required>
+                                </div>
                             </div>
+
+                            <div class="form-row">
+                                <div class="form-group" style="flex:1;">
+                                    <label for="lesson-description">Descrição</label>
+                                    <textarea id="lesson-description" rows="3">${lesson?.description || ''}</textarea>
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group" style="flex:1;">
+                                    <label for="lesson-duration">Duração (min)</label>
+                                    <input type="number" id="lesson-duration" value="${lesson?.duration || ''}" min="0">
+                                </div>
+                                <div class="form-group" style="width:120px;">
+                                    <label for="lesson-order">Ordem</label>
+                                    <input type="number" id="lesson-order" value="${lesson?.order || ''}" min="1">
+                                </div>
+                                <div style="flex:1;text-align:right;">
+                                    <label for="lesson-status" class="text-muted">Status</label>
+                                    <select id="lesson-status">
+                                        <option value="active" ${lesson && lesson.status === 'active' ? 'selected' : ''}>Ativa</option>
+                                        <option value="inactive" ${lesson && lesson.status === 'inactive' ? 'selected' : ''}>Inativa</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </section>
+
+                        <!-- Seção 2 — Conteúdo da Aula (dinâmico, com scroll interno) -->
+                        <section class="form-section card-section content-section">
+                            <h3 class="section-title">Conteúdo da Aula</h3>
+
+                            <div id="lesson-content-area" class="section-scroll">
+                                <div class="form-row">
+                                    <div class="form-group" style="flex:1;">
+                                        <label for="lesson-type">Tipo da aula</label>
+                                        <select id="lesson-type" required>
+                                            <option value="video" ${lesson && (lesson.videoUrl) ? 'selected' : ''}>Vídeo</option>
+                                            <option value="live" ${lesson && (lesson.liveUrl) ? 'selected' : ''}>Aula ao vivo</option>
+                                            <option value="link" ${lesson && (lesson.link) ? 'selected' : ''}>Link / Material</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div id="block-url" class="form-row conditional-block" style="display:none;">
+                                    <div class="form-group" style="flex:1;">
+                                        <label id="label-url" for="lesson-url">URL do vídeo / link</label>
+                                        <input type="text" id="lesson-url" value="${(lesson && (lesson.link || lesson.liveUrl || lesson.videoUrl)) || ''}" placeholder="https://">
+                                    </div>
+                                </div>
+
+                                <div id="block-files" class="form-row conditional-block" style="display:none; margin-top:8px;">
+                                    <div class="form-group" style="flex:1;">
+                                        <label for="lesson-files">Upload de arquivos (PDF)</label>
+                                        <div class="file-dropzone" id="lesson-dropzone" role="button" tabindex="0">
+                                            <div class="dropzone-inner">
+                                                <i class="fas fa-file-upload" aria-hidden="true" style="font-size:20px;color:var(--primary-color);"></i>
+                                                <div class="dropzone-text">Arraste o arquivo aqui ou <span class="dropzone-browse">clique para selecionar</span></div>
+                                            </div>
+                                        </div>
+                                        <input type="file" id="lesson-files" multiple accept="application/pdf,.pdf" style="display:none;" />
+                                    </div>
+                                </div>
+
+                                <div id="block-links" class="form-row conditional-block" style="display:flex; margin-top:8px;">
+                                    <div style="flex:1;">
+                                        <label for="lesson-resource-name">Adicionar link externo</label>
+                                            <div class="link-row">
+                                                <input type="text" id="lesson-resource-name" class="link-input" placeholder="Nome do link (ex: Sala ao vivo - Google Meet)" />
+                                                <input type="text" id="lesson-resource-url" class="link-input" placeholder="https:// - adicionar link" />
+                                            </div>
+                                            <div class="link-actions">
+                                                <button type="button" class="btn btn-outline" id="add-resource-link">Adicionar link</button>
+                                            </div>
+                                    </div>
+                                </div>
+
+                                <div class="form-row" style="margin-top:10px;">
+                                    <div class="form-group" style="flex:1;">
+                                        <ul id="resources-list" class="resources-list"></ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
                         </div>
 
-                        <div class="form-group">
-                            <label for="lesson-type">Tipo da Aula *</label>
-                            <select id="lesson-type" required>
-                                <option value="video" ${lesson && (lesson.videoUrl) ? 'selected' : ''}>Vídeo gravado</option>
-                                <option value="link" ${lesson && (lesson.link) ? 'selected' : ''}>Link externo</option>
-                                <option value="live" ${lesson && (lesson.liveUrl) ? 'selected' : ''}>Aula ao vivo</option>
-                            </select>
-                        </div>
-
-                        <div class="form-group" id="field-url-group">
-                            <label for="lesson-url">URL (obrigatório para Link/Ao vivo)</label>
-                            <input type="text" id="lesson-url" value="${(lesson && (lesson.link || lesson.liveUrl || lesson.videoUrl)) || ''}" placeholder="https://">
-                        </div>
-
-                        <div class="form-group">
-                            <label for="lesson-status">Status</label>
-                            <select id="lesson-status">
-                                <option value="active" ${lesson && lesson.status === 'active' ? 'selected' : ''}>Ativa</option>
-                                <option value="inactive" ${lesson && lesson.status === 'inactive' ? 'selected' : ''}>Inativa</option>
-                            </select>
-                        </div>
-
-                        <div class="modal-actions">
+                        <!-- Botões de ação fixos no rodapé do modal -->
+                        <div class="modal-actions footer-actions">
                             <button type="button" class="btn btn-outline modal-close">Cancelar</button>
-                            <button type="submit" class="btn btn-primary">${lesson ? 'Atualizar' : 'Salvar'}</button>
+                            <button type="submit" class="btn btn-primary">${lesson ? 'Atualizar Aula' : 'Salvar Aula'}</button>
                         </div>
                     </form>
                 </div>
@@ -1397,22 +1455,143 @@ class AdminSystem {
 
         const form = modal.querySelector('#lesson-form');
         const typeField = modal.querySelector('#lesson-type');
-        const urlGroup = modal.querySelector('#field-url-group');
+        const urlBlock = modal.querySelector('#block-url');
         const urlInput = modal.querySelector('#lesson-url');
+        const filesBlock = modal.querySelector('#block-files');
+        const linksBlock = modal.querySelector('#block-links');
 
-        const syncUrlVisibility = () => {
+        const syncTypeVisibility = () => {
             const t = typeField.value;
+            // reset
+            urlBlock.style.display = 'none';
+            filesBlock.style.display = 'none';
+            linksBlock.style.display = 'none';
+
             if (t === 'video') {
-                urlGroup.querySelector('label').textContent = 'URL do Vídeo (opcional)';
+                urlBlock.style.display = 'flex';
                 urlInput.placeholder = 'https://www.youtube.com/embed/... (opcional)';
-            } else {
-                urlGroup.querySelector('label').textContent = 'URL (obrigatório para Link/Ao vivo)';
-                urlInput.placeholder = 'https://';
+            } else if (t === 'live') {
+                urlBlock.style.display = 'flex';
+                urlInput.placeholder = 'https:// (sala ao vivo)';
+            } else if (t === 'link') {
+                linksBlock.style.display = 'flex';
+                filesBlock.style.display = 'flex';
+                urlInput.placeholder = 'https:// (link do recurso)';
             }
         };
 
-        typeField.addEventListener('change', syncUrlVisibility);
-        syncUrlVisibility();
+        typeField.addEventListener('change', syncTypeVisibility);
+        syncTypeVisibility();
+
+        // Resources handling: initialize state and UI for existing lesson resources
+        const resourcesListEl = modal.querySelector('#resources-list');
+        const filesInputEl = modal.querySelector('#lesson-files');
+        const dropzoneEl = modal.querySelector('#lesson-dropzone');
+        const addResourceLinkBtn = modal.querySelector('#add-resource-link');
+        const resourceUrlInput = modal.querySelector('#lesson-resource-url');
+        const resourceNameInput = modal.querySelector('#lesson-resource-name');
+
+        // state holds objects: { name, url, type }
+        let resourcesState = (lesson && lesson.resources) ? lesson.resources.map(r => {
+            if (typeof r === 'string') return { name: r.split('/').pop(), url: r, type: (r.startsWith('data:') ? 'file' : 'link') };
+            return r;
+        }) : [];
+
+        const renderResources = () => {
+            resourcesListEl.innerHTML = resourcesState.map((r, idx) => `
+                <li class="resource-item" data-idx="${idx}" data-type="${r.type}">
+                    <div class="resource-left">
+                        <i class="fas ${r.type === 'file' ? 'fa-file-pdf' : 'fa-link'} resource-icon"></i>
+                        <a href="${r.url}" target="_blank" rel="noopener noreferrer" class="resource-link">${r.name}</a>
+                    </div>
+                    <div class="resource-right">
+                        <button type="button" class="btn btn-sm btn-outline remove-resource">Remover</button>
+                    </div>
+                </li>
+            `).join('');
+
+            // attach remove handlers with feedback
+            resourcesListEl.querySelectorAll('.remove-resource').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const li = e.currentTarget.closest('li');
+                    const idx = parseInt(li.dataset.idx);
+                    const removed = resourcesState.splice(idx, 1);
+                    renderResources();
+                    ui.showAlert(`Recurso removido: ${removed[0].name}`, 'info');
+                });
+            });
+        };
+
+        renderResources();
+
+        // helper to process File objects array (used by input change and drop)
+        const processFiles = (fileList) => {
+            const files = Array.from(fileList || []);
+            if (!files.length) return;
+            let remaining = files.length;
+            files.forEach(file => {
+                if (resourcesState.some(r => r.type === 'file' && r.name === file.name)) {
+                    ui.showAlert(`Arquivo já adicionado: ${file.name}`, 'warning');
+                    remaining -= 1;
+                    if (remaining === 0) filesInputEl.value = '';
+                    return;
+                }
+
+                const reader = new FileReader();
+                reader.onload = (ev) => {
+                    const dataUrl = ev.target.result;
+                    if (resourcesState.some(r => r.url === dataUrl)) {
+                        ui.showAlert(`Arquivo já adicionado: ${file.name}`, 'warning');
+                    } else {
+                        resourcesState.push({ name: file.name, url: dataUrl, type: 'file' });
+                        ui.showAlert(`Arquivo adicionado: ${file.name}`, 'success');
+                    }
+                    remaining -= 1;
+                    if (remaining === 0) {
+                        renderResources();
+                        filesInputEl.value = '';
+                    }
+                };
+                reader.readAsDataURL(file);
+            });
+        };
+
+        // handle file uploads from the hidden input
+        filesInputEl.addEventListener('change', (e) => processFiles(e.target.files));
+
+        // dropzone handlers: click opens file picker; drag/drop adds files
+        if (dropzoneEl) {
+            dropzoneEl.addEventListener('click', () => filesInputEl.click());
+            dropzoneEl.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); filesInputEl.click(); } });
+
+            dropzoneEl.addEventListener('dragover', (e) => { e.preventDefault(); dropzoneEl.classList.add('dragover'); });
+            dropzoneEl.addEventListener('dragenter', (e) => { e.preventDefault(); dropzoneEl.classList.add('dragover'); });
+            dropzoneEl.addEventListener('dragleave', (e) => { dropzoneEl.classList.remove('dragover'); });
+            dropzoneEl.addEventListener('drop', (e) => {
+                e.preventDefault(); dropzoneEl.classList.remove('dragover');
+                const dtFiles = e.dataTransfer && e.dataTransfer.files ? e.dataTransfer.files : [];
+                if (dtFiles.length) processFiles(dtFiles);
+            });
+        }
+
+        // add external link with required name + url, prevent duplicates
+        addResourceLinkBtn.addEventListener('click', () => {
+            const name = (resourceNameInput.value || '').trim();
+            const url = (resourceUrlInput.value || '').trim();
+            if (!name) { ui.showAlert('Informe o nome do link', 'warning'); resourceNameInput.focus(); return; }
+            if (!url) { ui.showAlert('Informe a URL do link', 'warning'); resourceUrlInput.focus(); return; }
+            // simple url normalization
+            const normalized = url;
+            if (resourcesState.some(r => r.type === 'link' && (r.url === normalized || r.name.toLowerCase() === name.toLowerCase()))) {
+                ui.showAlert('Link já adicionado', 'warning');
+                return;
+            }
+            resourcesState.push({ name, url: normalized, type: 'link' });
+            resourceNameInput.value = '';
+            resourceUrlInput.value = '';
+            renderResources();
+            ui.showAlert(`Link adicionado: ${name}`, 'success');
+        });
 
         form.addEventListener('submit', (e) => {
             e.preventDefault();
@@ -1442,6 +1621,8 @@ class AdminSystem {
                     if (type === 'link') l.link = url;
                     if (type === 'live') l.liveUrl = url;
                     l.status = status;
+                    // save resources (files/links)
+                    l.resources = resourcesState;
                     database.saveDatabase();
                     ui.showAlert('Aula atualizada com sucesso!', 'success');
                 }
@@ -1451,6 +1632,8 @@ class AdminSystem {
                 if (type === 'video') newLesson.videoUrl = url || '';
                 if (type === 'link') newLesson.link = url;
                 if (type === 'live') newLesson.liveUrl = url;
+                // attach any resources added in modal
+                newLesson.resources = resourcesState;
                 database.data.lessons.push(newLesson);
                 database.saveDatabase();
                 ui.showAlert('Aula criada com sucesso!', 'success');

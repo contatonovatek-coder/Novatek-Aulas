@@ -440,6 +440,22 @@ class Database {
         return progress;
     }
 
+    removeLessonFromProgress(userId, courseId, lessonId) {
+        const progress = this.getUserProgress(userId, courseId);
+        const lessons = this.getLessonsByCourseId(courseId);
+        if (!progress) return progress;
+
+        const idx = progress.completedLessons.indexOf(lessonId);
+        if (idx !== -1) {
+            progress.completedLessons.splice(idx, 1);
+        }
+
+        progress.lastAccessed = new Date().toISOString();
+        progress.progress = Math.round((progress.completedLessons.length / lessons.length) * 100);
+        this.saveDatabase();
+        return progress;
+    }
+
     // Métodos para certificados
     createCertificate(certificateData) {
         const newId = this.data.certificates.length > 0 ? Math.max(...this.data.certificates.map(c => c.id)) + 1 : 1;

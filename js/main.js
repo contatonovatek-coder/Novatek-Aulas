@@ -1164,42 +1164,10 @@ class MainApp {
                                     </div>
                                 </div>
 
-                                <div class="setting-item">
-                                    <i class="fas fa-user-cog"></i>
-                                    <div>
-                                        <h4 class="font-bold">Gerenciar Perfil</h4>
-                                        <p class="text-sm text-gray">Atualize informações públicas da sua conta</p>
-                                    </div>
-                                    <div class="setting-actions">
-                                        <button class="btn btn-outline" id="edit-profile-btn-small">Editar</button>
-                                    </div>
-                                </div>
+                                <!-- Perfil removido conforme solicitação -->
                             </div>
 
-                            <div class="settings-card">
-                                <h3 class="text-lg font-bold mb-3">Segurança</h3>
-                                <div class="setting-item">
-                                    <i class="fas fa-key"></i>
-                                    <div>
-                                        <h4 class="font-bold">Alterar Senha</h4>
-                                        <p class="text-sm text-gray">Altere sua senha com segurança</p>
-                                    </div>
-                                    <div class="setting-actions">
-                                        <button class="btn btn-outline" id="change-password-btn">Alterar</button>
-                                    </div>
-                                </div>
-
-                                <div class="setting-item">
-                                    <i class="fas fa-shield-alt"></i>
-                                    <div>
-                                        <h4 class="font-bold">Autenticação de Dois Fatores</h4>
-                                        <p class="text-sm text-gray">Proteja sua conta com 2FA</p>
-                                    </div>
-                                    <div class="toggle-switch">
-                                        <input type="checkbox" id="2fa-toggle" ${user.preferences?.twoFactor ? 'checked' : ''}>
-                                    </div>
-                                </div>
-                            </div>
+                            <!-- Bloco 'Segurança' removido conforme solicitação -->
 
                             <div class="settings-card danger-zone">
                                 <h3 class="text-lg font-bold mb-3 text-danger">Zona de Perigo</h3>
@@ -1232,9 +1200,7 @@ class MainApp {
     }
 
     addSettingsEvents() {
-        document.getElementById('change-password-btn')?.addEventListener('click', () => {
-            this.showChangePasswordForm();
-        });
+        // 'change-password-btn' removed from layout; handler omitted
 
         document.getElementById('export-data-btn')?.addEventListener('click', () => {
             this.exportUserData();
