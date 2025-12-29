@@ -3688,7 +3688,15 @@ img {
     justify-content: center;
     border-radius: 8px;
 }
-.admin-table .actions .btn i { margin: 0; font-size: 1rem; }
+.admin-table .actions .btn i {
+    margin: 0;
+    font-size: 1rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    line-height: 1;
+}
 .admin-table .actions .btn.btn-outline { background: transparent; border: 1px solid transparent; }
 .admin-table .actions .btn.btn-danger { background: transparent; border: 1px solid rgba(239,68,68,0.12); color: #ef4444; }
 .admin-table .actions .btn.btn-danger:hover { background: rgba(239,68,68,0.06); }

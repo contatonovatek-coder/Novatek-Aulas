@@ -547,7 +547,7 @@ class AdminSystem {
 
     showSendNotificationModal() {
         const modal = document.createElement('div');
-        modal.className = 'modal';
+        modal.className = 'modal admin-user-modal';
         modal.innerHTML = `
             <div class="modal-content" style="max-width: 500px;">
                 <div class="modal-header">
@@ -1247,7 +1247,7 @@ class AdminSystem {
 
     showDeleteLessonModal(lesson) {
         const modal = document.createElement('div');
-        modal.className = 'modal';
+        modal.className = 'modal admin-user-modal';
         modal.innerHTML = `
             <div class="modal-content" style="max-width:520px;">
                 <div class="modal-header">
@@ -1316,7 +1316,7 @@ class AdminSystem {
         const modal = document.createElement('div');
         modal.className = 'modal';
         modal.innerHTML = `
-            <div class="modal-content">
+            <div class="modal-content profile-modal">
                 <div class="modal-header">
                     <h2>${lesson ? 'Editar Aula' : 'Adicionar Nova Aula'}</h2>
                     <button class="modal-close">&times;</button>
