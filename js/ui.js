@@ -252,7 +252,7 @@ class UI {
             if (window.innerWidth <= 992 && 
                 sidebar.classList.contains('active') &&
                 !sidebar.contains(e.target) &&
-                !menuToggle.contains(e.target)) {
+                (!menuToggle || !menuToggle.contains(e.target))) {
                 sidebar.classList.remove('active');
             }
         });

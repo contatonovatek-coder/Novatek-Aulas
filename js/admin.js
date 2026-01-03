@@ -120,14 +120,6 @@ class AdminSystem {
                 <div class="admin-quick-actions">
                     <h3><i class="fas fa-bolt"></i> Ações Rápidas</h3>
                     <div class="actions-grid">
-                        <div class="action-btn" data-action="add-course">
-                            <i class="fas fa-plus-circle"></i>
-                            <span>Adicionar Curso</span>
-                        </div>
-                        <div class="action-btn" data-action="add-user">
-                            <i class="fas fa-user-plus"></i>
-                            <span>Adicionar Usuário</span>
-                        </div>
                         <div class="action-btn" data-action="send-notification">
                             <i class="fas fa-bullhorn"></i>
                             <span>Enviar Notificação</span>

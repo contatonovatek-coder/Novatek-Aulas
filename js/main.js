@@ -205,7 +205,7 @@ class MainApp {
                     <i class="fas fa-history"></i>
                 </div>
                 <div class="stat-info">
-                    <h3>${lastActivity ? new Date(lastActivity.lastAccessed).toLocaleDateString() : '—'}</h3>
+                    <h3 class="no-wrap">${lastActivity ? new Date(lastActivity.lastAccessed).toLocaleDateString() : '—'}</h3>
                     <p>Última Atividade</p>
                 </div>
             </div>

@@ -1817,13 +1817,14 @@ img {
 .stat-card {
     background-color: var(--white);
     border-radius: var(--radius);
-    padding: 1.5rem;
     display: flex;
-    align-items: center;
-    gap: 1.25rem;
+    align-items: flex-start;
+    gap: 1rem;
     box-shadow: var(--shadow);
     transition: var(--transition);
     border: 1px solid transparent;
+    padding: 1rem 1.25rem;
+    min-height: 72px;
 }
 
 .stat-card:hover {
@@ -1861,9 +1862,27 @@ img {
 }
 
 .stat-info h3 {
-    font-size: 1.75rem;
-    margin-bottom: 0.25rem;
+    font-size: 1.125rem;
+    margin: 0 0 0.25rem 0;
     font-weight: 700;
+    line-height: 1.2;
+    max-width: calc(100% - 70px);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    word-break: break-word;
+}
+
+/* Prevent truncation for values that must stay on one line (dates, short numbers) */
+.stat-info h3.no-wrap {
+    white-space: nowrap;
+    overflow: visible;
+    text-overflow: clip;
+    display: block;
+    -webkit-line-clamp: unset;
+    -webkit-box-orient: unset;
 }
 
 .stat-info p {
@@ -3716,8 +3735,18 @@ img {
 }
 
 .chart-container {
-    height: 250px;
+    height: 340px;
     position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.5rem 1rem;
+}
+
+.chart-container canvas {
+    max-width: 420px;
+    width: 100% !important;
+    height: auto !important;
 }
 
 .activities-list {
