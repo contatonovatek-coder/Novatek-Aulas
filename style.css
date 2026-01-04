@@ -2833,6 +2833,190 @@ img {
     color: var(--primary-color);
 }
 
+/* =========================
+   Responsividade adicional e regras para breakpoints variados
+   ========================= */
+
+/* Backdrop para sidebar em telas pequenas */
+.sidebar-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.45);
+    z-index: 90;
+    opacity: 1;
+    transition: opacity 240ms ease, visibility 240ms ease;
+}
+.sidebar-backdrop.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+
+/* Off-canvas sidebar behavior (mobile/tablet) */
+@media (max-width: 1024px) {
+    :root { --sidebar-width: 280px; --header-height: 64px; }
+    .sidebar {
+        position: fixed;
+        left: 0;
+        top: 0;
+        height: 100vh;
+        transform: translateX(-112%);
+        transition: transform 260ms cubic-bezier(.2,.9,.2,1), box-shadow 160ms ease;
+        z-index: 100;
+        width: var(--sidebar-width);
+        overflow-y: auto;
+        box-shadow: 0 24px 48px rgba(2,6,23,0.28);
+    }
+    .sidebar.open { transform: translateX(0); }
+    .main-content { margin-left: 0 !important; }
+    .sidebar.collapsed { width: 84px; }
+    .sidebar.collapsed .nav-item a { justify-content: center; }
+    .sidebar.collapsed .nav-item a span, .sidebar.collapsed .profile-info, .sidebar.collapsed .section-title { display: none; }
+    .menu-toggle { display: inline-flex; }
+    .hidden-desktop { display: inline-flex; }
+}
+
+/* Mostrar toggle apenas em telas pequenas, esconder em desktop */
+.menu-toggle { display: none; background: none; border: none; font-size: 1.125rem; width:40px; height:40px; align-items:center; justify-content:center; border-radius:8px; color:var(--dark-color); }
+.menu-toggle:focus { outline: none; box-shadow: 0 6px 18px rgba(79,70,229,0.06); }
+.hidden-desktop { display: none; }
+
+/* Header / Top menu adjustments for smaller screens (preserve font sizes and controls) */
+@media (max-width: 768px) {
+    :root { --header-height: 64px; }
+    .main-header { padding: 0.75rem 1rem; height: var(--header-height); }
+    .header-right { gap: 0.5rem; }
+    .menu-toggle { display: inline-flex; }
+    .hidden-desktop { display: inline-flex; }
+}
+
+/* Keep original sizes on very small screens; ensure container fits viewport without changing element sizes */
+@media (max-width: 420px) {
+    .login-container { max-width: calc(100% - 2rem); }
+}
+
+/* Forms and modals: keep inputs inside viewport, avoid overflow */
+@media (max-width: 560px) {
+    .modal .modal-content, #register-modal .modal-content { max-width: calc(100% - 1.5rem); margin: 0 .75rem; }
+    .modal .modal-body { padding: 1rem; }
+    .form-row { flex-direction: column; gap: 0.75rem; }
+}
+
+/* Cards, grids and columns: enforce stacking on narrow screens */
+@media (max-width: 768px) {
+    .courses-grid { grid-template-columns: 1fr; }
+    .stats-cards { grid-template-columns: 1fr; }
+    .painel-do-aluno-grid { grid-template-columns: 1fr; }
+    .lesson-main-grid { grid-template-columns: 1fr; }
+    .plan-cards { display: grid; grid-template-columns: 1fr; gap: 1rem; }
+}
+
+@media (min-width: 768px) and (max-width: 1366px) {
+    .courses-grid { grid-template-columns: repeat(2, minmax(240px, 1fr)); }
+    .stats-cards { grid-template-columns: repeat(2, minmax(220px, 1fr)); }
+    .plan-cards { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; }
+}
+
+/* Larger screens: ensure content doesn't stretch too wide, keep centered */
+@media (min-width: 1367px) {
+    .container { max-width: 1400px; }
+    :root { --sidebar-width: 300px; --header-height: 84px; }
+}
+
+/* Ultra-wide desktops (ensure layouts adapt to large widths up to 2560) */
+@media (min-width: 1600px) {
+    .container { max-width: 1600px; }
+}
+
+@media (min-width: 1920px) {
+    .container { max-width: 1820px; }
+}
+
+@media (min-width: 2560px) {
+    .container { max-width: 2300px; }
+}
+
+/* Preserve root font-size to avoid changing element sizes across breakpoints */
+
+/* Safety: avoid horizontal scroll anywhere */
+html, body { overflow-x: hidden; }
+
+/* Ensure inputs, buttons, cards never overflow container widths */
+input, textarea, select, button, .card-section, .course-card, .plan-card { max-width: 100%; box-sizing: border-box; }
+
+/* Make sure icons and text scale proportionally in sidebar */
+.sidebar .nav-item a i { font-size: 1.05rem; }
+
+/* Accessibility: focus-visible outlines preserved */
+*:focus { outline: 2px solid transparent; }
+*:focus-visible { outline: 3px solid rgba(79,70,229,0.16); outline-offset: 2px; }
+
+/* When on authentication screens (login/register/forgot), hide site menus */
+.auth-active .sidebar,
+.auth-active .main-header,
+.auth-active .main-content {
+    display: none !important;
+}
+
+/* Also hide menus when the login screen is visible (no JS needed for this case) */
+#login-screen:not(.hidden) ~ .painel-do-aluno .sidebar,
+#login-screen:not(.hidden) ~ .painel-do-aluno .main-header,
+#login-screen:not(.hidden) ~ .painel-do-aluno .main-content {
+    display: none !important;
+}
+
+/* When register or forgot modals are visible (modals are later in DOM), use :has where supported, fallback to body.auth-active */
+body:has(#register-modal:not(.hidden)) .sidebar,
+body:has(#register-modal:not(.hidden)) .main-header,
+body:has(#register-modal:not(.hidden)) .main-content,
+body:has(#forgot-modal:not(.hidden)) .sidebar,
+body:has(#forgot-modal:not(.hidden)) .main-header,
+body:has(#forgot-modal:not(.hidden)) .main-content {
+    display: none !important;
+}
+
+/* Mobile fixes: ensure header, painel and register modal wrap correctly without changing element sizes */
+@media (max-width: 768px) {
+    /* Allow header to wrap so right-side items don't overflow */
+    .main-header {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.75rem 1rem;
+        height: auto; /* allow multi-line header without forcing font-size changes */
+    }
+    .header-left { flex: 1 1 60%; min-width: 140px; }
+    .header-right { flex: 0 1 40%; display: flex; gap: 0.5rem; justify-content: flex-end; align-items: center; flex-wrap: wrap; }
+    .header-search { order: 3; flex: 1 1 100%; max-width: 100%; }
+    .btn-notification, .header-user { flex: 0 0 auto; }
+
+    /* Painel content: stack grids and avoid horizontal overflow */
+    .painel-do-aluno-grid { grid-template-columns: 1fr !important; }
+    .painel-do-aluno-content { padding-left: 1rem; padding-right: 1rem; }
+
+    /* Make sure sidebar does not push content when hidden off-canvas */
+    .main-content { margin-left: 0 !important; }
+
+    /* Register modal: force single-column layout and ensure modal fits viewport */
+    #register-modal .modal-content { max-width: calc(100% - 1rem); margin: 0 0.5rem; }
+    #register-modal .register-grid, #register-modal .register-form .form-grid { grid-template-columns: 1fr !important; }
+    #register-modal .plan-cards { grid-template-columns: 1fr !important; overflow-x: auto; }
+}
+
+/* Slightly larger breakpoint to guarantee modal fits on small tablets */
+@media (max-width: 1024px) {
+    #register-modal .modal-content { max-width: calc(100% - 2rem); }
+    #register-modal .plan-cards { max-width: 100%; overflow-x: auto; }
+}
+
+/* Ensure plan-cards never force modal wider than viewport */
+#register-modal .plan-cards, #register-modal .register-grid { box-sizing: border-box; max-width: 100%; }
+
+
+/* Show menu-toggle only for logged-in panel (prevents appearing on login/register) */
+.menu-toggle { display: none; }
+.painel-do-aluno .menu-toggle { display: none; }
+@media (max-width: 1024px) {
+    .painel-do-aluno .menu-toggle { display: inline-flex; }
+}
+
 
 
 .checkbox-group {

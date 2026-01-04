@@ -78,6 +78,7 @@
                         </button>
                     </div>
                     
+                    
                     <p class="register-link">
                         Não tem uma conta? <a href="#" id="register-link">Criar agora</a>
                     </p>
@@ -202,6 +203,9 @@
             <main class="main-content">
                 <!-- Header -->
                 <header class="main-header">
+                        <button class="menu-toggle hidden-desktop" id="menu-toggle" aria-label="Abrir menu" aria-expanded="false">
+                            <i class="fas fa-bars"></i>
+                        </button>
                     <div class="header-left">
                         <h2 id="welcome-message">Bem-vindo!</h2>
                         <p id="current-date">Carregando data...</p>
@@ -222,12 +226,6 @@
                                     <!-- Notificações serão carregadas aqui -->
                                 </div>
                             </div>
-                        </div>
-                        
-                        <div class="header-search">
-                            <input type="text" id="global-search" placeholder="Pesquisar cursos, aulas...">
-                            <i class="fas fa-search"></i>
-                            <div class="search-results hidden" id="search-results"></div>
                         </div>
                         
                         <div class="header-user" id="header-user-menu">
@@ -409,6 +407,64 @@
     </div>
 
     <!-- Scripts -->
+    <script>
+        (function(){
+            const menuToggle = document.getElementById('menu-toggle');
+            const sidebar = document.querySelector('.sidebar');
+            // backdrop may be moved; ensure single instance
+            let backdrop = document.getElementById('sidebar-backdrop');
+            if(!backdrop){
+                backdrop = document.createElement('div');
+                backdrop.id = 'sidebar-backdrop';
+                backdrop.className = 'sidebar-backdrop hidden';
+                document.body.appendChild(backdrop);
+            }
+
+            function openSidebar(){
+                if(!sidebar) return;
+                sidebar.classList.add('open');
+                backdrop.classList.remove('hidden');
+                if(menuToggle) menuToggle.setAttribute('aria-expanded','true');
+            }
+            function closeSidebar(){
+                if(!sidebar) return;
+                sidebar.classList.remove('open');
+                backdrop.classList.add('hidden');
+                if(menuToggle) menuToggle.setAttribute('aria-expanded','false');
+            }
+
+            if(menuToggle){
+                menuToggle.addEventListener('click', function(e){
+                    if(sidebar && sidebar.classList.contains('open')) closeSidebar(); else openSidebar();
+                });
+            }
+            backdrop.addEventListener('click', closeSidebar);
+            document.addEventListener('keydown', function(e){ if(e.key==='Escape') closeSidebar(); });
+
+            // AUTH SCREEN: hide sidebar/header when login/register/forgot are visible
+            const loginScreen = document.getElementById('login-screen');
+            const registerModal = document.getElementById('register-modal');
+            const forgotModal = document.getElementById('forgot-modal');
+
+            function updateAuthState(){
+                const authActive = (loginScreen && !loginScreen.classList.contains('hidden')) ||
+                                   (registerModal && !registerModal.classList.contains('hidden')) ||
+                                   (forgotModal && !forgotModal.classList.contains('hidden'));
+                document.body.classList.toggle('auth-active', !!authActive);
+                if(authActive) closeSidebar();
+            }
+
+            // initial
+            updateAuthState();
+
+            // observe class changes for these nodes (visibility toggles)
+            const obsTargets = [loginScreen, registerModal, forgotModal].filter(Boolean);
+            if(obsTargets.length){
+                const mo = new MutationObserver(updateAuthState);
+                obsTargets.forEach(node => mo.observe(node, { attributes: true, attributeFilter: ['class'] }));
+            }
+        })();
+    </script>
     <script src="/js/auth.js"></script>
     <script src="/js/database.js"></script>
     <script src="/js/router.js"></script>
