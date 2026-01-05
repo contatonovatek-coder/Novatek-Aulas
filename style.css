@@ -2954,6 +2954,99 @@ input, textarea, select, button, .card-section, .course-card, .plan-card { max-w
     display: none !important;
 }
 
+/* =========================
+   Header - Responsividade (fixes)
+   ========================= */
+/* Allow the header-left area to shrink (prevent pushing other items) */
+.main-header .header-left {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-width: 0; /* important for text-overflow inside flex */
+}
+.main-header .header-left h2,
+.main-header .header-left p {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap; /* keep greeting and date on single line; use ellipsis when necessary */
+}
+
+/* Ensure right-side controls don't cause overflow and can wrap sensibly */
+.main-header .header-right {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    min-width: 0;
+}
+.main-header .header-right > * {
+    flex-shrink: 0;
+}
+
+/* Hamburger (menu-toggle) visible only on mobile (<=768px) */
+@media (min-width: 769px) {
+    .menu-toggle, .hidden-desktop { display: none !important; }
+}
+@media (max-width: 768px) {
+    .menu-toggle, .hidden-desktop { display: inline-flex !important; }
+    .main-header { padding: 0.6rem 0.75rem; gap: 0.5rem; align-items: center; }
+    .header-left { order: 1; }
+    .menu-toggle { order: 0; }
+    .header-right { order: 2; justify-content: flex-end; gap: 0.5rem; flex-wrap: wrap; }
+    .header-left h2 { font-size: 1.125rem; }
+    .header-left p { font-size: 0.825rem; }
+
+    /* On small screens ensure dropdowns become fixed so they are not clipped */
+    .header-right .notifications-dropdown,
+    .header-right .user-menu,
+    .notifications-dropdown,
+    .user-menu {
+        position: fixed;
+        top: calc(var(--header-height) + 8px);
+        right: 8px;
+        left: auto;
+        max-width: calc(100vw - 16px);
+        width: auto;
+        max-height: calc(100vh - var(--header-height) - 56px);
+        overflow-y: auto;
+        z-index: 1100;
+        box-sizing: border-box;
+    }
+}
+
+/* General dropdown safety: never exceed viewport width/height */
+.notifications-dropdown,
+.user-menu {
+    max-width: calc(100vw - 32px);
+    box-sizing: border-box;
+    overflow-y: auto;
+    max-height: calc(100vh - var(--header-height) - 64px);
+    right: 8px;
+    left: auto;
+}
+
+/* Very small screens: make dropdown span nearly full width (better accessibility) */
+@media (max-width: 420px) {
+    .notifications-dropdown,
+    .user-menu {
+        position: fixed;
+        top: calc(var(--header-height) + 8px);
+        right: 8px;
+        left: 8px;
+        width: auto;
+        max-width: calc(100vw - 16px);
+    }
+}
+
+/* Keep notification/user buttons clickable when header wraps */
+.btn-notification, .header-user { z-index: 60; }
+
+/* Allow header to grow vertically on small screens to avoid overlap */
+@media (max-width: 768px) {
+    .main-header { height: auto; position: sticky; top: 0; }
+}
+
+
 /* Also hide menus when the login screen is visible (no JS needed for this case) */
 #login-screen:not(.hidden) ~ .painel-do-aluno .sidebar,
 #login-screen:not(.hidden) ~ .painel-do-aluno .main-header,
@@ -3486,6 +3579,69 @@ body:has(#forgot-modal:not(.hidden)) .main-content {
     .lesson-item .lesson-status { margin-bottom: 0.5rem; }
 }
 
+/* Mobile-only adjustments for Aulas / Minhas Aulas
+   - transform horizontal cards into vertical cards
+   - place status icon at top-left
+   - stack action buttons full-width and vertical
+   - avoid horizontal scrolling and preserve visual identity
+*/
+@media (max-width: 600px) {
+    .lesson-card {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.6rem;
+        padding: 0.85rem;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    /* Ensure status/icon appears at the top-left of the card */
+    .lesson-status {
+        order: -1;
+        align-self: flex-start;
+        margin: 0 0 0.4rem 0;
+    }
+
+    .lesson-left {
+        display: block;
+    }
+
+    .lesson-info {
+        width: 100%;
+        min-width: 0;
+    }
+
+    .lesson-title { margin-bottom: 0.25rem; }
+    .lesson-desc { margin-bottom: 0.5rem; }
+
+    /* Put meta (ex: "Vídeo · 50 min") on its own line */
+    .lesson-meta {
+        display: block;
+        margin-bottom: 0.5rem;
+    }
+
+    /* Buttons: stacked, full-width, never side-by-side */
+    .lesson-actions {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 0.5rem;
+        width: 100%;
+    }
+
+    .lesson-actions .btn,
+    .lesson-actions button {
+        width: 100%;
+        box-sizing: border-box;
+        justify-content: center;
+    }
+
+    /* Prevent horizontal scrolling from any card/content */
+    .lessons-container, .lessons-list, .lesson-card {
+        min-width: 0;
+        overflow-x: hidden;
+    }
+}
+
 
 /* =========================
    PÁGINAS ESPECÍFICAS
@@ -3628,11 +3784,169 @@ body:has(#forgot-modal:not(.hidden)) .main-content {
     .profile-avatar-section { flex-direction: row; gap: 1rem; }
 }
 
+/* Mobile profile-specific layout (structure-only changes) */
+@media (max-width: 600px) {
+    /* Top area: center name, email and place edit button below */
+    .profile-header-page {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        gap: 0.5rem;
+    }
+
+    /* Ensure inner container doesn't keep desktop 'space-between' layout */
+    .profile-header-page .container {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        justify-content: center !important;
+        width: 100%;
+        padding: 0;
+        box-sizing: border-box;
+        gap: 0.4rem;
+    }
+
+    .profile-header-actions {
+        width: 100%;
+        display: flex;
+        justify-content: center;
+    }
+
+    .profile-info-section {
+        width: 100%;
+        order: 2;
+    }
+
+    .profile-info-section h2 { margin: 0 0 0.25rem 0; }
+    .profile-email-page { margin: 0 0 0.5rem 0; }
+
+    /* Edit button full width, easy to tap */
+    #edit-profile-btn, #btn-edit-profile, .profile-header-page .btn {
+        width: 100%;
+        max-width: 420px;
+        box-sizing: border-box;
+        padding: 0.85rem 1rem;
+    }
+
+    /* Profile card: avatar centered on top, badge under avatar */
+    .profile-card-page .profile-avatar-section {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        gap: 0.6rem;
+    }
+
+    .profile-avatar-large { margin: 0 auto 0.25rem auto; }
+    .profile-plan-badge { margin-top: 0.35rem; }
+
+    /* Metrics: 2x2 grid or column depending on available width */
+    .profile-stats-page { grid-template-columns: repeat(2, 1fr); gap: 0.6rem; }
+    /* Also adjust the metrics container used in markup */
+    .metrics-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.6rem; justify-items: center; }
+    .metric-card { width: 100%; max-width: 100%; }
+
+    /* Ensure metrics degrade to a single column on very narrow screens */
+    @media (max-width: 380px) {
+        .profile-stats-page { grid-template-columns: 1fr; }
+    }
+
+    /* Account info: each item stacked vertically (label above value) */
+    .account-info-list li { display: block; padding: 0.6rem 0.75rem; }
+    .account-info-list .info-key { display: block; margin-bottom: 0.25rem; text-transform:uppercase; font-size:0.78rem; }
+    .account-info-list .info-val { display: block; font-size:0.95rem; }
+
+    /* Modal: profile edit should fit mobile and be scrollable if tall */
+    .profile-modal .modal-content { width: 90%; max-width: 90%; max-height: 90vh; }
+    .profile-modal .modal-body { max-height: calc(90vh - 72px); overflow-y: auto; -webkit-overflow-scrolling: touch; }
+    .profile-modal .modal-header { position: sticky; top: 0; z-index: 3; }
+    .profile-modal .modal-close { z-index: 4; }
+
+    /* Avoid any horizontal scroll issues on profile page */
+    .profile-page, .profile-card-page, .profile-grid, .profile-stats-page { min-width: 0; overflow-x: hidden; }
+
+    /* Left column fixed width should become full-width on mobile to avoid overflow */
+    .profile-left-fixed { flex: none !important; width: 100% !important; max-width: 100% !important; }
+    .profile-grid { display: block; }
+    .profile-right { width: 100%; }
+}
+
 /* Página de Assinatura - Visual refinado */
 .subscription-page {
     max-width: 1100px;
     margin: 0 auto;
     padding: 2rem 1rem;
+}
+
+/* Mobile adjustments for Subscription page */
+@media (max-width: 600px) {
+    /* Center header/title */
+    .subscription-header .title-row { flex-direction: column; align-items: center; text-align: center; gap: 0.4rem; }
+    .subscription-header h1, .subscription-header p { text-align: center; }
+
+    /* Stack plan cards vertically and make them full width */
+    .plan-cards { grid-template-columns: 1fr !important; gap: 0.9rem; }
+    .plan-card, .plan-card-page { width: 100%; box-sizing: border-box; }
+    .plan-card .plan-info { padding-right: 0; }
+
+    /* Price alignment and spacing */
+    .plan-card .plan-price { text-align: left; margin-top: 0.5rem; }
+
+    /* Buttons full-width and stacked */
+    .plan-card .btn, .plan-card .select-plan, .plan-card .btn-danger, .plan-card .btn-outline {
+        width: 100% !important;
+        display: block !important;
+        box-sizing: border-box;
+        justify-content: center;
+    }
+    .plan-card .btn + .btn { margin-top: 0.5rem; }
+
+    /* Modal mobile-friendly: up to 90% width and scrollable body */
+    .modal .modal-content { width: 90%; max-width: 90%; max-height: 90vh; }
+    .modal .modal-body { max-height: calc(90vh - 72px); overflow-y: auto; -webkit-overflow-scrolling: touch; }
+
+    /* Prevent horizontal scrolling */
+    .subscription-page, .plan-cards, .plan-card { min-width: 0; overflow-x: hidden; }
+
+    /* Fix subscription grid overflow: override inline flex and force vertical stacking */
+    .subscription-content .subscription-grid {
+        display: block !important;
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 0.9rem !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+    }
+
+    .subscription-content .subscription-grid > * {
+        flex: 0 0 auto !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+    }
+
+    .subscription-content .subscription-grid .payments-column {
+        min-width: 0 !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+        flex: 0 0 auto !important;
+    }
+
+    /* Make the plan header adapt to vertical layout */
+    .plan-card .plan-card-head { display: flex; flex-direction: column; align-items: flex-start; gap: 0.5rem; }
+    .plan-card .plan-price { text-align: left; }
+
+    /* Ensure plan actions/buttons are full width and easy to tap */
+    .plan-actions .btn, .plan-actions-row .btn, .plan-card .select-plan, .plan-card .btn-danger {
+        width: 100% !important;
+        display: block !important;
+        box-sizing: border-box;
+    }
+
+    /* Allow payment history table to scroll inside its container instead of causing page overflow */
+    .admin-table-container { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    /* Make payments table responsive inside its scroller */
+    .admin-table.payments-table { width: 100%; min-width: 0; border-collapse: collapse; }
+    .admin-table.payments-table th, .admin-table.payments-table td { white-space: nowrap; }
 }
 
 .subscription-header {
@@ -5022,5 +5336,40 @@ body:has(#forgot-modal:not(.hidden)) .main-content {
 
 /* Acessibilidade: foco visível para cards navegáveis */
 #register-modal .plan-card:focus { outline: 3px solid rgba(79,70,229,0.14); outline-offset: 4px; }
+
+/* =========================
+   REGISTER MODAL - TECHNICAL RESPONSIVENESS (no visual changes)
+   - limit modal height to viewport, keep it centered
+   - allow internal scrolling of modal body only
+   - prevent grid children from forcing overflow
+   These rules are intentionally technical and do not change colors, spacing or typography.
+========================= */
+#register-modal .modal-content {
+    display: flex;
+    flex-direction: column;
+    max-height: calc(100vh - 2rem); /* leave small viewport inset */
+    overflow: hidden; /* body will scroll instead of the modal expanding */
+    box-sizing: border-box;
+}
+
+#register-modal .modal-body {
+    flex: 1 1 auto;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch; /* smooth scrolling on mobile */
+}
+
+/* Ensure grid/flex children can shrink and do not force modal wider than viewport */
+#register-modal .register-grid,
+#register-modal .register-form .form-grid,
+#register-modal .plan-cards,
+#register-modal .password-pair {
+    min-width: 0;
+    box-sizing: border-box;
+}
+
+/* On very small screens allow horizontal scrolling only for plan cards if needed */
+@media (max-width: 420px) {
+    #register-modal .plan-cards { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+}
 
 
