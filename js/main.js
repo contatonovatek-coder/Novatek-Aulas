@@ -109,12 +109,19 @@ class MainApp {
         content.innerHTML = `
             <div class="painel-do-aluno-home">
                 <div class="painel-do-aluno-header mb-6">
-                    <div class="header-left">
-                        <h1 class="text-3xl font-bold">Painel do Aluno</h1>
-                        <p class="text-gray mt-2 greeting">${greeting || 'Bem-vindo de volta!'}<span class="greeting-sub"> — ${lastActivityText}</span></p>
-                    </div>
-                    <div class="header-actions">
-                        <button class="btn btn-outline" id="btn-resume-overall">Continuar último curso</button>
+                    <div class="header-top flex flex-col sm:flex-row sm:items-center sm:justify-between">
+                        <div class="header-left">
+                            <h1 class="text-3xl font-bold">Painel do Aluno</h1>
+                            <p class="greeting text-lg font-semibold mt-2">${greeting || 'Bem-vindo de volta!'}</p>
+                            <p class="greeting-sub text-sm text-gray mt-1">${lastActivityText}</p>
+                            <div class="header-cta-mobile mt-3" style="display:none;">
+                                <button class="btn btn-primary btn-resume-mobile" style="min-height:44px; width:100%; max-width:420px;">Continuar último curso</button>
+                            </div>
+                        </div>
+
+                        <div class="header-actions mt-4 sm:mt-0 justify-end">
+                            <button class="btn btn-primary" id="btn-resume-overall" style="min-height:44px; padding-left:18px; padding-right:18px; width:100%; max-width:220px;">Continuar último curso</button>
+                        </div>
                     </div>
                 </div>
 
@@ -380,6 +387,7 @@ class MainApp {
                 </div>
             </div>
         `;
+        // resume button positioning handled by CSS (desktop/right, mobile/below)
     }
 
     addPainelDoAlunoEvents() {
@@ -391,24 +399,26 @@ class MainApp {
         });
 
         // resume overall last course CTA
+        const resumeHandler = (e) => {
+            const user = auth.getCurrentUser();
+            if (!user) { ui.showAlert('Faça login para acessar os cursos', 'info'); return; }
+            const progresses = (database.data.userProgress || []).filter(p => p.userId === user.id);
+            if (progresses.length === 0) {
+                ui.showAlert('Nenhum curso em andamento', 'info');
+                return;
+            }
+            const last = progresses.slice().sort((a, b) => new Date(b.lastAccessed) - new Date(a.lastAccessed))[0];
+            if (last && last.courseId) {
+                this.startCourse(last.courseId);
+            } else {
+                ui.showAlert('Nenhuma atividade recente encontrada', 'info');
+            }
+        };
+
+        // attach to desktop CTA and mobile inline CTA (if present)
         const resumeBtn = document.getElementById('btn-resume-overall');
-        if (resumeBtn) {
-            resumeBtn.addEventListener('click', (e) => {
-                const user = auth.getCurrentUser();
-                if (!user) { ui.showAlert('Faça login para acessar os cursos', 'info'); return; }
-                const progresses = (database.data.userProgress || []).filter(p => p.userId === user.id);
-                if (progresses.length === 0) {
-                    ui.showAlert('Nenhum curso em andamento', 'info');
-                    return;
-                }
-                const last = progresses.slice().sort((a, b) => new Date(b.lastAccessed) - new Date(a.lastAccessed))[0];
-                if (last && last.courseId) {
-                    this.startCourse(last.courseId);
-                } else {
-                    ui.showAlert('Nenhuma atividade recente encontrada', 'info');
-                }
-            });
-        }
+        if (resumeBtn) resumeBtn.addEventListener('click', resumeHandler);
+        document.querySelectorAll('.btn-resume-mobile').forEach(b => b.addEventListener('click', resumeHandler));
 
         document.querySelectorAll('[data-route]').forEach(link => {
             link.addEventListener('click', (e) => {

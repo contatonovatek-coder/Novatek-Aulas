@@ -1,6 +1,6 @@
-/* =========================
+﻿/* =========================
    RESET & VARIÁVEIS GLOBAIS
-========================= */
+=========================*/
 :root {
     --primary-color: #4F46E5;
     --primary-dark: #4338CA;
@@ -21,30 +21,30 @@
     --white: #FFFFFF;
     --black: #000000;
     
-    /* Planos de assinatura */
+    /* Planos de assinatura*/
     --plan-junior: #4F46E5;
     --plan-pleno: #8B5CF6;
     --plan-senior: #10B981;
     
-    /* Sombras */
+    /* Sombras*/
     --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
     --shadow-md: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
     --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
     --shadow-xl: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
     
-    /* Bordas */
+    /* Bordas*/
     --radius: 8px;
     --radius-md: 12px;
     --radius-lg: 16px;
     --radius-xl: 24px;
     --radius-full: 9999px;
     
-    /* Transições */
+    /* Transições*/
     --transition: all 0.3s ease;
     --transition-slow: all 0.5s ease;
     --transition-fast: all 0.15s ease;
     
-    /* Layout */
+    /* Layout*/
     --sidebar-width: 280px;
     --header-height: 80px;
     --footer-height: 50px;
@@ -107,7 +107,7 @@ img {
 
 /* =========================
    UTILIDADES
-========================= */
+=========================*/
 .hidden {
     display: none !important;
 }
@@ -244,7 +244,7 @@ img {
     gap: 1.5rem;
 }
 
-/* Container */
+/* ContÃªiner*/
 .container {
     width: 100%;
     max-width: 1200px;
@@ -252,14 +252,14 @@ img {
     padding: 0 1rem;
 }
 
-/* App */
+/* AplicaÃ§Ã£o*/
 .app {
     min-height: 100vh;
     width: 100%;
     position: relative;
 }
 
-/* Botões */
+/* Botões*/
 .btn {
     padding: 0.75rem 1.5rem;
     border-radius: var(--radius);
@@ -400,8 +400,8 @@ img {
 }
 
 /* =========================
-   Admin - Gerenciar Aulas
-   ========================= */
+   admin - Gerenciar Aulas
+   =========================*/
 .admin-lessons .section-header { margin-bottom: 1rem; }
 .admin-lessons-grid { display: grid; grid-template-columns: 1fr; gap: 1.5rem; align-items: start; }
 .admin-lessons.drawer-open .admin-lessons-grid { grid-template-columns: 360px 1fr; }
@@ -429,11 +429,11 @@ img {
 .lesson-meta { font-size:0.9rem; }
 .lesson-actions { display:flex; gap:8px; }
 
-/* Centralizar ícones dentro dos botões de ação na lista de aulas */
+/* Centralizar ícones dentro dos botões de ação na lista de aulas*/
 .lesson-actions .btn {
     min-width: 36px;
     height: 36px;
-    padding: 0; /* ícone centralizado, sem padding lateral */
+    padding: 0; /* ícone centralizado, sem padding lateral*/
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -454,7 +454,7 @@ img {
     .courses-list { max-height: 240px; }
 }
 
-/* Compact state for course cards when drawer open */
+/* Compact estado for course cards when drawer open*/
 .courses-list.compact .course-card-admin { padding:0.6rem; border-radius:8px; font-size:0.95rem; }
 
 .modal .modal-content { max-width:720px; width:100%; border-radius:12px; overflow:hidden; box-shadow: 0 10px 30px rgba(15,23,42,0.12); }
@@ -470,11 +470,11 @@ img {
 .modal .modal-actions .btn { min-width:110px; border-radius:999px; padding:0.5rem 1rem; }
 .modal .modal-actions .btn.primary { background: linear-gradient(90deg,#7c3aed,#5b21b6); color:#fff; border: none; }
 .modal .modal-actions .btn.ghost { background: transparent; color:var(--gray-color); border: none; }
-/* compatibility with existing button classes */
+/* compatibility with existing button classes*/
 .modal .modal-actions .btn.btn-primary { background: linear-gradient(90deg,#7c3aed,#5b21b6); color:#fff; border:none; }
 .modal .modal-actions .btn.btn-outline, .modal .modal-actions .btn.btn-outline.modal-close { background: transparent; color:var(--gray-color); border: none; }
 
-/* Lesson modal specific styles (design match) */
+/* Lesson modal specific styles (design match)*/
 .lesson-modal .modal-header.compact {
     position: relative;
     padding: 1.25rem 1.5rem;
@@ -516,13 +516,13 @@ img {
 }
 .lesson-form .form-group textarea { min-height:70px; }
 
-/* Ensure textarea doesn't grow horizontally inside flex containers */
+/* Ensure textarea doesn't grow horizontally inside flex containers*/
 .modal textarea, .lesson-form .form-group textarea, .modal .form-group textarea {
     width: 100%;
     max-width: 100%;
     box-sizing: border-box;
-    min-width: 0; /* allow shrinking inside flex items */
-    resize: vertical; /* only vertical resize */
+    min-width: 0; /* allow shrinking inside flex items*/
+    resize: vertical; /* only vertical resize*/
     white-space: pre-wrap;
     overflow-wrap: break-word;
 }
@@ -537,20 +537,20 @@ img {
 .resource-link { color:var(--dark-color); font-weight:600; }
 .resource-right { display:flex; align-items:center; gap:8px; }
 
-/* Materials list container: fixed max-height with internal scroll */
+/* Materials list contÃªiner: fixed max-height with internal scroll*/
 #resources-list {
-    max-height: 220px; /* limit height so modal doesn't grow */
+    max-height: 220px; /* limit height so modal doesn't grow*/
     overflow-y: auto;
-    padding-right: 6px; /* space for thin scrollbar */
+    padding-right: 6px; /* space for thin scrollbar*/
 }
 
-/* Thin, discreet scrollbar */
+/* Thin, discreet scrollbar*/
 #resources-list::-webkit-scrollbar { width: 8px; }
 #resources-list::-webkit-scrollbar-track { background: transparent; }
 #resources-list::-webkit-scrollbar-thumb { background: rgba(15,23,42,0.06); border-radius: 8px; }
 #resources-list::-webkit-scrollbar-thumb:hover { background: rgba(15,23,42,0.10); }
 
-/* Firefox */
+/* Firefox*/
 #resources-list { scrollbar-width: thin; scrollbar-color: rgba(15,23,42,0.06) transparent; }
 
 @media (max-width: 720px) {
@@ -560,13 +560,63 @@ img {
 .footer-actions { display:flex; justify-content:flex-end; gap:8px; padding-top:8px; border-top:1px solid rgba(15,23,42,0.04); margin-top:8px; }
 .footer-section .form-row { align-items:center; }
 
-/* Smaller inputs and more compact spacing for better fit */
+/* Smaller inputs and more compact spacing for better fit*/
 @media (max-width: 720px) {
     .lesson-modal .modal-content { max-width: 95%; }
     .lesson-form .form-row { flex-direction:column; }
 }
 
-/* File input custom styling to replace default ugly control */
+/* Force cabeÃ§alho-top to behave as a space-between row on desktop and ensure cabeÃ§alho-actions sits at the right*/
+.painel-do-aluno-header > .header-top {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+@media (min-width: 900px) {
+    .painel-do-aluno-header > .header-top {
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+    }
+    .painel-do-aluno-header .header-actions {
+        margin-left: 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        flex: 0 0 auto;
+    }
+}
+
+/* Position resume button inside cabeÃ§alho at the right edge of the content area on desktop*/
+.painel-do-aluno-header { position: relative; }
+.painel-do-aluno-header .header-actions { display: block; }
+
+@media (min-width: 900px) {
+    .painel-do-aluno-header .header-actions {
+        position: absolute;
+        right: 16px; /* distance from viewport/content edge*/
+        top: 20px; /* align vertically with cabeÃ§alho*/
+        z-index: 100;
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+    }
+
+    /* ensure content has a little right padding so the button doesn't cover it*/
+    .painel-do-aluno-home { padding-right: 48px; }
+}
+/* Mobile: hide desktop cabeÃ§alho-actions button and show inline mobile CTA*/
+@media (max-width: 899px) {
+    .painel-do-aluno-header .header-actions { display: none !important; }
+    .painel-do-aluno-header .header-cta-mobile { display: flex !important; justify-content: center; }
+    .painel-do-aluno-header .header-cta-mobile .btn { width: 100%; border-radius: var(--radius-full); }
+}
+@media (min-width: 900px) {
+    .painel-do-aluno-header .header-cta-mobile { display: none !important; }
+}
+
+/* File input custom styling to replace default ugly control*/
 .lesson-form .form-group input[type="file"] {
     display: block;
     width: 100%;
@@ -579,7 +629,7 @@ img {
     cursor: pointer;
 }
 
-/* Style the button portion in modern browsers */
+/* Style the button portion in modern browsers*/
 .lesson-form .form-group input[type="file"]::file-selector-button {
     margin-right: 12px;
     padding: 8px 12px;
@@ -591,7 +641,7 @@ img {
     cursor: pointer;
 }
 
-/* Webkit fallback */
+/* Webkit fallback*/
 .lesson-form .form-group input[type="file"]::-webkit-file-upload-button {
     margin-right: 12px;
     padding: 8px 12px;
@@ -603,10 +653,10 @@ img {
     cursor: pointer;
 }
 
-/* Improve small helper text appearance */
+/* Improve small helper text appearance*/
 .lesson-form .form-group .text-gray { font-size:0.85rem; color:var(--gray-color); margin-top:6px; display:block; }
 
-/* New: Two-section layout, cards and scroll for lesson modal */
+/* New: Two-section layout, cards and scroll for lesson modal*/
 .lesson-modal .modal-content { max-width:920px; width:100%; border-radius:12px; overflow:hidden; }
 .lesson-modal .modal-content .modal-header { padding:16px; }
 .lesson-modal .card-section { background: var(--white); border:1px solid var(--gray-light); border-radius:10px; padding:12px; box-shadow: 0 6px 18px rgba(15,23,42,0.03); }
@@ -617,23 +667,23 @@ img {
 .lesson-modal .section-scroll::-webkit-scrollbar-track { background: transparent; }
 .lesson-modal .section-scroll::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.10); border-radius:6px; border:2px solid transparent; background-clip: padding-box; }
 
-/* Ensure dynamic lists don't break layout */
+/* Ensure dynamic lists don't break layout*/
 .lesson-modal .resources-list { list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:8px; }
 .resource-item { display:flex; justify-content:space-between; align-items:center; gap:8px; padding:8px; border:1px solid var(--gray-light); border-radius:8px; background:transparent; }
 .resource-left { display:flex; gap:8px; align-items:center; min-width:0; }
 .resource-link { color:var(--primary-color); text-decoration:none; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:60ch; }
 
-/* ensure form controls span their container to avoid uneven widths */
+/* ensure form controls span their contÃªiner to avoid uneven widths*/
 .lesson-modal .form-group input, .lesson-modal .form-group select, .lesson-modal .form-group textarea { width:100%; box-sizing:border-box; }
 
-/* Link row: inputs + button aligned */
+/* Link row: inputs + button aligned*/
 .lesson-modal .link-row { display:flex; gap:8px; align-items:center; margin-top:6px; }
 .lesson-modal .link-row .link-input { flex:1; padding:10px 12px; border:1px solid transparent; border-radius:12px; background:#EEF6FF; font-size:0.95rem; min-width:0; box-sizing:border-box; }
 .lesson-modal .link-row .link-input:focus { outline:none; border-color:var(--primary-color); box-shadow:0 6px 18px rgba(79,70,229,0.06); }
 .lesson-modal .link-actions { display:flex; justify-content:flex-end; margin-top:8px; }
 .lesson-modal .link-actions #add-resource-link { white-space:nowrap; min-width:120px; padding:8px 14px; height:40px; }
 
-/* File dropzone styling */
+/* File dropzone styling*/
 .lesson-modal .file-dropzone { display:flex; align-items:center; justify-content:center; padding:18px; border:2px dashed rgba(31,41,55,0.08); border-radius:12px; background: #FBFDFF; cursor:pointer; transition:var(--transition); }
 .lesson-modal .file-dropzone .dropzone-inner { display:flex; align-items:center; gap:12px; color:var(--dark-color); }
 .lesson-modal .file-dropzone .dropzone-text { font-size:0.95rem; color:var(--gray-color); }
@@ -644,38 +694,38 @@ img {
     .lesson-modal .file-dropzone { padding:14px; }
 }
 
-/* Standardize focus/hover for modal form controls to match site */
+/* Standardize focus/hover for modal form controls to match site*/
 .modal .form-group input:focus, .modal .form-group select:focus, .modal .form-group textarea:focus, .lesson-modal .link-row .link-input:focus {
     outline: none;
     border-color: var(--primary-color);
     box-shadow: 0 6px 18px rgba(79,70,229,0.06);
 }
 
-/* Better vertical spacing and consistent form-row gaps */
+/* Better vertical spacing and consistent form-row gaps*/
 .lesson-form .form-row { display:flex; gap:12px; margin-bottom:12px; }
 .lesson-modal .card-section { padding:14px; }
 .lesson-modal .section-title { margin-bottom:10px; }
 
-/* Ensure resources list stays within content area and looks consistent */
+/* Ensure resources list stays within content area and looks consistent*/
 #resources-list, .lesson-modal .resources-list { max-height:36vh; overflow-y:auto; padding-right:6px; }
 
-/* Make remove buttons consistent size */
+/* Make remove botÃµes consistent size*/
 .resource-right .btn, .resources-list .remove-resource { padding:6px 8px; font-size:0.9rem; }
 
-/* Footer actions fixed inside modal (visually fixed near bottom) */
+/* rodapÃ© actions fixed inside modal (visually fixed near bottom)*/
 .lesson-modal .modal-actions.footer-actions { display:flex; gap:0.75rem; justify-content:flex-end; padding:12px 16px; border-top:1px solid var(--gray-light); margin-top:12px; background:linear-gradient(180deg, rgba(255,255,255,0.95), rgba(255,255,255,0.98)); position:sticky; bottom:0; }
 
-/* Make modal taller on larger screens and prevent whole-modal scroll */
+/* Make modal taller on larger screens and prevent whole-modal scroll*/
 .lesson-modal .modal-content { max-height:85vh; display:flex; flex-direction:column; }
 .lesson-modal .modal-body { padding:16px; overflow:visible; }
 
-/* Small screens: stack rows */
+/* Small screens: stack rows*/
 @media (max-width:720px) {
     .lesson-form .form-row { flex-direction:column; }
     .lesson-modal .section-scroll { max-height:36vh; }
 }
 
-/* Grid layout: informações à esquerda, conteúdo à direita */
+/* Grid layout: informações à esquerda, conteúdo à direita*/
 .lesson-modal .lesson-grid { display:grid; grid-template-columns: 40% 60%; gap:16px; align-items:start; }
 .lesson-modal .lesson-grid .info-section { max-width:100%; }
 .lesson-modal .lesson-grid .content-section { width:100%; }
@@ -684,15 +734,15 @@ img {
     .lesson-modal .lesson-grid { grid-template-columns: 1fr; }
 }
 
-/* prevent background scroll while modal open */
+/* prevent background scroll while modal open*/
 .modal-open { overflow: hidden; }
 
-/* Dragging mode - avoid accidental scroll/clicks */
+/* Dragging mode - avoid accidental scroll/clicks*/
 .dragging-mode { touch-action: none; user-select: none; }
 
 
 
-/* Badges */
+/* Badges*/
 .badge {
     display: inline-block;
     padding: 0.25rem 0.75rem;
@@ -729,8 +779,8 @@ img {
 }
 
 /* =========================
-   LOGIN SCREEN
-========================= */
+   TELA DE login
+=========================*/
 .login-screen {
     min-height: 100vh;
     display: flex;
@@ -821,7 +871,7 @@ img {
     font-weight: 400;
 }
 
-/* Formulário de Login */
+/* Formulário de login*/
 .login-form {
     margin-bottom: 1.5rem;
 }
@@ -853,7 +903,7 @@ img {
 
 .input-with-icon input {
     width: 100%;
-    padding: 0.875rem 3rem 0.875rem 3rem; /* espaço à direita para o botão de olho */
+    padding: 0.875rem 3rem 0.875rem 3rem; /* espaço à direita para o botão de olho*/
     border: 2px solid var(--gray-light);
     border-radius: var(--radius);
     font-size: 1rem;
@@ -889,7 +939,7 @@ img {
     align-items: center;
     justify-content: center;
     padding: 0;
-    border-radius: 9999px; /* circular */
+    border-radius: 9999px; /* circular*/
     line-height: 0;
     transition: var(--transition-fast);
 }
@@ -1082,7 +1132,7 @@ img {
     margin-top: 1rem;
 }
 
-/* Background animado do login */
+/* Background animado do login*/
 .login-background {
     position: absolute;
     top: 0;
@@ -1138,14 +1188,14 @@ img {
 
 /* =========================
    PAINEL DO ALUNO
-========================= */
+=========================*/
 .painel-do-aluno {
     display: flex;
     min-height: 100vh;
     background-color: var(--light-color);
 }
 
-/* Sidebar */
+/* Sidebar*/
 .sidebar {
     width: var(--sidebar-width);
     background-color: var(--white);
@@ -1208,12 +1258,12 @@ img {
     object-fit: cover;
 }
 
-/* Meu Perfil - estilos refinados */
+/* Meu Perfil - estilos refinados*/
 .profile-page {
     padding: 0.45rem 0.85rem 1rem 0.85rem;
 }
 .profile-card-page {
-    padding: 0.8rem; /* further reduced padding for compactness */
+    padding: 0.8rem; /* further reduced padding for compactness*/
 }
 .profile-avatar-wrap { position: relative; width: 120px; }
 .profile-avatar-circle { width: 120px; height: 120px; border-radius: 9999px; overflow: hidden; border: 3px solid rgba(79,70,229,0.08); }
@@ -1229,7 +1279,7 @@ img {
 .metric-value { font-weight:700; font-size:0.98rem; color:var(--dark-color); opacity:0.95; }
 .metric-label { font-size:0.75rem; color:var(--gray-color); text-transform:uppercase; letter-spacing:0.6px; }
 
-/* Improve metric visuals: subtle background and consistent sizing */
+/* Improve metric visuals: subtle background and consistent sizing*/
 .metric-card { background: rgba(255,255,255,1); box-shadow: 0 1px 2px rgba(16,24,40,0.03); display:flex; align-items:center; justify-content:center; flex-direction:column; padding:0.6rem 0.6rem; width:120px; }
 .metric-icon { background: rgba(79,70,229,0.06); color:var(--primary-color); width:36px; height:36px; border-radius:8px; }
 .metric-value { font-size:1.02rem; }
@@ -1250,19 +1300,19 @@ img {
 
 .plan-summary { font-size:0.95rem; }
 
-/* Visual polish */
+/* Visual polish*/
 .profile-card-page { transition: box-shadow 220ms ease, transform 220ms ease; }
 .profile-card-page:hover { box-shadow: var(--shadow-md); transform: translateY(-4px); }
 
 .profile-header-page h1 { font-size: 2.25rem; font-weight:800; }
 .profile-header-page p { font-size:0.95rem; color:var(--gray-color); margin-top:0.25rem; }
 
-/* Ensure compact but legible spacing */
+/* Ensure compact but legible spacing*/
 @media (min-width: 1024px) {
     .profile-card-page { padding: 0.8rem; }
 }
 
-/* Alignment fixes based on screenshot feedback */
+/* Alignment fixes based on screenshot feedback*/
 .profile-header-page { display:flex; align-items:center; justify-content:space-between; gap:1rem; padding: 0.25rem 0; }
 .profile-header-page .btn { margin-top: 0; }
 
@@ -1284,34 +1334,34 @@ img {
 .actions-row .btn-outline { border-color: rgba(79,70,229,0.15); color: var(--primary-color); }
 .actions-row .btn-outline:hover { background: rgba(79,70,229,0.06); }
 
-/* Ensure plan-summary aligns visually with right column, not pushed too low */
+/* Ensure plan-summary aligns visually with right column, not pushed too low*/
 .plan-summary { margin-top:0.75rem; }
 .plan-summary-box { border:1px solid var(--gray-light); background: linear-gradient(180deg, rgba(255,255,255,1), rgba(250,250,250,1)); padding:1rem; border-radius:10px; }
 .plan-summary-box strong { display:block; font-size:1rem; margin-bottom:0.25rem; }
 .plan-summary-box .text-gray { font-size:0.9rem; }
 
-/* Header alignment: place header actions to the same container width as card */
+/* cabeÃ§alho alignment: place cabeÃ§alho actions to the same contÃªiner width as card*/
 .profile-header-page .container { max-width: 1200px; margin: 0 auto; padding: 0 1rem; }
 .profile-header-actions { display:flex; align-items:center; gap:0.5rem; }
 .profile-header-actions .btn { box-shadow: var(--shadow); }
 
-/* Improve spacing around metrics block to align with left column */
+/* Improve spacing around metrics block to align with left column*/
 .profile-left .metrics-grid { margin-top: 8px; }
 
-/* Slightly reduce left column width on smaller screens for balance */
+/* Slightly reduce left column width on smaller screens for balance*/
 @media (min-width: 1024px) {
     .profile-left-fixed { flex: 0 0 200px; }
 }
 
 
-/* Avatar overlay - slightly smaller and inside circle */
+/* Avatar overlay - slightly smaller and inside circle*/
 .avatar-edit-overlay { right:8px; bottom:8px; }
 
-/* Slightly reduce card border radius to match main cards */
+/* Slightly reduce card border radius to match main cards*/
 .profile-card-page { border-radius: 12px; }
 
 
-/* Responsive tweaks to avoid vertical scroll on typical desktop view */
+/* Responsive tweaks to avoid vertical scroll on typical desktop view*/
 @media (min-width: 1024px) {
     .profile-card-page { padding: 1rem; }
     .profile-left { flex-basis: 220px; }
@@ -1352,7 +1402,7 @@ img {
     overflow-x: hidden;
 }
 
-/* Custom thin scrollbar for sidebar (hidden by default, visible on hover) */
+/* Custom thin scrollbar for sidebar (hidden by default, visible on hover)*/
 .sidebar-nav::-webkit-scrollbar { width: 8px; }
 .sidebar-nav::-webkit-scrollbar-track { background: transparent; }
 .sidebar-nav::-webkit-scrollbar-thumb { background: rgba(15,23,42,0.06); border-radius: 999px; }
@@ -1436,7 +1486,7 @@ img {
     background-color: var(--white);
 }
 
-/* Collapsed sidebar styles (toggle by adding `.collapsed` to `.sidebar`) */
+/* Collapsed sidebar styles (toggle by adding `.collapsed` to `.sidebar`)*/
 .sidebar.collapsed { width: 84px; }
 .sidebar.collapsed .profile-info, .sidebar.collapsed .section-title { display: none; }
 .sidebar.collapsed .nav-item a { justify-content: center; padding: 0.75rem 0; }
@@ -1461,7 +1511,7 @@ img {
     background-color: rgba(239, 68, 68, 0.1);
 }
 
-/* Conteúdo Principal */
+/* Conteúdo Principal*/
 .main-content {
     flex: 1;
     margin-left: var(--sidebar-width);
@@ -1823,14 +1873,14 @@ img {
     margin: 0.5rem 0;
 }
 
-/* Conteúdo do Painel do Aluno */
+/* Conteúdo do Painel do Aluno*/
 .painel-do-aluno-content {
     flex: 1;
     padding: 0.75rem 2rem 2rem 2rem;
     overflow-y: auto;
 }
 
-/* Stats Cards */
+/* Stats Cards*/
 .stats-cards {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
@@ -1895,17 +1945,19 @@ img {
     text-overflow: ellipsis;
     display: -webkit-box;
     -webkit-line-clamp: 2;
+    line-clamp: 2;
     -webkit-box-orient: vertical;
     word-break: break-word;
 }
 
-/* Prevent truncation for values that must stay on one line (dates, short numbers) */
+/* Prevent truncation for values that must stay on one line (dates, short numbers)*/
 .stat-info h3.no-wrap {
     white-space: nowrap;
     overflow: visible;
     text-overflow: clip;
     display: block;
     -webkit-line-clamp: unset;
+    line-clamp: unset;
     -webkit-box-orient: unset;
 }
 
@@ -1914,7 +1966,7 @@ img {
     font-size: 0.875rem;
 }
 
-/* Seções de Cursos */
+/* Seções de Cursos*/
 .courses-section {
     margin-bottom: 2.5rem;
 }
@@ -1950,16 +2002,16 @@ img {
     gap: 1.25rem;
 }
 
-/* Layout para Painel do Aluno: duas colunas (conteúdo + sidebar/progresso) */
+/* Layout para Painel do Aluno: duas colunas (conteúdo + sidebar/progresso)*/
 .painel-do-aluno-grid {
     display: grid;
-    /* 2-column layout: main content + aside/progress */
+    /* 2-column layout: main content + aside/progress*/
     grid-template-columns: 1fr minmax(300px, 380px);
     gap: 1.5rem;
     align-items: start;
 }
 
-/* Breakpoints to support a wide range of laptop/desktop sizes */
+/* Breakpoints to support a wide range of laptop/desktop sizes*/
 @media (max-width: 1400px) {
     .painel-do-aluno-grid {
         grid-template-columns: 1fr minmax(260px, 360px);
@@ -2010,7 +2062,7 @@ img {
     transform: scale(1.07) translateZ(0);
 }
 
-/* subtle gradient overlay at bottom of image to improve title contrast */
+/* subtle gradient overlay at bottom of image to improve title contrast*/
 .course-image::after {
     content: "";
     position: absolute;
@@ -2057,29 +2109,29 @@ img {
     flex-direction: column;
 }
 
-/* Make continue action the primary focal point */
+/* Make continue action the primary focal point*/
 .course-footer { margin-top: auto; }
 .course-meta { display:flex; justify-content:space-between; align-items:center; gap:1rem; }
 .course-meta .course-meta-right { min-width: 160px; display:flex; justify-content:flex-end; }
 .btn-continue { padding: 0.7rem 1rem; border-radius: 10px; font-weight:800; box-shadow: 0 12px 30px rgba(124,58,237,0.12); transform-origin: center; transition: transform .12s ease, box-shadow .12s ease; }
 .btn-continue:hover { transform: translateY(-3px); box-shadow: 0 18px 40px rgba(79,70,229,0.12); }
 
-/* progress visuals */
+/* progress visuals*/
 .progress-info .progress-percent { font-weight:700; color:var(--primary-color); }
 .progress-bar { height: 10px; background: rgba(15,23,42,0.04); border-radius: 999px; overflow: hidden; }
 .progress-bar .progress-fill { height:100%; background: linear-gradient(90deg, var(--primary-color) 0%, rgba(124,58,237,0.95) 100%); transition: width 700ms cubic-bezier(.2,.9,.2,1); }
 
-/* refine level badges to be more discrete and integrated */
+/* refine level badges to be more discrete and integrated*/
 .course-level { opacity: 0.92; font-weight:700; background: rgba(255,255,255,0.85); padding:6px 10px; border-radius:999px; font-size:0.75rem; box-shadow: 0 6px 18px rgba(15,23,42,0.04); }
 .course-level.intermediate { color: var(--warning-color); }
 .course-level.advanced { color: var(--danger-color); }
 
-/* header greeting */
+/* cabeÃ§alho greeting*/
 .painel-do-aluno-header { display:flex; align-items:center; justify-content:space-between; gap:1rem; max-width: 1200px; margin: 0 auto 1rem auto; }
 .painel-do-aluno-header .greeting { margin:0; font-size:1rem; }
 .painel-do-aluno-header .greeting-sub { display:block; font-weight:500; color:var(--gray-color); font-size:0.95rem; margin-top:6px; }
 
-/* avoid very wide layouts */
+/* avoid very wide layouts*/
 .painel-do-aluno-home { max-width: 1280px; margin: 0 auto; padding: 0 0.75rem; }
 
 @media (max-width: 900px) {
@@ -2174,7 +2226,7 @@ img {
     font-size: 0.85rem;
 }
 
-/* Seção de Progresso */
+/* Seção de Progresso*/
 .progress-section {
     display: grid;
     grid-template-columns: 1fr;
@@ -2276,7 +2328,7 @@ img {
     transition: width 500ms ease;
 }
 
-/* Meta items inside progress card (stacked title + value) */
+/* Meta items inside progress card (stacked title + value)*/
 .progress-meta {
     display: flex;
     flex-direction: column;
@@ -2303,7 +2355,7 @@ img {
     line-height: 1.3;
 }
 
-/* Always stack meta items vertically (one below the other) for clarity */
+/* Always stack meta items vertically (one below the other) for clarity*/
 .progress-meta { flex-direction: column; }
 .progress-meta-item { width: 100%; }
 
@@ -2311,7 +2363,7 @@ img {
     .progress-section { grid-template-columns: minmax(320px, 420px); }
 }
 
-/* Footer */
+/* RodapÃ©*/
 .main-footer {
     padding: 1.25rem 2rem;
     border-top: 1px solid var(--gray-light);
@@ -2336,7 +2388,7 @@ img {
 
 /* =========================
    MODAIS
-========================= */
+=========================*/
 .modal {
     position: fixed;
     top: 0;
@@ -2423,7 +2475,7 @@ img {
     padding: 1.5rem;
 }
 
-/* Profile edit modal: use site colors for header and polish inputs/buttons */
+/* Profile edit modal: use site colors for cabeÃ§alho and polish inputs/botÃµes*/
 .profile-modal .modal-header {
     padding: 1.25rem 1.5rem;
     background: linear-gradient(90deg, var(--primary-color) 0%, var(--secondary-color) 100%);
@@ -2463,14 +2515,14 @@ img {
 .profile-modal .actions-left { display:flex; align-items:center; }
 .profile-modal .actions-right { display:flex; align-items:center; }
 
-/* Neutral outline for Cancel button */
+/* Neutral outline for Cancel button*/
 .btn-outline-neutral { border-color: rgba(15,23,42,0.08); color: var(--gray-dark); background: transparent; }
 .btn-outline-neutral:hover { background: rgba(15,23,42,0.04); }
 
-/* Make Cancel visually lighter but still a button */
+/* Make Cancel visually lighter but still a button*/
 .profile-modal .modal-actions .btn-outline.modal-close { background: transparent; }
 
-/* Ensure inputs and actions look consistent on small screens */
+/* Ensure inputs and actions look consistent on small screens*/
 @media (max-width: 720px) {
     .profile-modal .modal-content { max-width: calc(100% - 2rem); margin: 0 1rem; }
     .profile-modal .modal-actions { flex-direction: column-reverse; align-items: stretch; }
@@ -2513,7 +2565,7 @@ img {
 }
 
 #register-modal .modal-content {
-    max-width: 1500px; /* aumento adicional para mais espaço horizontal */
+    max-width: 1500px; /* aumento adicional para mais espaço horizontal*/
     width: calc(100% - 3rem);
     box-sizing: border-box;
     border-radius: 14px;
@@ -2602,7 +2654,7 @@ img {
     #register-modal .modal-header h2 { font-size: 1.2rem; }
 }
 
-/* Estilos específicos para modal de gerenciamento de usuários (seguir design do site) */
+/* Estilos específicos para modal de gerenciamento de usuários (seguir design do site)*/
 .admin-user-modal .modal-body .form-row {
     align-items: flex-start;
 }
@@ -2643,7 +2695,7 @@ img {
     width: 100%;
 }
 
-/* Upload de avatar */
+/* Upload de avatar*/
 .admin-user-modal .avatar-uploader {
     width: 100%;
     display: flex;
@@ -2669,7 +2721,7 @@ img {
     font-size: 0.85rem;
 }
 
-/* Melhorias visuais do modal */
+/* Melhorias visuais do modal*/
 .admin-user-modal .modal-header h2 {
     font-size: 1.25rem;
     letter-spacing: -0.2px;
@@ -2681,7 +2733,7 @@ img {
     min-width: 110px;
 }
 
-/* Inputs com visual preenchido como na imagem */
+/* Inputs com visual preenchido como na imagem*/
 .admin-user-modal input[type="text"],
 .admin-user-modal input[type="email"],
 .admin-user-modal input[type="password"],
@@ -2718,7 +2770,7 @@ img {
     color: var(--primary-color);
 }
 
-/* Header com gradiente roxo e subtítulo */
+/* cabeÃ§alho com gradiente roxo e subtítulo*/
 .admin-user-modal .modal-header {
     background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
     color: #fff;
@@ -2732,13 +2784,13 @@ img {
 .admin-user-modal .modal-header .modal-close {
     color: rgba(255,255,255,0.85);
 }
-/* Corrigir hover do botão de fechar no header roxo: manter ícone visível */
+/* Corrigir hover do botão de fechar no cabeÃ§alho roxo: manter ícone visível*/
 .admin-user-modal .modal-header .modal-close:hover {
     background-color: rgba(255,255,255,0.12);
-    color: #ffffff; /* manter o X branco sobre o fundo levemente esbranquiçado */
+    color: #ffffff; /* manter o X branco sobre o fundo levemente esbranquiçado*/
 }
 
-/* Estilizar textarea para seguir o mesmo visual dos inputs preenchidos */
+/* Estilizar textarea para seguir o mesmo visual dos inputs preenchidos*/
 .admin-user-modal textarea,
 .admin-user-modal .input-with-icon textarea {
     background: #eef6ff;
@@ -2759,7 +2811,7 @@ img {
     border-color: transparent;
 }
 
-/* Estilo para coluna de avaliação (num + estrela) */
+/* Estilo para coluna de avaliação (num + estrela)*/
 .rating {
     display: inline-flex;
     align-items: center;
@@ -2771,7 +2823,7 @@ img {
     font-size: 0.95rem;
 }
 .rating-icon {
-    color: #FFC107; /* amber */
+    color: #FFC107; /* amber*/
     text-shadow: 0 1px 0 rgba(0,0,0,0.05);
     font-size: 0.95rem;
 }
@@ -2806,24 +2858,24 @@ img {
     margin-top: 4px;
 }
 
-/* Estilo específico apenas para o campo de senha (visual como na imagem anexada) */
+/* Estilo específico apenas para o campo de senha (visual como na imagem anexada)*/
 .admin-user-modal .form-group label[for="user-password"] {
     display: block;
     margin-bottom: 0.5rem;
     font-weight: 600;
 }
 .admin-user-modal .form-group .input-with-icon {
-    background: transparent; /* tornar wrapper transparente para eliminar camada dupla */
-    padding: 0; /* remover padding para que só o input tenha o preenchimento */
+    background: transparent; /* tornar wrapper transparente para eliminar camada dupla*/
+    padding: 0; /* remover padding para que só o input tenha o preenchimento*/
     border-radius: 0;
     position: relative;
     box-shadow: none;
-    border: none; /* remover borda residual que criava o quadrado cinza */
+    border: none; /* remover borda residual que criava o quadrado cinza*/
 }
 .admin-user-modal .form-group .input-with-icon input {
-    background: #eef6ff; /* deixar igual aos outros inputs */
+    background: #eef6ff; /* deixar igual aos outros inputs*/
     border: none;
-    padding: 0.9rem 3rem 0.9rem 1rem; /* espaço para o ícone à direita */
+    padding: 0.9rem 3rem 0.9rem 1rem; /* espaço para o ícone à direita*/
     border-radius: 10px;
     width: 100%;
     box-shadow: none;
@@ -2833,7 +2885,7 @@ img {
 }
 .admin-user-modal .form-group .input-with-icon input:focus {
     border-color: transparent;
-    box-shadow: none; /* aparência limpa sem sombra */
+    box-shadow: none; /* aparência limpa sem sombra*/
 }
 .admin-user-modal .form-group .password-toggle {
     position: absolute;
@@ -2859,9 +2911,9 @@ img {
 
 /* =========================
    Responsividade adicional e regras para breakpoints variados
-   ========================= */
+   =========================*/
 
-/* Backdrop para sidebar em telas pequenas */
+/* Backdrop para sidebar em telas pequenas*/
 .sidebar-backdrop {
     position: fixed;
     inset: 0;
@@ -2872,7 +2924,7 @@ img {
 }
 .sidebar-backdrop.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
 
-/* Off-canvas sidebar behavior (mobile/tablet) */
+/* Off-canvas sidebar behavior (mobile/tablet)*/
 @media (max-width: 1024px) {
     :root { --sidebar-width: 280px; --header-height: 64px; }
     .sidebar {
@@ -2896,12 +2948,12 @@ img {
     .hidden-desktop { display: inline-flex; }
 }
 
-/* Mostrar toggle apenas em telas pequenas, esconder em desktop */
+/* Mostrar toggle apenas em telas pequenas, esconder em desktop*/
 .menu-toggle { display: none; background: none; border: none; font-size: 1.125rem; width:40px; height:40px; align-items:center; justify-content:center; border-radius:8px; color:var(--dark-color); }
 .menu-toggle:focus { outline: none; box-shadow: 0 6px 18px rgba(79,70,229,0.06); }
 .hidden-desktop { display: none; }
 
-/* Header / Top menu adjustments for smaller screens (preserve font sizes and controls) */
+/* cabeÃ§alho / Top menu adjustments for smaller screens (preserve font sizes and controls)*/
 @media (max-width: 768px) {
     :root { --header-height: 64px; }
     .main-header { padding: 0.75rem 1rem; height: var(--header-height); }
@@ -2910,19 +2962,19 @@ img {
     .hidden-desktop { display: inline-flex; }
 }
 
-/* Keep original sizes on very small screens; ensure container fits viewport without changing element sizes */
+/* Keep original sizes on very small screens; ensure contÃªiner fits viewport without changing element sizes*/
 @media (max-width: 420px) {
     .login-container { max-width: calc(100% - 2rem); }
 }
 
-/* Forms and modals: keep inputs inside viewport, avoid overflow */
+/* Forms and modais: keep inputs inside viewport, avoid overflow*/
 @media (max-width: 560px) {
     .modal .modal-content, #register-modal .modal-content { max-width: calc(100% - 1.5rem); margin: 0 .75rem; }
     .modal .modal-body { padding: 1rem; }
     .form-row { flex-direction: column; gap: 0.75rem; }
 }
 
-/* Cards, grids and columns: enforce stacking on narrow screens */
+/* Cards, grids and columns: enforce stacking on narrow screens*/
 @media (max-width: 768px) {
     .courses-grid { grid-template-columns: 1fr; }
     .stats-cards { grid-template-columns: 1fr; }
@@ -2937,13 +2989,13 @@ img {
     .plan-cards { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; }
 }
 
-/* Larger screens: ensure content doesn't stretch too wide, keep centered */
+/* Larger screens: ensure content doesn't stretch too wide, keep centered*/
 @media (min-width: 1367px) {
     .container { max-width: 1400px; }
     :root { --sidebar-width: 300px; --header-height: 84px; }
 }
 
-/* Ultra-wide desktops (ensure layouts adapt to large widths up to 2560) */
+/* Ultra-wide desktops (ensure layouts adapt to large widths up to 2560)*/
 @media (min-width: 1600px) {
     .container { max-width: 1600px; }
 }
@@ -2956,22 +3008,22 @@ img {
     .container { max-width: 2300px; }
 }
 
-/* Preserve root font-size to avoid changing element sizes across breakpoints */
+/* Preserve root font-size to avoid changing element sizes across breakpoints*/
 
-/* Safety: avoid horizontal scroll anywhere */
+/* Safety: avoid horizontal scroll anywhere*/
 html, body { overflow-x: hidden; }
 
-/* Ensure inputs, buttons, cards never overflow container widths */
+/* Ensure inputs, botÃµes, cards never overflow contÃªiner widths*/
 input, textarea, select, button, .card-section, .course-card, .plan-card { max-width: 100%; box-sizing: border-box; }
 
-/* Make sure icons and text scale proportionally in sidebar */
+/* Make sure icons and text scale proportionally in sidebar*/
 .sidebar .nav-item a i { font-size: 1.05rem; }
 
-/* Accessibility: focus-visible outlines preserved */
+/* Accessibility: focus-visible outlines preserved*/
 *:focus { outline: 2px solid transparent; }
 *:focus-visible { outline: 3px solid rgba(79,70,229,0.16); outline-offset: 2px; }
 
-/* When on authentication screens (login/register/forgot), hide site menus */
+/* When on authentication screens (login/register/forgot), hide site menus*/
 .auth-active .sidebar,
 .auth-active .main-header,
 .auth-active .main-content {
@@ -2979,24 +3031,24 @@ input, textarea, select, button, .card-section, .course-card, .plan-card { max-w
 }
 
 /* =========================
-   Header - Responsividade (fixes)
-   ========================= */
-/* Allow the header-left area to shrink (prevent pushing other items) */
+   cabeÃ§alho - Responsividade (fixes)
+   =========================*/
+/* Allow the cabeÃ§alho-left area to shrink (prevent pushing other items)*/
 .main-header .header-left {
     display: flex;
     flex-direction: column;
     flex: 1 1 auto;
-    min-width: 0; /* important for text-overflow inside flex */
+    min-width: 0; /* important for text-overflow inside flex*/
 }
 .main-header .header-left h2,
 .main-header .header-left p {
     min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
-    white-space: nowrap; /* keep greeting and date on single line; use ellipsis when necessary */
+    white-space: nowrap; /* keep greeting and date on single line; use ellipsis when necessary*/
 }
 
-/* Ensure right-side controls don't cause overflow and can wrap sensibly */
+/* Ensure right-side controls don't cause overflow and can wrap sensibly*/
 .main-header .header-right {
     display: flex;
     align-items: center;
@@ -3007,7 +3059,7 @@ input, textarea, select, button, .card-section, .course-card, .plan-card { max-w
     flex-shrink: 0;
 }
 
-/* Hamburger (menu-toggle) visible only on mobile (<=768px) */
+/* Hamburger (menu-toggle) visible only on mobile (<=768px)*/
 @media (min-width: 769px) {
     .menu-toggle, .hidden-desktop { display: none !important; }
 }
@@ -3020,7 +3072,7 @@ input, textarea, select, button, .card-section, .course-card, .plan-card { max-w
     .header-left h2 { font-size: 1.125rem; }
     .header-left p { font-size: 0.825rem; }
 
-    /* On small screens ensure dropdowns become fixed so they are not clipped */
+    /* On small screens ensure dropdowns become fixed so they are not clipped*/
     .header-right .notifications-dropdown,
     .header-right .user-menu,
     .notifications-dropdown,
@@ -3038,7 +3090,7 @@ input, textarea, select, button, .card-section, .course-card, .plan-card { max-w
     }
 }
 
-/* General dropdown safety: never exceed viewport width/height */
+/* General dropdown safety: never exceed viewport width/height*/
 .notifications-dropdown,
 .user-menu {
     max-width: calc(100vw - 32px);
@@ -3049,7 +3101,7 @@ input, textarea, select, button, .card-section, .course-card, .plan-card { max-w
     left: auto;
 }
 
-/* Very small screens: make dropdown span nearly full width (better accessibility) */
+/* Very small screens: make dropdown span nearly full width (better accessibility)*/
 @media (max-width: 420px) {
     .notifications-dropdown,
     .user-menu {
@@ -3062,23 +3114,23 @@ input, textarea, select, button, .card-section, .course-card, .plan-card { max-w
     }
 }
 
-/* Keep notification/user buttons clickable when header wraps */
+/* Keep notification/user botÃµes clickable when cabeÃ§alho wraps*/
 .btn-notification, .header-user { z-index: 60; }
 
-/* Allow header to grow vertically on small screens to avoid overlap */
+/* Allow cabeÃ§alho to grow vertically on small screens to avoid overlap*/
 @media (max-width: 768px) {
     .main-header { height: auto; position: sticky; top: 0; }
 }
 
 
-/* Also hide menus when the login screen is visible (no JS needed for this case) */
+/* Also hide menus when the login tela is visible (no JS needed for this case)*/
 #login-screen:not(.hidden) ~ .painel-do-aluno .sidebar,
 #login-screen:not(.hidden) ~ .painel-do-aluno .main-header,
 #login-screen:not(.hidden) ~ .painel-do-aluno .main-content {
     display: none !important;
 }
 
-/* When register or forgot modals are visible (modals are later in DOM), use :has where supported, fallback to body.auth-active */
+/* When register or forgot modais are visible (modais are later in DOM), use :has where supported, fallback to body.auth-active*/
 body:has(#register-modal:not(.hidden)) .sidebar,
 body:has(#register-modal:not(.hidden)) .main-header,
 body:has(#register-modal:not(.hidden)) .main-content,
@@ -3088,46 +3140,46 @@ body:has(#forgot-modal:not(.hidden)) .main-content {
     display: none !important;
 }
 
-/* Mobile fixes: ensure header, painel and register modal wrap correctly without changing element sizes */
+/* Mobile fixes: ensure cabeÃ§alho, painel and register modal wrap correctly without changing element sizes*/
 @media (max-width: 768px) {
-    /* Allow header to wrap so right-side items don't overflow */
+    /* Allow cabeÃ§alho to wrap so right-side items don't overflow*/
     .main-header {
         display: flex;
         flex-wrap: wrap;
         align-items: center;
         gap: 0.5rem;
         padding: 0.75rem 1rem;
-        height: auto; /* allow multi-line header without forcing font-size changes */
+        height: auto; /* allow multi-line cabeÃ§alho without forcing font-size changes*/
     }
     .header-left { flex: 1 1 60%; min-width: 140px; }
     .header-right { flex: 0 1 40%; display: flex; gap: 0.5rem; justify-content: flex-end; align-items: center; flex-wrap: wrap; }
     .header-search { order: 3; flex: 1 1 100%; max-width: 100%; }
     .btn-notification, .header-user { flex: 0 0 auto; }
 
-    /* Painel content: stack grids and avoid horizontal overflow */
+    /* Painel content: stack grids and avoid horizontal overflow*/
     .painel-do-aluno-grid { grid-template-columns: 1fr !important; }
     .painel-do-aluno-content { padding-left: 1rem; padding-right: 1rem; }
 
-    /* Make sure sidebar does not push content when hidden off-canvas */
+    /* Make sure sidebar does not push content when hidden off-canvas*/
     .main-content { margin-left: 0 !important; }
 
-    /* Register modal: force single-column layout and ensure modal fits viewport */
+    /* Register modal: force single-column layout and ensure modal fits viewport*/
     #register-modal .modal-content { max-width: calc(100% - 1rem); margin: 0 0.5rem; }
     #register-modal .register-grid, #register-modal .register-form .form-grid { grid-template-columns: 1fr !important; }
     #register-modal .plan-cards { grid-template-columns: 1fr !important; overflow-x: auto; }
 }
 
-/* Slightly larger breakpoint to guarantee modal fits on small tablets */
+/* Slightly larger breakpoint to guarantee modal fits on small tablets*/
 @media (max-width: 1024px) {
     #register-modal .modal-content { max-width: calc(100% - 2rem); }
     #register-modal .plan-cards { max-width: 100%; overflow-x: auto; }
 }
 
-/* Ensure plan-cards never force modal wider than viewport */
+/* Ensure plan-cards never force modal wider than viewport*/
 #register-modal .plan-cards, #register-modal .register-grid { box-sizing: border-box; max-width: 100%; }
 
 
-/* Show menu-toggle only for logged-in panel (prevents appearing on login/register) */
+/* Show menu-toggle only for logged-in panel (prevents appearing on login/register)*/
 .menu-toggle { display: none; }
 .painel-do-aluno .menu-toggle { display: none; }
 @media (max-width: 1024px) {
@@ -3173,7 +3225,7 @@ body:has(#forgot-modal:not(.hidden)) .main-content {
     font-weight: 600;
 }
 
-/* Planos de Assinatura */
+/* Planos de Assinatura*/
 .plans-selection {
     display: flex;
     flex-direction: column;
@@ -3263,7 +3315,7 @@ body:has(#forgot-modal:not(.hidden)) .main-content {
     font-size: 0.875rem;
 }
 
-/* Modal de Detalhes do Plano */
+/* modal de Detalhes do Plano*/
 .plan-details-content {
     display: flex;
     flex-direction: column;
@@ -3362,7 +3414,7 @@ body:has(#forgot-modal:not(.hidden)) .main-content {
     color: var(--gray-color);
 }
 
-/* Modal de Aula */
+/* modal de Aula*/
 .lesson-modal-content {
     display: flex;
     flex-direction: column;
@@ -3372,7 +3424,7 @@ body:has(#forgot-modal:not(.hidden)) .main-content {
 .video-player-container {
     position: relative;
     width: 100%;
-    padding-bottom: 56.25%; /* 16:9 Aspect Ratio */
+    padding-bottom: 56.25%; /* 16:9 Aspect Ratio*/
     background-color: var(--black);
     border-radius: var(--radius);
     overflow: hidden;
@@ -3394,7 +3446,7 @@ body:has(#forgot-modal:not(.hidden)) .main-content {
     border-radius: var(--radius);
 }
 
-/* Lesson modal improved layout */
+/* Lesson modal improved layout*/
 .lesson-modal-content { display: flex; flex-direction: column; gap: 1rem; }
 .lesson-top { display:flex; align-items:center; justify-content:space-between; gap:1rem; }
 .lesson-status-badge { display:inline-flex; align-items:center; gap:0.5rem; padding:0.35rem 0.6rem; border-radius:999px; font-weight:700; font-size:0.9rem; }
@@ -3418,7 +3470,7 @@ body:has(#forgot-modal:not(.hidden)) .main-content {
 .lesson-actions-modal .left-actions { display:flex; gap:0.5rem; }
 .lesson-actions-modal .right-actions { display:flex; gap:0.5rem; align-items:center; }
 
-/* Responsive: on wide screens present video and materials side-by-side */
+/* Responsive: on wide screens present video and materials side-by-side*/
 @media (min-width: 900px) {
     .lesson-main-grid { grid-template-columns: 2fr 1fr; }
 }
@@ -3464,7 +3516,7 @@ body:has(#forgot-modal:not(.hidden)) .main-content {
 
 /* =========================
    PÁGINA DE AULAS (ESTILOS MELHORADOS)
-   ========================= */
+   =========================*/
 .lessons-page {
     padding: 1.25rem 0 2.5rem;
 }
@@ -3523,14 +3575,14 @@ body:has(#forgot-modal:not(.hidden)) .main-content {
     gap: 0.75rem;
 }
 
-/* Lesson card layout */
+/* Lesson card layout*/
 .lesson-card {
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 0.75rem;
     padding: 1rem;
-    width: 100%; /* make the inner lesson card span the full available width */
+    width: 100%; /* make the inner lesson card span the full available width*/
     background-color: var(--white);
     border: 1px solid rgba(15,23,42,0.04);
     border-radius: 10px;
@@ -3577,10 +3629,10 @@ body:has(#forgot-modal:not(.hidden)) .main-content {
     font-size: 0.88rem;
 }
 
-/* Ensure actions align to the right edge and don't constrain the card */
+/* Ensure actions align to the right edge and don't constrain the card*/
 .lesson-actions { display: flex; gap: 0.6rem; align-items: center; }
 
-/* Next lesson visual */
+/* Next lesson visual*/
 .lesson-item.next > .flex, .lesson-item .next-bg {
     background-color: rgba(79,70,229,0.03);
 }
@@ -3596,7 +3648,7 @@ body:has(#forgot-modal:not(.hidden)) .main-content {
 .course-section-title { font-size: 1.15rem; font-weight:800; margin:0; color:var(--dark-color); }
 .course-header-sub { font-size:0.9rem; color:var(--gray-color); }
 
-/* Ajustes responsivos */
+/* Ajustes responsivos*/
 @media (max-width: 900px) {
     .lessons-header { flex-direction: column; align-items: flex-start; gap: 0.5rem; }
     .lesson-item > .flex { flex-direction: column; align-items: stretch; }
@@ -3606,7 +3658,7 @@ body:has(#forgot-modal:not(.hidden)) .main-content {
 /* Mobile-only adjustments for Aulas / Minhas Aulas
    - transform horizontal cards into vertical cards
    - place status icon at top-left
-   - stack action buttons full-width and vertical
+   - stack action botÃµes full-width and vertical
    - avoid horizontal scrolling and preserve visual identity
 */
 @media (max-width: 600px) {
@@ -3619,7 +3671,7 @@ body:has(#forgot-modal:not(.hidden)) .main-content {
         box-sizing: border-box;
     }
 
-    /* Ensure status/icon appears at the top-left of the card */
+    /* Ensure status/icon appears at the top-left of the card*/
     .lesson-status {
         order: -1;
         align-self: flex-start;
@@ -3638,13 +3690,13 @@ body:has(#forgot-modal:not(.hidden)) .main-content {
     .lesson-title { margin-bottom: 0.25rem; }
     .lesson-desc { margin-bottom: 0.5rem; }
 
-    /* Put meta (ex: "Vídeo · 50 min") on its own line */
+    /* Put meta (ex: "Vídeo · 50 min") on its own line*/
     .lesson-meta {
         display: block;
         margin-bottom: 0.5rem;
     }
 
-    /* Buttons: stacked, full-width, never side-by-side */
+    /* botÃµes: stacked, full-width, never side-by-side*/
     .lesson-actions {
         display: flex !important;
         flex-direction: column !important;
@@ -3659,7 +3711,7 @@ body:has(#forgot-modal:not(.hidden)) .main-content {
         justify-content: center;
     }
 
-    /* Prevent horizontal scrolling from any card/content */
+    /* Prevent horizontal scrolling from any card/content*/
     .lessons-container, .lessons-list, .lesson-card {
         min-width: 0;
         overflow-x: hidden;
@@ -3669,9 +3721,9 @@ body:has(#forgot-modal:not(.hidden)) .main-content {
 
 /* =========================
    PÁGINAS ESPECÍFICAS
-========================= */
+=========================*/
 
-/* Página de Perfil */
+/* Página de Perfil*/
 .profile-page {
     max-width: 900px;
     margin: 2rem auto;
@@ -3808,9 +3860,9 @@ body:has(#forgot-modal:not(.hidden)) .main-content {
     .profile-avatar-section { flex-direction: row; gap: 1rem; }
 }
 
-/* Mobile profile-specific layout (structure-only changes) */
+/* Mobile profile-specific layout (structure-only changes)*/
 @media (max-width: 600px) {
-    /* Top area: center name, email and place edit button below */
+    /* Top area: center name, email and place edit button below*/
     .profile-header-page {
         flex-direction: column;
         align-items: center;
@@ -3818,7 +3870,7 @@ body:has(#forgot-modal:not(.hidden)) .main-content {
         gap: 0.5rem;
     }
 
-    /* Ensure inner container doesn't keep desktop 'space-between' layout */
+    /* Ensure inner contÃªiner doesn't keep desktop 'space-between' layout*/
     .profile-header-page .container {
         display: flex !important;
         flex-direction: column !important;
@@ -3844,7 +3896,7 @@ body:has(#forgot-modal:not(.hidden)) .main-content {
     .profile-info-section h2 { margin: 0 0 0.25rem 0; }
     .profile-email-page { margin: 0 0 0.5rem 0; }
 
-    /* Edit button full width, easy to tap */
+    /* Edit button full width, easy to tap*/
     #edit-profile-btn, #btn-edit-profile, .profile-header-page .btn {
         width: 100%;
         max-width: 420px;
@@ -3852,7 +3904,7 @@ body:has(#forgot-modal:not(.hidden)) .main-content {
         padding: 0.85rem 1rem;
     }
 
-    /* Profile card: avatar centered on top, badge under avatar */
+    /* Profile card: avatar centered on top, badge under avatar*/
     .profile-card-page .profile-avatar-section {
         flex-direction: column;
         align-items: center;
@@ -3863,59 +3915,59 @@ body:has(#forgot-modal:not(.hidden)) .main-content {
     .profile-avatar-large { margin: 0 auto 0.25rem auto; }
     .profile-plan-badge { margin-top: 0.35rem; }
 
-    /* Metrics: 2x2 grid or column depending on available width */
+    /* Metrics: 2x2 grid or column depending on available width*/
     .profile-stats-page { grid-template-columns: repeat(2, 1fr); gap: 0.6rem; }
-    /* Also adjust the metrics container used in markup */
+    /* Also adjust the metrics contÃªiner used in markup*/
     .metrics-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.6rem; justify-items: center; }
     .metric-card { width: 100%; max-width: 100%; }
 
-    /* Ensure metrics degrade to a single column on very narrow screens */
+    /* Ensure metrics degrade to a single column on very narrow screens*/
     @media (max-width: 380px) {
         .profile-stats-page { grid-template-columns: 1fr; }
     }
 
-    /* Account info: each item stacked vertically (label above value) */
+    /* Account info: each item stacked vertically (label above value)*/
     .account-info-list li { display: block; padding: 0.6rem 0.75rem; }
     .account-info-list .info-key { display: block; margin-bottom: 0.25rem; text-transform:uppercase; font-size:0.78rem; }
     .account-info-list .info-val { display: block; font-size:0.95rem; }
 
-    /* Modal: profile edit should fit mobile and be scrollable if tall */
+    /* modal: profile edit should fit mobile and be scrollable if tall*/
     .profile-modal .modal-content { width: 90%; max-width: 90%; max-height: 90vh; }
     .profile-modal .modal-body { max-height: calc(90vh - 72px); overflow-y: auto; -webkit-overflow-scrolling: touch; }
     .profile-modal .modal-header { position: sticky; top: 0; z-index: 3; }
     .profile-modal .modal-close { z-index: 4; }
 
-    /* Avoid any horizontal scroll issues on profile page */
+    /* Avoid any horizontal scroll issues on profile page*/
     .profile-page, .profile-card-page, .profile-grid, .profile-stats-page { min-width: 0; overflow-x: hidden; }
 
-    /* Left column fixed width should become full-width on mobile to avoid overflow */
+    /* Left column fixed width should become full-width on mobile to avoid overflow*/
     .profile-left-fixed { flex: none !important; width: 100% !important; max-width: 100% !important; }
     .profile-grid { display: block; }
     .profile-right { width: 100%; }
 }
 
-/* Página de Assinatura - Visual refinado */
+/* Página de Assinatura - Visual refinado*/
 .subscription-page {
     max-width: 1100px;
     margin: 0 auto;
     padding: 2rem 1rem;
 }
 
-/* Mobile adjustments for Subscription page */
+/* Mobile adjustments for Subscription page*/
 @media (max-width: 600px) {
-    /* Center header/title */
+    /* Center cabeÃ§alho/title*/
     .subscription-header .title-row { flex-direction: column; align-items: center; text-align: center; gap: 0.4rem; }
     .subscription-header h1, .subscription-header p { text-align: center; }
 
-    /* Stack plan cards vertically and make them full width */
+    /* Stack plan cards vertically and make them full width*/
     .plan-cards { grid-template-columns: 1fr !important; gap: 0.9rem; }
     .plan-card, .plan-card-page { width: 100%; box-sizing: border-box; }
     .plan-card .plan-info { padding-right: 0; }
 
-    /* Price alignment and spacing */
+    /* Price alignment and spacing*/
     .plan-card .plan-price { text-align: left; margin-top: 0.5rem; }
 
-    /* Buttons full-width and stacked */
+    /* botÃµes full-width and stacked*/
     .plan-card .btn, .plan-card .select-plan, .plan-card .btn-danger, .plan-card .btn-outline {
         width: 100% !important;
         display: block !important;
@@ -3924,14 +3976,14 @@ body:has(#forgot-modal:not(.hidden)) .main-content {
     }
     .plan-card .btn + .btn { margin-top: 0.5rem; }
 
-    /* Modal mobile-friendly: up to 90% width and scrollable body */
+    /* modal mobile-friendly: up to 90% width and scrollable body*/
     .modal .modal-content { width: 90%; max-width: 90%; max-height: 90vh; }
     .modal .modal-body { max-height: calc(90vh - 72px); overflow-y: auto; -webkit-overflow-scrolling: touch; }
 
-    /* Prevent horizontal scrolling */
+    /* Prevent horizontal scrolling*/
     .subscription-page, .plan-cards, .plan-card { min-width: 0; overflow-x: hidden; }
 
-    /* Fix subscription grid overflow: override inline flex and force vertical stacking */
+    /* Fix subscription grid overflow: override inline flex and force vertical stacking*/
     .subscription-content .subscription-grid {
         display: block !important;
         flex-direction: column !important;
@@ -3955,20 +4007,20 @@ body:has(#forgot-modal:not(.hidden)) .main-content {
         flex: 0 0 auto !important;
     }
 
-    /* Make the plan header adapt to vertical layout */
+    /* Make the plan cabeÃ§alho adapt to vertical layout*/
     .plan-card .plan-card-head { display: flex; flex-direction: column; align-items: flex-start; gap: 0.5rem; }
     .plan-card .plan-price { text-align: left; }
 
-    /* Ensure plan actions/buttons are full width and easy to tap */
+    /* Ensure plan actions/botÃµes are full width and easy to tap*/
     .plan-actions .btn, .plan-actions-row .btn, .plan-card .select-plan, .plan-card .btn-danger {
         width: 100% !important;
         display: block !important;
         box-sizing: border-box;
     }
 
-    /* Allow payment history table to scroll inside its container instead of causing page overflow */
+    /* Allow payment history table to scroll inside its contÃªiner instead of causing page overflow*/
     .admin-table-container { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
-    /* Make payments table responsive inside its scroller */
+    /* Make payments table responsive inside its scroller*/
     .admin-table.payments-table { width: 100%; min-width: 0; border-collapse: collapse; }
     .admin-table.payments-table th, .admin-table.payments-table td { white-space: nowrap; }
 }
@@ -4014,20 +4066,20 @@ body:has(#forgot-modal:not(.hidden)) .main-content {
 .badge-simple { display:inline-block; padding:0.22rem 0.56rem; font-size:0.72rem; font-weight:700; border-radius:999px; background:rgba(34,197,94,0.08); color:var(--accent-color); }
 .plan-card-page.current .badge-simple { background:rgba(59,130,246,0.08); color:var(--primary-color); }
 
-/* Specific subscription header tweaks: bring h2 and badge closer and remove large outline */
+/* Specific subscription cabeÃ§alho tweaks: bring h2 and badge closer and remove large outline*/
 .subscription-page .section-header { justify-content:flex-start; gap:0.6rem; margin-bottom:0.8rem; padding:0.45rem 0; }
 .subscription-page .section-header h2 { font-size:1.125rem; margin:0; font-weight:800; color:var(--dark-color); }
 .subscription-page .section-header span { display:inline-block; font-size:0.9rem; font-weight:700; color:var(--accent-color); background:transparent; padding:0.18rem 0.5rem; border-radius:999px; border:1px solid transparent; }
 
-/* Adjust payment history heading spacing (red box) */
+/* Adjust payment history heading spacing (red box)*/
 .subscription-page .payment-history h3 { margin: 0.75rem 0 0.6rem 0; font-size:1.05rem; color:var(--dark-color); font-weight:800; }
 
-/* Cancel button visual (green circled area) - make it subtle outline red */
+/* Cancel button visual (green circled area) - make it subtle outline red*/
 .btn-danger { background: transparent; color: #ef4444; border: 1px solid rgba(239,68,68,0.14); padding: 0.45rem 0.85rem; border-radius:8px; box-shadow:none; }
 .btn-danger i { margin-right:0.5rem; }
 .btn-danger:hover { background: rgba(239,68,68,0.06); }
 
-/* Make payments table container more compact and aligned */
+/* Make payments table contÃªiner more compact and aligned*/
 .admin-table-container { margin-top: 0.4rem; }
 .admin-table { width:100%; border-collapse:collapse; background:var(--white); border-radius:10px; overflow:hidden; box-shadow:0 6px 18px rgba(15,23,42,0.03); }
 .admin-table thead th { padding:12px 18px; background:var(--gray-very-light); font-weight:700; font-size:0.9rem; color:var(--dark-color); }
@@ -4042,7 +4094,7 @@ body:has(#forgot-modal:not(.hidden)) .main-content {
 .btn-ghost { background:transparent; color:var(--dark-color); border-color:var(--gray-very-light); }
 .btn-danger { background:#fff; color:#ef4444; border:1px solid rgba(239,68,68,0.08); }
 
-/* Payments history table */
+/* Payments history table*/
 .payments-table { width:100%; border-collapse:collapse; margin-top:1rem; background:transparent; }
 .payments-table thead th { text-align:left; padding:12px 16px; font-weight:700; color:var(--dark-color); font-size:0.9rem; border-bottom:1px solid var(--gray-very-light); }
 .payments-table tbody td { padding:14px 16px; vertical-align:middle; color:var(--dark-color); font-size:0.92rem; border-bottom:1px solid rgba(15,23,42,0.03); }
@@ -4063,8 +4115,8 @@ body:has(#forgot-modal:not(.hidden)) .main-content {
     .subscription-header { padding-bottom:0.75rem; }
 }
 
-/* Página de Cursos */
-/* Courses page styles removed with page deletion */
+/* Página de Cursos*/
+/* Courses page styles removed with page deletion*/
 
 .filter-group {
     display: flex;
@@ -4094,11 +4146,11 @@ body:has(#forgot-modal:not(.hidden)) .main-content {
     border-color: var(--primary-color);
 }
 
-/* courses-grid-page removed */
+/* courses-grid-page removed*/
 
 /* =========================
    PAINEL ADMINISTRATIVO
-========================= */
+=========================*/
 .admin-stats {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -4106,7 +4158,7 @@ body:has(#forgot-modal:not(.hidden)) .main-content {
     margin-bottom: 2.5rem;
 }
 
-/* Painel administrativo - hero e ajustes visuais */
+/* Painel administrativo - hero e ajustes visuais*/
 .admin-painel-do-aluno {
     padding: 1.25rem 0;
 }
@@ -4372,7 +4424,7 @@ body:has(#forgot-modal:not(.hidden)) .main-content {
     font-size: 0.95rem;
 }
 
-/* Tabelas Admin */
+/* Tabelas admin*/
 .admin-table-container {
     background-color: var(--white);
     border-radius: var(--radius);
@@ -4385,7 +4437,7 @@ body:has(#forgot-modal:not(.hidden)) .main-content {
     border-collapse: collapse;
 }
 
-/* Subscription / plan styles */
+/* Subscription / plan styles*/
 .plan-card { border: 1px solid rgba(15,23,42,0.04); }
 .plan-card {
     border: 1px solid rgba(15,23,42,0.04);
@@ -4413,10 +4465,10 @@ body:has(#forgot-modal:not(.hidden)) .main-content {
 .plan-card .btn-outline { border-color: rgba(79,70,229,0.12); color:var(--primary-color); }
 .plan-card .btn-outline:hover { background: rgba(79,70,229,0.04); }
 
-/* Badge polish */
+/* Badge polish*/
 .plan-card .badge { margin-left:8px; background: #D1FAE5; color: var(--accent-dark); font-weight:700; }
 
-/* Ensure plan card responsive sizing */
+/* Ensure plan card responsive sizing*/
 @media (max-width: 900px) {
     .subscription-grid { flex-direction:column; }
     .plan-card { width:100%; }
@@ -4428,14 +4480,14 @@ body:has(#forgot-modal:not(.hidden)) .main-content {
 
 .empty-payments { padding: 1rem; background: linear-gradient(180deg,#fafafa,#fff); border-radius:8px; border:1px dashed rgba(15,23,42,0.04); }
 
-/* Make admin-table rows readable and with hover */
+/* Make admin-table rows readable and with hover*/
 .admin-table tbody tr { transition: background 160ms ease; }
 .admin-table tbody tr:hover { background: rgba(79,70,229,0.03); }
 
-/* Payment action button icon spacing */
+/* Payment action button icon spacing*/
 .btn-receipt i { margin-right: 6px; }
 
-/* Modal confirm buttons align with global modal styles (re-using .profile-modal rules) */
+/* modal confirm botÃµes align with global modal styles (re-using .profile-modal rules)*/
 .modal .modal-actions .actions-left { display:flex; }
 .modal .modal-actions .actions-right { display:flex; }
 
@@ -4475,11 +4527,11 @@ body:has(#forgot-modal:not(.hidden)) .main-content {
     font-size: 0.75rem;
 }
 
-/* Ajustes para botões de ação na tabela: ícones centralizados e tamanhos uniformes */
+/* Ajustes para botões de ação na tabela: ícones centralizados e tamanhos uniformes*/
 .admin-table .actions .btn {
     min-width: 36px;
     height: 36px;
-    padding: 0; /* ícone centralizado, sem padding lateral */
+    padding: 0; /* ícone centralizado, sem padding lateral*/
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -4498,9 +4550,9 @@ body:has(#forgot-modal:not(.hidden)) .main-content {
 .admin-table .actions .btn.btn-danger { background: transparent; border: 1px solid rgba(239,68,68,0.12); color: #ef4444; }
 .admin-table .actions .btn.btn-danger:hover { background: rgba(239,68,68,0.06); }
 
-/* Override geral de hover para botões de ação na tabela: não transformar ícone em branco */
+/* Override geral de hover para botões de ação na tabela: não transformar ícone em branco*/
 .admin-table .actions .btn:hover {
-    /* ligeiro destaque de fundo, sem mudar a cor do ícone */
+    /* ligeiro destaque de fundo, sem mudar a cor do ícone*/
     background: rgba(79,70,229,0.06);
     color: var(--primary-color);
     border-color: transparent;
@@ -4513,7 +4565,7 @@ body:has(#forgot-modal:not(.hidden)) .main-content {
     box-shadow: none;
 }
 
-/* Priorizar estilo de hover para botão de excluir (manter vermelho) */
+/* Priorizar estilo de hover para botão de excluir (manter vermelho)*/
 .admin-table .actions .btn.btn-danger:hover {
     background: rgba(239,68,68,0.06) !important;
     color: #ef4444 !important;
@@ -4525,7 +4577,7 @@ body:has(#forgot-modal:not(.hidden)) .main-content {
 
 
 
-/* Formulários Admin */
+/* Formulários admin*/
 .admin-form {
     background-color: var(--white);
     border-radius: var(--radius);
@@ -4583,7 +4635,7 @@ body:has(#forgot-modal:not(.hidden)) .main-content {
 
 /* =========================
    RESPONSIVIDADE
-========================= */
+=========================*/
 @media (max-width: 1200px) {
     .progress-section {
         grid-template-columns: 1fr;
@@ -4823,7 +4875,7 @@ body:has(#forgot-modal:not(.hidden)) .main-content {
 
 /* =========================
    ANIMAÇÕES
-========================= */
+=========================*/
 @keyframes pulse {
     0%, 100% {
         opacity: 1;
@@ -4852,7 +4904,7 @@ body:has(#forgot-modal:not(.hidden)) .main-content {
 
 /* =========================
    ESTADOS
-========================= */
+=========================*/
 .loading {
     display: flex;
     flex-direction: column;
@@ -4917,7 +4969,7 @@ body:has(#forgot-modal:not(.hidden)) .main-content {
 
 /* =========================
    UTILITÁRIOS FINAIS
-========================= */
+=========================*/
 .scrollbar-hide {
     -ms-overflow-style: none;
     scrollbar-width: none;
@@ -4933,24 +4985,22 @@ body:has(#forgot-modal:not(.hidden)) .main-content {
     white-space: nowrap;
 }
 
-/* Limita o texto a 2 linhas */
+/* Limita o texto a 2 linhas*/
 .line-clamp-2 {
     display: -webkit-box;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 2;
+    line-clamp: 2;
     overflow: hidden;
 }
 
-/* Limita o texto a 3 linhas */
 .line-clamp-3 {
     display: -webkit-box;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 3;
+    line-clamp: 3;
     overflow: hidden;
 }
-
-
-/* Esconder scrollbar mas manter funcionalidade */
 .scrollbar-thin {
     scrollbar-width: thin;
     scrollbar-color: var(--gray-light) transparent;
@@ -4976,7 +5026,7 @@ body:has(#forgot-modal:not(.hidden)) .main-content {
 
 /* =========================
    SETTINGS PAGE STYLES
-   ========================= */
+   =========================*/
 .settings-page .settings-grid {
     display: grid;
     gap: 1rem;
@@ -4984,7 +5034,6 @@ body:has(#forgot-modal:not(.hidden)) .main-content {
 
 @media (min-width: 900px) {
     .settings-page .settings-grid {
-        /* After removing profile and security blocks, stack cards vertically for a cleaner layout */
         grid-template-columns: 1fr;
     }
 }
@@ -5079,7 +5128,6 @@ body:has(#forgot-modal:not(.hidden)) .main-content {
 
 .btn-outline-danger:hover { background: rgba(239,68,68,0.06); }
 
-/* Enhanced settings visuals */
 .settings-header-hero {
     background: linear-gradient(135deg, rgba(79,70,229,0.08), rgba(139,92,246,0.06));
     border-radius: 14px;
@@ -5133,8 +5181,8 @@ body:has(#forgot-modal:not(.hidden)) .main-content {
 }
 
 /* =========================
-   ESTILOS ADICIONAIS - MODAL CRIAR CONTA
-   ========================= */
+   ESTILOS ADICIONAIS - modal CRIAR CONTA
+   =========================*/
 #register-modal .register-grid {
     display: grid;
     grid-template-columns: 1fr;
@@ -5159,19 +5207,14 @@ body:has(#forgot-modal:not(.hidden)) .main-content {
 }
 
 #register-modal .register-hero .muted { color: var(--gray-color); margin-bottom: 0.5rem; }
-
 #register-modal .benefits-list { display: flex; flex-direction: column; gap: 0.4rem; margin: 0; padding: 0; }
 #register-modal .benefit-item { display: flex; gap: 0.6rem; align-items: center; color: var(--gray-dark); font-size: 0.95rem; }
 #register-modal .benefit-item i { color: var(--primary-color); width: 22px; text-align: center; }
-
 #register-modal .hero-badge { display: flex; align-items: center; justify-content: center; }
 #register-modal .trial-badge { background: linear-gradient(90deg, var(--primary-color), var(--secondary-color)); color: #fff; padding: 0.45rem 0.9rem; border-radius: 999px; font-weight: 800; font-size: 0.85rem; box-shadow: var(--shadow); }
-
-/* Form grid: 2 col on wide, 1 col on small */
 #register-modal .register-form .form-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.75rem; margin-bottom: 0.75rem; }
 #register-modal .register-form .form-group { margin-bottom: 0; }
 
-/* Plan cards */
 #register-modal .plan-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0.75rem; }
 
 #register-modal .plan-card {
@@ -5187,41 +5230,30 @@ body:has(#forgot-modal:not(.hidden)) .main-content {
 }
 
 #register-modal .plan-card:hover { transform: translateY(-6px); box-shadow: var(--shadow-lg); border-color: rgba(79,70,229,0.12); }
-
 #register-modal .plan-card-header { display: flex; justify-content: space-between; align-items: baseline; gap: 0.5rem; }
 #register-modal .plan-card-header h4 { margin: 0; font-size: 1rem; color: var(--dark-color); }
 #register-modal .plan-price { font-weight: 800; color: var(--primary-color); font-size: 1.05rem; }
 #register-modal .plan-price span { font-weight: 500; color: var(--gray-color); font-size: 0.85rem; margin-left: 6px; }
-
 #register-modal .plan-desc { color: var(--gray-dark); font-size: 0.88rem; margin: 0; }
-
 #register-modal .plan-features { list-style: none; padding: 0; margin: 0.4rem 0; color: var(--gray-dark); font-size: 0.9rem; }
 #register-modal .plan-features li { display: flex; gap: 0.5rem; align-items: center; margin-bottom: 0.25rem; }
 #register-modal .plan-features li i { color: var(--accent-color); }
-
 #register-modal .select-plan { margin-top: auto; align-self: start; padding: 0.55rem 0.85rem; border-radius: 10px; font-weight: 700; transition: var(--transition); }
-
-/* selected visual state */
 #register-modal .plan-card.selected { border-color: var(--primary-color); background-color: rgba(79,70,229,0.045); box-shadow: 0 18px 40px rgba(79,70,229,0.06); }
 #register-modal .plan-card.selected .select-plan { background: linear-gradient(90deg, var(--primary-color), var(--secondary-color)); color: #fff; border: none; }
-
-/* replace button label visually when selected (keeps HTML text intact) */
 #register-modal .plan-card .select-plan { position: relative; color: var(--primary-color); background: transparent; border: 1.5px solid rgba(79,70,229,0.12); }
 #register-modal .plan-card .select-plan::after { content: '' ; position: absolute; inset: 0; display: none; align-items: center; justify-content: center; font-weight: 700; }
 #register-modal .plan-card.selected .select-plan::after { display: flex; content: 'Plano Selecionado'; color: #fff; background: transparent; }
 #register-modal .plan-card.selected .select-plan span { visibility: hidden; }
-
-/* Input focus subtle enhancement */
 #register-modal .form-group input:focus { transform: translateY(-1px); }
 
-/* Responsive adjustments */
+/* Responsive adjustments*/
 @media (min-width: 900px) {
-    /* reduzir largura do hero para liberar mais espaço para formulários e cards */
+    /* reduzir largura do hero para liberar mais espaço para formulários e cards*/
     #register-modal .register-grid { grid-template-columns: 340px 1fr; align-items: start; }
     #register-modal .register-hero { flex-direction: column; align-items: flex-start; }
 }
 
-/* For plan cards show 2 columns on medium screens and up */
 @media (min-width: 700px) {
     #register-modal .plan-cards { grid-template-columns: repeat(2, 1fr); }
 }
@@ -5230,7 +5262,6 @@ body:has(#forgot-modal:not(.hidden)) .main-content {
     #register-modal .plan-cards { grid-template-columns: repeat(3, 1fr); }
 }
 
-/* If the modal still appears narrow on some screens, allow horizontal scroll for plan-cards */
 #register-modal .plan-cards { min-width: 0; }
 #register-modal .plan-cards::-webkit-scrollbar { height: 6px; }
 
@@ -5240,149 +5271,139 @@ body:has(#forgot-modal:not(.hidden)) .main-content {
     #register-modal .register-grid { grid-template-columns: 1fr; }
 }
 
-/* Smooth focus outline for accessibility */
+/* Smooth focus outline for accessibility*/
 #register-modal .form-group input:focus, #register-modal .select-plan:focus { outline: none; box-shadow: 0 8px 24px rgba(79,70,229,0.08); border-color: rgba(79,70,229,0.9); }
 
-/* ---- Enhancements para modal 'Criar Conta' e planos ---- */
-
-/* Garantir cards de mesma altura e espaçamento consistente */
+/* Garantir cards de mesma altura e espaçamento consistente*/
 #register-modal .plan-card { min-height: 300px; border-radius: 14px; }
 
-/* Destaque do preço e hierarquia visual */
+/* Destaque do preço e hierarquia visual*/
 #register-modal .plan-card-header h4 { font-size: 0.95rem; font-weight: 600; color: var(--gray-dark); }
 #register-modal .plan-price { font-size: 1.35rem; font-weight: 900; color: var(--primary-dark); }
 
-/* Badge 'Mais Popular' visível para o plano Pleno */
+/* Badge 'Mais Popular' visível para o plano Pleno*/
 .plan-badge { display: inline-block; margin-left: 0.6rem; padding: 0.25rem 0.6rem; font-size: 0.72rem; font-weight: 800; color: #fff; border-radius: 999px; background: linear-gradient(90deg, var(--primary-color), var(--secondary-color)); box-shadow: 0 8px 20px rgba(139,92,246,0.18); }
 
-/* Card Pleno levemente maior e com sombra mais forte */
+/* Card Pleno levemente maior e com sombra mais forte*/
 .plan-card--featured { transform-origin: center; border: 1.8px solid rgba(139,92,246,0.14); box-shadow: 0 26px 60px rgba(79,70,229,0.10); }
 .plan-card--featured:hover { transform: translateY(-8px) scale(1.02); box-shadow: 0 36px 80px rgba(79,70,229,0.14); }
 
-/* Suporte para renderização dinâmica que usa a classe 'featured' */
+/* Suporte para renderização dinâmica que usa a classe 'featured'*/
 .plan-card.featured { transform-origin: center; border: 1.8px solid rgba(139,92,246,0.14); box-shadow: 0 26px 60px rgba(79,70,229,0.10); }
 .plan-card.featured:hover { transform: translateY(-8px) scale(1.02); box-shadow: 0 36px 80px rgba(79,70,229,0.14); }
 
-/* Seleção clara do card: borda roxa forte, fundo destacado e ícone de check */
+/* Seleção clara do card: borda roxa forte, fundo destacado e ícone de check*/
 #register-modal .plan-card.selected { border: 2.5px solid var(--primary-color); background: linear-gradient(180deg, rgba(79,70,229,0.04), rgba(79,70,229,0.02)); }
 #register-modal .plan-card.selected::after { content: '\2713'; position: absolute; top: 12px; right: 12px; background: var(--primary-color); color: #fff; width: 36px; height: 36px; border-radius: 999px; display: flex; align-items: center; justify-content: center; font-weight: 800; box-shadow: 0 6px 18px rgba(79,70,229,0.18); }
 
-/* Badge 'Mais Popular' posicionada mais alta e com cor viva */
+/* Badge 'Mais Popular' posicionada mais alta e com cor viva*/
 #register-modal .plan-badge { position: absolute; top: -12px; right: 12px; padding: 0.35rem 0.7rem; font-size: 0.72rem; font-weight: 800; color: #fff; border-radius: 999px; background: linear-gradient(90deg, #7C3AED, #6D28D9); box-shadow: 0 10px 30px rgba(99,102,241,0.12); }
 
-/* Preço com hierarquia: valor maior, período menor e com menor contraste */
+/* Preço com hierarquia: valor maior, período menor e com menor contraste*/
 #register-modal .plan-price { display: flex; align-items: baseline; gap: 0.4rem; }
 #register-modal .plan-price .currency { font-size: 0.95rem; font-weight: 700; color: var(--gray-color); }
 #register-modal .plan-price .amount, #register-modal .plan-price { font-size: 1.6rem; font-weight: 900; color: var(--primary-dark); }
 #register-modal .plan-price .period { font-size: 0.78rem; color: var(--gray-color); margin-left: 4px; }
 
-/* Forçar alinhamento interno dos cards (títulos/descrições) */
+/* Forçar alinhamento interno dos cards (títulos/descrições)*/
 #register-modal .plan-card-header { min-height: 48px; align-items: center; }
 #register-modal .plan-desc { min-height: 38px; }
 #register-modal .plan-features { margin-top: 0.25rem; }
 
-/* Padronizar botões 'Selecionar Plano' - outline roxo por padrão */
+/* Padronizar botões 'Selecionar Plano' - outline roxo por padrão*/
 #register-modal .plan-card .select-plan { border: 2px solid rgba(79,70,229,0.18); color: var(--primary-dark); background: transparent; padding: 0.6rem 0.85rem; border-radius: 10px; font-weight: 700; }
 #register-modal .plan-card .select-plan:hover { background: linear-gradient(90deg, rgba(79,70,229,0.12), rgba(139,92,246,0.08)); color: #fff; border-color: transparent; }
 #register-modal .plan-card.selected .select-plan { background: linear-gradient(90deg, var(--primary-color), var(--secondary-color)); color: #fff; border: none; }
 
-/* Diminuir peso visual da coluna esquerda (benefícios) */
+/* Diminuir peso visual da coluna esquerda (benefícios)*/
 #register-modal .register-hero .benefits-list .benefit-item { color: rgba(55,65,81,0.65); font-size: 0.9rem; }
 #register-modal .register-hero .benefit-item i { font-size: 0.9rem; color: rgba(79,70,229,0.9); }
 
-/* Bloco de termos: checkbox maior, área clicável ampliada */
+/* Bloco de termos: checkbox maior, área clicável ampliada*/
 .terms-block { background: rgba(15,23,42,0.02); padding: 0.65rem; border-radius: 10px; display: flex; align-items: center; gap: 0.75rem; }
 .terms-block input[type="checkbox"] { width: 1.4rem; height: 1.4rem; margin: 0; accent-color: var(--primary-color); }
 .terms-block label { font-size: 0.86rem; color: var(--gray-color); cursor: pointer; }
 
-/* Botão 'Criar Conta' refinamentos: hover glow, disabled and loading */
+/* Botão 'Criar Conta' refinamentos: hover glow, disabled and loading*/
 .btn-register { padding: 0.95rem 1.25rem; font-size: 1.05rem; border-radius: 12px; background: linear-gradient(90deg, #6D28D9, #4F46E5); box-shadow: 0 12px 30px rgba(79,70,229,0.18); border: none; color: #fff; transition: transform .18s ease, box-shadow .18s ease; }
 .btn-register:hover { transform: translateY(-3px); box-shadow: 0 22px 44px rgba(79,70,229,0.26), 0 6px 18px rgba(79,70,229,0.12); }
 .btn-register:disabled, .btn-register.btn-disabled { opacity: 0.5; cursor: not-allowed; box-shadow: none; transform: none; }
 .btn-register.loading { pointer-events: none; opacity: 0.9; }
 .btn-register.loading i.fa-spinner { margin-right: 0.5rem; }
 
-/* Microinteractions: elevação mais sutil no hover dos cards e animação ao selecionar */
+/* Microinteractions: elevação mais sutil no hover dos cards e animação ao selecionar*/
 #register-modal .plan-card { transition: transform 220ms ease, box-shadow 220ms ease, border-color 180ms ease; }
 #register-modal .plan-card:hover { transform: translateY(-6px); box-shadow: 0 18px 48px rgba(2,6,23,0.06), 0 8px 24px rgba(79,70,229,0.06); }
 #register-modal .plan-card.selected { animation: plan-select-pop 320ms ease; }
 
-/* Garantir que badges e check não quebrem o layout em telas pequenas */
+/* Garantir que badges e check não quebrem o layout em telas pequenas*/
 @media (max-width: 560px) {
     #register-modal .plan-badge { position: static; margin-top: 0.5rem; }
     #register-modal .plan-card.selected::after { top: 8px; right: 8px; width: 32px; height: 32px; }
 }
 
-/* Botão sempre fixo na base do card */
+/* Botão sempre fixo na base do card*/
 #register-modal .plan-card .select-plan { margin-top: auto; align-self: stretch; display: inline-flex; justify-content: center; }
 
-/* Hover e seleção: elevação + glow roxo sutil */
+/* Hover e seleção: elevação + glow roxo sutil*/
 #register-modal .plan-card:hover { box-shadow: 0 18px 48px rgba(79,70,229,0.06), 0 3px 8px rgba(2,6,23,0.04); }
 #register-modal .plan-card.selected { transform: translateY(-6px); box-shadow: 0 28px 72px rgba(79,70,229,0.14); border-color: rgba(79,70,229,0.18); }
 
-/* Animação ao selecionar plano (microinteraction) */
+/* Animação ao selecionar plano (microinteraction)*/
 @keyframes plan-select-pop { 0% { transform: scale(0.995); } 50% { transform: scale(1.02); } 100% { transform: scale(1); } }
 #register-modal .plan-card.selected { animation: plan-select-pop 360ms ease; }
 
-/* Diminuir peso visual da coluna esquerda (benefícios) */
+/* Diminuir peso visual da coluna esquerda (benefícios)*/
 #register-modal .register-hero { background: transparent; color: var(--gray-dark); opacity: 0.95; }
 #register-modal .register-hero .hero-text h3 { font-size: 1.05rem; font-weight: 600; }
 #register-modal .register-hero .muted { color: var(--gray-color); }
 
-/* Inputs e foco com destaque roxo mais forte */
+/* Inputs e foco com destaque roxo mais forte*/
 #register-modal .form-group input { border: 2px solid var(--gray-light); border-radius: 10px; padding: 0.75rem; }
 #register-modal .form-group input:focus { border-color: var(--primary-color); box-shadow: 0 8px 30px rgba(79,70,229,0.12); }
 
-/* Agrupamento visual das senhas */
+/* Agrupamento visual das senhas*/
 .password-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; }
 @media (max-width: 560px) { .password-pair { grid-template-columns: 1fr; } }
 
-/* Botão principal Criar Conta: maior e com gradiente mais forte */
+/* Botão principal Criar Conta: maior e com gradiente mais forte*/
 .btn-register { padding: 0.95rem 1.25rem; font-size: 1.05rem; border-radius: 12px; background: linear-gradient(90deg, #6D28D9, #4F46E5); box-shadow: 0 12px 30px rgba(79,70,229,0.18); border: none; color: #fff; }
 .btn-register:hover { transform: translateY(-3px); box-shadow: 0 18px 36px rgba(79,70,229,0.22); }
 .btn-register:disabled, .btn-register.btn-disabled { opacity: 0.6; cursor: not-allowed; box-shadow: none; }
 
-/* Termos em bloco sutil */
+/* Termos em bloco sutil*/
 .terms-block { background: rgba(15,23,42,0.02); padding: 0.6rem; border-radius: 10px; display: flex; align-items: center; gap: 0.75rem; }
 .terms-block input[type="checkbox"] { width: 1.25rem; height: 1.25rem; margin: 0; accent-color: var(--primary-color); }
 .terms-block label { font-size: 0.85rem; color: var(--gray-color); }
 
-/* Modal abrir com animação suave */
+/* modal abrir com animação suave*/
 #register-modal .modal-content { transform: translateY(10px) scale(0.995); opacity: 0; transition: transform 320ms ease, opacity 260ms ease; }
 #register-modal:not(.hidden) .modal-content { transform: translateY(0) scale(1); opacity: 1; }
 
-/* Microinteraction hover no botão selecionar do card */
+/* Microinteraction hover no botão selecionar do card*/
 #register-modal .plan-card .select-plan:hover { transform: translateY(-3px); }
 
-/* Ajuste espaçamento vertical geral dentro do modal */
+/* Ajuste espaçamento vertical geral dentro do modal*/
 #register-modal .modal-body { padding: 1rem 1.25rem; }
 #register-modal .register-grid { gap: 1rem; }
 
-/* Acessibilidade: foco visível para cards navegáveis */
+/* Acessibilidade: foco visível para cards navegáveis*/
 #register-modal .plan-card:focus { outline: 3px solid rgba(79,70,229,0.14); outline-offset: 4px; }
 
-/* =========================
-   REGISTER MODAL - TECHNICAL RESPONSIVENESS (no visual changes)
-   - limit modal height to viewport, keep it centered
-   - allow internal scrolling of modal body only
-   - prevent grid children from forcing overflow
-   These rules are intentionally technical and do not change colors, spacing or typography.
-========================= */
 #register-modal .modal-content {
     display: flex;
     flex-direction: column;
-    max-height: calc(100vh - 2rem); /* leave small viewport inset */
-    overflow: hidden; /* body will scroll instead of the modal expanding */
+    max-height: calc(100vh - 2rem); 
+    overflow: hidden;
     box-sizing: border-box;
 }
 
 #register-modal .modal-body {
     flex: 1 1 auto;
     overflow-y: auto;
-    -webkit-overflow-scrolling: touch; /* smooth scrolling on mobile */
+    -webkit-overflow-scrolling: touch;
 }
 
-/* Ensure grid/flex children can shrink and do not force modal wider than viewport */
 #register-modal .register-grid,
 #register-modal .register-form .form-grid,
 #register-modal .plan-cards,
@@ -5391,9 +5412,6 @@ body:has(#forgot-modal:not(.hidden)) .main-content {
     box-sizing: border-box;
 }
 
-/* On very small screens allow horizontal scrolling only for plan cards if needed */
 @media (max-width: 420px) {
     #register-modal .plan-cards { overflow-x: auto; -webkit-overflow-scrolling: touch; }
 }
-
-
