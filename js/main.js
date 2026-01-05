@@ -230,6 +230,7 @@ class MainApp {
                 </div>
             </div>
         `;
+        this.addCertificateEvents();
     }
 
     loadProgressData() {
@@ -541,26 +542,108 @@ class MainApp {
     renderCertificates() {
         const content = document.getElementById('painel-do-aluno-content');
         const user = auth.getCurrentUser();
+        // Compute progress info for header
+        const allCourses = database.getAllCourses();
+        const totalCourses = allCourses.length;
+        const certificates = user ? database.getCertificatesByUserId(user.id) : [];
+
+        // find courses completed (100%) regardless of certificate issuance
+        const completedCourses = user ? allCourses.filter(c => {
+            const p = database.getUserProgress(user.id, c.id);
+            return p && p.progress >= 100;
+        }) : [];
+        const completedCount = completedCourses.length;
+        const progressPercent = totalCourses > 0 ? Math.round((completedCount / totalCourses) * 100) : 0;
+
+        // courses completed but without certificate yet
+        const coursesWithoutCert = completedCourses.filter(c => !certificates.some(cert => cert.courseId === c.id));
 
         content.innerHTML = `
             <div class="certificates-page">
-                <div class="certificates-header mb-8">
+                <div class="certificates-header mb-6">
                     <h1 class="text-3xl font-bold">Meus Certificados</h1>
                     <p class="text-gray mt-2">Certificados de conclusão dos cursos</p>
                 </div>
-                
+
                 ${user ? `
-                    <div class="certificates-grid grid grid-cols-1 md:grid-cols-2 gap-6" id="certificates-container">
-                        ${this.renderUserCertificates(user)}
+                    <div class="certificates-top mb-6">
+                        <div class="flex items-center justify-between flex-wrap">
+                            <div class="progress-summary">
+                                <div class="text-sm text-gray">Você concluiu <strong>${completedCount}</strong> de <strong>${totalCourses}</strong> cursos</div>
+                                <div class="progress-bar-large mt-2" style="max-width:420px; background:var(--bg-light); border-radius:8px; height:10px; overflow:hidden;">
+                                    <div class="progress-fill" style="width:${progressPercent}%; background:var(--primary-color); height:100%; border-radius:8px;"></div>
+                                </div>
+                            </div>
+                            <div class="actions mt-3 md:mt-0">
+                                <button class="btn btn-primary" data-route="painel-do-aluno">Ver cursos disponíveis</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="certificates-container">
+                        ${certificates.length === 0 && coursesWithoutCert.length === 0 ? `
+                            <div class="empty-certificates flex flex-col items-center justify-center py-12 px-4 text-center">
+                                <div class="cert-preview mb-6" style="width:320px; max-width:90%;">
+                                    <div class="certificate-mockup rounded-lg shadow-sm" style="background:linear-gradient(180deg, rgba(255,255,255,0.9), rgba(250,250,255,0.9)); padding:24px; border-radius:12px;">
+                                        <div style="display:flex;align-items:center;justify-content:center;padding:36px 0;filter:blur(0.6px);opacity:0.95;">
+                                            <i class="fas fa-certificate text-primary text-4xl"></i>
+                                        </div>
+                                        <div style="text-align:center;color:var(--muted);font-size:12px;">Preview do certificado</div>
+                                    </div>
+                                </div>
+
+                                <h3 class="text-xl font-bold mb-2">Nenhum certificado ainda</h3>
+                                <p class="text-gray mb-6">Conclua seus cursos para desbloquear seus certificados.</p>
+
+                                <div class="rules-card mb-6" style="background:var(--card-bg); padding:16px; border-radius:10px; max-width:560px; width:100%;">
+                                    <ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:8px;align-items:flex-start;">
+                                        <li style="display:flex;align-items:center;gap:8px;color:var(--text);"><i class="fas fa-check text-primary" style="width:18px"></i> Concluir 100% do curso</li>
+                                        <li style="display:flex;align-items:center;gap:8px;color:var(--text);"><i class="fas fa-check text-primary" style="width:18px"></i> Cumprir requisitos obrigatórios</li>
+                                        <li style="display:flex;align-items:center;gap:8px;color:var(--text);"><i class="fas fa-check text-primary" style="width:18px"></i> Finalizar avaliação (se existir)</li>
+                                    </ul>
+                                </div>
+
+                                <div class="w-full max-w-sm">
+                                    <button class="btn btn-primary btn-block" data-route="painel-do-aluno" style="border-radius:999px; width:100%;">Ver cursos disponíveis</button>
+                                </div>
+                            </div>
+                        ` : `
+                            ${certificates.length > 0 ? `
+                                <div class="certificates-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
+                                    ${this.renderUserCertificates(user)}
+                                </div>
+                            ` : ''}
+
+                            ${coursesWithoutCert.length > 0 ? `
+                                <div class="pending-certificates">
+                                    <h3 class="text-lg font-bold mb-3">Certificados aguardando emissão</h3>
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        ${coursesWithoutCert.map(course => {
+                                            const prog = database.getUserProgress(user.id, course.id) || {};
+                                            const completedAt = prog.lastAccessed ? new Date(prog.lastAccessed).toLocaleDateString('pt-BR') : '-';
+                                            return `
+                                                <div class="pending-card p-4 bg-white rounded-lg shadow-sm flex items-center justify-between">
+                                                    <div>
+                                                        <div class="text-sm text-gray">${course.title}</div>
+                                                        <div class="text-xs text-gray mt-1">Concluído em ${completedAt}</div>
+                                                    </div>
+                                                    <div>
+                                                        <button class="btn btn-sm btn-primary" data-claim-certificate="${course.id}">Reivindicar certificado</button>
+                                                    </div>
+                                                </div>
+                                            `;
+                                        }).join('')}
+                                    </div>
+                                </div>
+                            ` : ''}
+                        `}
                     </div>
                 ` : `
                     <div class="empty-state">
                         <i class="fas fa-sign-in-alt text-gray mb-4"></i>
                         <h3 class="text-xl font-bold mb-2">Faça login para ver seus certificados</h3>
-                        <p class="text-gray mb-6">Acesse sua conta para visualizar seus certificados conquistados.</p>
-                        <button class="btn btn-primary" onclick="ui.openModal('login-screen')">
-                            Fazer Login
-                        </button>
+                        <p class="text-gray mb-6">Acesse sua conta para visualizar e gerenciar seus certificados conquistados.</p>
+                        <button class="btn btn-primary" onclick="ui.openModal('login-screen')">Fazer Login</button>
                     </div>
                 `}
             </div>
@@ -568,53 +651,134 @@ class MainApp {
     }
 
     renderUserCertificates(user) {
-        const certificates = database.getCertificatesByUserId(user.id);
+        const certificates = database.getCertificatesByUserId(user.id) || [];
         const courses = database.getAllCourses();
-        
-        if (certificates.length === 0) {
-            return `
-                <div class="col-span-2">
-                    <div class="empty-state">
-                        <i class="fas fa-graduation-cap text-gray mb-4"></i>
-                        <h3 class="text-xl font-bold mb-2">Nenhum certificado ainda</h3>
-                        <p class="text-gray mb-6">Complete seus cursos para obter certificados.</p>
-                        <button class="btn btn-primary" data-route="painel-do-aluno">
-                            <i class="fas fa-book mr-2"></i> Ver Cursos
-                        </button>
-                    </div>
-                </div>
-            `;
-        }
-        
+
+        // Map to cards layout
         return certificates.map(cert => {
-            const course = courses.find(c => c.id === cert.courseId);
-            if (!course) return '';
-            
+            const course = courses.find(c => c.id === cert.courseId) || { title: 'Curso', level: 'beginner' };
+            const levelText = this.getLevelText(course.level);
+            const issued = cert.issuedAt ? new Date(cert.issuedAt).toLocaleDateString('pt-BR') : '-';
+
             return `
-                <div class="certificate-card">
-                    <div class="certificate-header">
-                        <i class="fas fa-certificate text-primary text-2xl"></i>
-                        <div>
-                            <h3 class="font-bold">${course.title}</h3>
-                            <p class="text-sm text-gray">Emitido em ${new Date(cert.issuedAt).toLocaleDateString('pt-BR')}</p>
+                <div class="certificate-card p-4 bg-white rounded-lg shadow-sm">
+                    <div class="flex items-start justify-between">
+                        <div class="flex items-start gap-4">
+                            <div class="cert-thumb rounded-md" style="width:72px;height:56px;display:flex;align-items:center;justify-content:center;background:linear-gradient(180deg, rgba(245,242,255,0.6), rgba(243,240,255,0.6));border-radius:8px;">
+                                <i class="fas fa-certificate text-primary text-2xl"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-bold mb-1">${course.title}</h4>
+                                <div class="text-sm text-gray">${levelText} • Concluído em ${issued}</div>
+                            </div>
                         </div>
-                    </div>
-                    <div class="certificate-body">
-                        <p class="text-gray mb-2">Certificado de conclusão emitido para</p>
-                        <h4 class="text-xl font-bold mb-2">${user.name}</h4>
-                        <p class="text-gray">pela conclusão do curso ${course.title}</p>
-                    </div>
-                    <div class="certificate-actions">
-                        <button class="btn btn-outline" data-view-certificate="${cert.id}">
-                            <i class="fas fa-eye mr-2"></i> Visualizar
-                        </button>
-                        <button class="btn btn-primary" data-download-certificate="${cert.id}">
-                            <i class="fas fa-download mr-2"></i> Baixar PDF
-                        </button>
+                        <div class="flex items-center gap-2">
+                            <button class="btn btn-sm btn-outline" data-view-certificate="${cert.id}"><i class="fas fa-eye mr-2"></i>Ver</button>
+                            <button class="btn btn-sm btn-primary" data-download-certificate="${cert.id}"><i class="fas fa-download mr-2"></i>Baixar</button>
+                            <button class="btn btn-sm btn-outline" data-share-certificate="${cert.id}"><i class="fas fa-share-alt mr-2"></i>Compartilhar</button>
+                        </div>
                     </div>
                 </div>
             `;
         }).join('');
+    }
+
+    addCertificateEvents() {
+        // View
+        document.querySelectorAll('[data-view-certificate]').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const id = parseInt(e.currentTarget.dataset.viewCertificate);
+                const cert = database.data.certificates.find(c => c.id === id) || null;
+                const course = cert ? database.getCourseById(cert.courseId) : null;
+                const user = auth.getCurrentUser();
+
+                const modal = document.createElement('div');
+                modal.className = 'modal';
+                modal.innerHTML = `
+                    <div class="modal-content" style="max-width:760px;">
+                        <div class="modal-header">
+                            <h2>Visualizar Certificado</h2>
+                            <button class="modal-close">&times;</button>
+                        </div>
+                        <div class="modal-body">
+                            <div style="padding:24px; text-align:center;">
+                                <div style="font-size:36px;color:var(--primary-color);"><i class="fas fa-certificate"></i></div>
+                                <h3 class="mt-3">${course ? course.title : 'Certificado'}</h3>
+                                <p class="text-gray">Emitido para ${user ? user.name : ''}</p>
+                                <p class="text-sm text-gray mt-2">Emitido em ${cert ? new Date(cert.issuedAt).toLocaleDateString('pt-BR') : '-'}</p>
+                            </div>
+                        </div>
+                        <div class="modal-actions">
+                            <button class="btn btn-outline modal-close">Fechar</button>
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(modal);
+                modal.querySelectorAll('.modal-close').forEach(b => b.addEventListener('click', () => modal.remove()));
+                modal.addEventListener('click', (ev) => { if (ev.target === modal) modal.remove(); });
+            });
+        });
+
+        // Download (placeholder behavior)
+        document.querySelectorAll('[data-download-certificate]').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const id = parseInt(e.currentTarget.dataset.downloadCertificate);
+                const cert = database.data.certificates.find(c => c.id === id) || null;
+                if (cert && cert.pdfUrl) {
+                    window.open(cert.pdfUrl, '_blank');
+                    return;
+                }
+                // fallback: generate simple text certificate
+                const course = cert ? database.getCourseById(cert.courseId) : null;
+                const user = auth.getCurrentUser();
+                const text = `Certificado de conclusão\nCurso: ${course ? course.title : ''}\nAluno: ${user ? user.name : ''}\nEmitido em: ${cert ? new Date(cert.issuedAt).toLocaleDateString('pt-BR') : new Date().toLocaleDateString('pt-BR')}`;
+                const blob = new Blob([text], { type: 'text/plain' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `certificado-${id || 'download'}.txt`;
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                URL.revokeObjectURL(url);
+                ui.showAlert('Download iniciado (arquivo de texto placeholder)', 'success');
+            });
+        });
+
+        // Share
+        document.querySelectorAll('[data-share-certificate]').forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+                const id = parseInt(e.currentTarget.dataset.shareCertificate);
+                const shareUrl = `${location.origin}${location.pathname}#cert-${id}`;
+                if (navigator.share) {
+                    try { await navigator.share({ title: 'Meu Certificado', text: 'Veja meu certificado', url: shareUrl }); }
+                    catch (err) { ui.showAlert('Compartilhamento cancelado', 'info'); }
+                } else if (navigator.clipboard) {
+                    navigator.clipboard.writeText(shareUrl).then(() => ui.showAlert('Link do certificado copiado', 'success'));
+                } else {
+                    ui.showAlert('Não foi possível compartilhar neste dispositivo', 'warning');
+                }
+            });
+        });
+
+        // Claim / create certificate for completed courses
+        document.querySelectorAll('[data-claim-certificate]').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const courseId = parseInt(e.currentTarget.dataset.claimCertificate);
+                const user = auth.getCurrentUser();
+                if (!user) { ui.showAlert('Faça login para reivindicar certificados', 'warning'); return; }
+
+                const already = database.getCertificatesByUserId(user.id).some(c => c.courseId === courseId);
+                if (already) { ui.showAlert('Certificado já emitido', 'info'); this.renderCertificates(); return; }
+
+                // Create certificate record
+                const course = database.getCourseById(courseId);
+                const cert = database.createCertificate({ userId: user.id, courseId, courseTitle: course ? course.title : '' });
+                ui.showAlert('Certificado emitido com sucesso!', 'success');
+                // re-render certificates to show new card
+                this.renderCertificates();
+            });
+        });
     }
 
     renderProfile() {

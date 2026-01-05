@@ -476,11 +476,35 @@ img {
 
 /* Lesson modal specific styles (design match) */
 .lesson-modal .modal-header.compact {
-    padding:1.25rem 1.5rem; display:flex; justify-content:space-between; align-items:center;
+    position: relative;
+    padding: 1.25rem 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     background: linear-gradient(90deg, #7C3AED 0%, #6D28D9 100%);
 }
 .lesson-modal .modal-header.compact .modal-title { margin:0; font-size:1.15rem; font-weight:700; color:#fff; }
-.lesson-modal .modal-header.compact .modal-close { background: transparent; font-size:1.25rem; color:#fff; width:36px; height:36px; display:flex; align-items:center; justify-content:center; border-radius:8px; border:none; }
+.lesson-modal .modal-header.compact .modal-close {
+    position: absolute;
+    right: 12px;
+    top: 12px;
+    background: rgba(255,255,255,0.10);
+    color: #fff;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    border: none;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.06);
+    transition: transform .16s cubic-bezier(.2,.9,.2,1), background-color .16s ease, box-shadow .16s ease;
+}
+.lesson-modal .modal-header.compact .modal-close:hover {
+    background: rgba(255,255,255,0.18);
+    transform: translateY(-3px) scale(1.03);
+    box-shadow: 0 10px 22px rgba(0,0,0,0.12);
+}
 
 .lesson-modal .modal-body { padding:18px 20px; background: var(--white); }
 .lesson-form .form-section { margin-bottom:12px; }
@@ -3342,7 +3366,7 @@ body:has(#forgot-modal:not(.hidden)) .main-content {
 .lesson-modal-content {
     display: flex;
     flex-direction: column;
-    gap: 1.5rem;
+    gap: 1.7rem;
 }
 
 .video-player-container {
