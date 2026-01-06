@@ -84,27 +84,48 @@ class AuthSystem {
             return { success: false, message: "Selecione um plano" };
         }
         
-        // Criar usuário
+        // Não criar nem autenticar o usuário agora — aguardaremos confirmação do pagamento
+        // Salvar plano selecionado para o fluxo de pagamento
+        localStorage.setItem('selected-plan', userData.plan);
+
+        // Retornar os dados preenchidos para que a UI abra o modal de pagamento
+        return {
+            success: true,
+            userData: {
+                name: userData.name,
+                email: userData.email,
+                password: userData.password,
+                plan: userData.plan
+            },
+            redirectToPayment: true,
+            message: "Cadastro recebido. Complete seu pagamento."
+        };
+    }
+
+    // Cria o usuário após confirmação do pagamento e inicia sessão
+    async completeRegistrationAfterPayment(userData) {
+        if (!userData || !userData.email) return { success: false };
+
         const newUser = database.createUser({
             name: userData.name,
             email: userData.email,
             password: userData.password,
-            plan: userData.plan
+            plan: userData.plan,
+            status: 'active',
+            createdAt: new Date().toISOString()
         });
-        
-        // Salvar usuário atual
+
+        // Atualizar sessão local e UI
         this.currentUser = newUser;
         localStorage.setItem('novatek-current-user', JSON.stringify(newUser));
-        
-        // Salvar plano selecionado para o fluxo de pagamento
-        localStorage.setItem('selected-plan', userData.plan);
-        
-        return { 
-            success: true, 
-            user: newUser,
-            redirectToPayment: true,
-            message: "Cadastro realizado com sucesso! Complete seu pagamento."
-        };
+        this.updateUIAfterLogin();
+
+        database.addActivity({
+            type: 'user_registered_and_paid',
+            message: `Usuário criado após pagamento: ${newUser.email}`
+        });
+
+        return { success: true, user: newUser };
     }
 
     logout() {

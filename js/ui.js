@@ -215,11 +215,12 @@ class UI {
                 try {
                     const result = await auth.register({ name, email, password, confirmPassword, plan });
                     if (result.success && result.redirectToPayment) {
-                        this.showAlert('Cadastro efetuado. Redirecionando para pagamento...', 'info');
+                        this.showAlert('Cadastro recebido. Abrindo pagamento...', 'info');
                         this.closeModal('register-modal');
-                        this.showPaymentScreen(result.user, plan);
+                        // Abrir modal de pagamento sem autenticar o usuário
+                        this.showPaymentScreen(result.userData, plan);
                     } else if (result.success) {
-                        this.showAlert(result.message || 'Cadastro realizado!', 'success');
+                        this.showAlert(result.message || 'Cadastro efetuado!', 'success');
                         this.closeModal('register-modal');
                     } else {
                         this.showAlert(result.message || 'Erro no cadastro', 'danger');
@@ -358,61 +359,59 @@ class UI {
         }
     }
 
-    showPaymentScreen(user, planId = null) {
+    showPaymentScreen(tempUserData, planId = null) {
         const plan = planId ? CONFIG.PLANS[planId.toUpperCase()] : CONFIG.PLANS.JUNIOR;
-        
+
+        const pixCode = `PIX:${(tempUserData && tempUserData.email) || 'guest'}:${Date.now()}:${planId || 'JUNIOR'}`;
+
         const modal = document.createElement('div');
-        modal.className = 'modal payment-screen';
+        modal.className = 'modal pix-payment-modal';
+        modal.id = `pix-payment-${Date.now()}`;
         modal.innerHTML = `
-            <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-content" style="max-width:520px; max-height:90vh; display:flex; flex-direction:column;">
                 <div class="modal-header">
-                    <h2>Finalizar Assinatura</h2>
+                    <h2>Pagamento via PIX</h2>
                     <button class="modal-close">&times;</button>
                 </div>
-                <div class="modal-body">
-                    <div class="payment-flow">
-                        <div class="steps">
-                            <div class="step active">1</div>
-                            <div class="step">2</div>
-                            <div class="step">3</div>
+                <div class="modal-body" style="overflow:auto; padding:20px;">
+                    <div style="display:flex; flex-direction:column; align-items:center; gap:16px;">
+                        <img id="pix-qr-img" src="https://chart.googleapis.com/chart?chs=300x300&cht=qr&chl=${encodeURIComponent(pixCode)}" alt="QR Code" style="width:260px; height:260px; max-width:80%;" />
+                        <p style="margin:0; text-align:center;">Escaneie o QR Code para pagar</p>
+
+                        <style>
+                            .pix-input-wrapper{width:100%;}
+                            .pix-input-wrapper .pix-input{width:100%; padding:10px; border:1px solid #ddd; border-radius:6px; box-sizing:border-box;}
+                            .pix-input-wrapper .pix-copy-btn{display:inline-block}
+
+                            /* Mobile: colocar o botão dentro do campo à direita */
+                            @media (max-width:600px){
+                                .pix-input-wrapper{position:relative}
+                                .pix-input-wrapper .pix-input{padding-right:110px}
+                                .pix-input-wrapper .pix-copy-btn{position:absolute; right:8px; top:50%; transform:translateY(-50%); height:36px; padding:6px 10px; border-radius:6px}
+                                .pix-input-wrapper{display:block}
+                            }
+
+                            /* Desktop: botão ao lado */
+                            @media (min-width:601px){
+                                .pix-input-row{display:flex; gap:8px; align-items:center}
+                                .pix-input-row .pix-copy-btn{position:static; transform:none}
+                                .pix-input-row .pix-input{padding-right:10px}
+                            }
+                        </style>
+
+                        <div class="pix-input-row pix-input-wrapper">
+                            <input id="pix-code-input" class="pix-input" readonly value="${pixCode}" />
+                            <button id="pix-copy-btn" class="pix-copy-btn btn btn-primary">Copiar código</button>
                         </div>
-                        
-                        <div class="step-content">
-                            <div class="step-pane active" id="step-1">
-                                <h3>Plano Selecionado</h3>
-                                <div class="selected-plan-summary">
-                                    <h4>${plan.name}</h4>
-                                    <div class="plan-price-large">
-                                        R$ <span>${plan.price}</span> /mês
-                                    </div>
-                                    <ul class="plan-features">
-                                        ${plan.features.map(feature => `
-                                            <li><i class="fas fa-check"></i> ${feature}</li>
-                                        `).join('')}
-                                    </ul>
-                                </div>
-                                <button class="btn btn-primary btn-block" id="next-step">
-                                    Continuar <i class="fas fa-arrow-right"></i>
-                                </button>
-                            </div>
-                            
-                            <div class="step-pane" id="step-2">
-                                <h3>Dados Pessoais</h3>
-                                <div class="user-info-review">
-                                    <p><strong>Nome:</strong> ${user.name}</p>
-                                    <p><strong>Email:</strong> ${user.email}</p>
-                                </div>
-                                <button class="btn btn-primary btn-block" id="proceed-payment">
-                                    <i class="fas fa-lock"></i> Prosseguir para Pagamento
-                                </button>
-                            </div>
-                            
-                            <div class="step-pane" id="step-3">
-                                <h3>Pagamento</h3>
-                                <div id="payment-container">
-                                    <div id="wallet_container"></div>
-                                </div>
-                            </div>
+
+                        <div id="copy-feedback" style="color:var(--accent); font-weight:600; display:none;">Copiado!</div>
+
+                        <div id="pix-timer" style="font-size:18px; font-weight:700;">10:00</div>
+
+                        <div id="pix-expired" style="display:none; color:#c00; text-align:center;">Tempo expirado. Gere um novo pagamento.</div>
+
+                        <div style="width:100%;">
+                            <button id="pix-confirm-btn" class="btn btn-accent btn-block">Já paguei</button>
                         </div>
                     </div>
                 </div>
@@ -422,48 +421,87 @@ class UI {
         document.body.appendChild(modal);
         this.openModal(modal.id);
 
-        const steps = modal.querySelectorAll('.step');
-        const stepPanes = modal.querySelectorAll('.step-pane');
-        let currentStep = 0;
+        const qrImg = modal.querySelector('#pix-qr-img');
+        const copyBtn = modal.querySelector('#pix-copy-btn');
+        const codeInput = modal.querySelector('#pix-code-input');
+        const feedback = modal.querySelector('#copy-feedback');
+        const timerEl = modal.querySelector('#pix-timer');
+        const expiredEl = modal.querySelector('#pix-expired');
+        const confirmBtn = modal.querySelector('#pix-confirm-btn');
 
-        modal.querySelector('#next-step')?.addEventListener('click', () => {
-            steps[currentStep].classList.remove('active');
-            stepPanes[currentStep].classList.remove('active');
-            
-            currentStep++;
-            steps[currentStep].classList.add('active');
-            stepPanes[currentStep].classList.add('active');
+        let remaining = 600; // seconds
+        timerEl.textContent = this.formatCountdown(remaining);
+
+        const intervalId = setInterval(() => {
+            remaining--;
+            if (remaining <= 0) {
+                clearInterval(intervalId);
+                timerEl.textContent = '00:00';
+                expiredEl.style.display = 'block';
+                qrImg.style.opacity = '0.5';
+                qrImg.style.pointerEvents = 'none';
+                copyBtn.disabled = true;
+                return;
+            }
+            timerEl.textContent = this.formatCountdown(remaining);
+        }, 1000);
+
+        copyBtn.addEventListener('click', async () => {
+            try {
+                await navigator.clipboard.writeText(codeInput.value);
+                feedback.style.display = 'block';
+                setTimeout(() => feedback.style.display = 'none', 2000);
+            } catch (err) {
+                this.showAlert('Não foi possível copiar para a área de transferência', 'danger');
+            }
         });
 
-        modal.querySelector('#proceed-payment')?.addEventListener('click', async () => {
-            steps[currentStep].classList.remove('active');
-            stepPanes[currentStep].classList.remove('active');
-            
-            currentStep++;
-            steps[currentStep].classList.add('active');
-            stepPanes[currentStep].classList.add('active');
+        confirmBtn.addEventListener('click', async () => {
+            confirmBtn.disabled = true;
+            confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Confirmando...';
+            clearInterval(intervalId);
 
             try {
-                // Aqui você chamaria o sistema de pagamento
-                this.showAlert('Redirecionando para pagamento...', 'info');
-            } catch (error) {
-                this.showAlert('Erro ao processar pagamento', 'danger');
+                const result = await auth.completeRegistrationAfterPayment(tempUserData);
+                if (result.success) {
+                    this.closeModal(modal.id);
+                    this.showAlert('Pagamento confirmado. Bem-vindo!', 'success');
+                    router.navigateTo('painel-do-aluno');
+                } else {
+                    this.showAlert('Erro ao finalizar cadastro após pagamento', 'danger');
+                    confirmBtn.disabled = false;
+                    confirmBtn.innerHTML = 'Já paguei';
+                }
+            } catch (err) {
+                this.showAlert('Erro ao processar confirmação', 'danger');
+                confirmBtn.disabled = false;
+                confirmBtn.innerHTML = 'Já paguei';
             }
         });
 
         modal.querySelector('.modal-close').addEventListener('click', () => {
+            clearInterval(intervalId);
             this.closeModal(modal.id);
         });
     }
 
+    formatCountdown(seconds) {
+        const mm = String(Math.floor(seconds / 60)).padStart(2, '0');
+        const ss = String(seconds % 60).padStart(2, '0');
+        return `${mm}:${ss}`;
+    }
+
     async processPayment(planId) {
+        // Permitir iniciar pagamento mesmo para usuários não autenticados.
+        // Usuários não autenticados serão direcionados para o registro (que abre o modal de pagamento em seguida).
         if (!auth.isAuthenticated()) {
-            this.showAlert('Faça login para continuar', 'warning');
+            localStorage.setItem('selected-plan', planId);
+            this.openModal('register-modal');
             return;
         }
 
         const user = auth.getCurrentUser();
-        this.showPaymentScreen(user, planId);
+        this.showPaymentScreen({ name: user.name, email: user.email }, planId);
     }
 
     openModal(modalId) {
@@ -478,154 +516,17 @@ class UI {
             }, 10);
         }
     }
-
     closeModal(modalId) {
         const modal = document.getElementById(modalId);
         if (modal) {
             modal.querySelector('.modal-content')?.classList.remove('show');
-            
+
             setTimeout(() => {
                 modal.classList.add('hidden');
                 modal.style.display = 'none';
                 document.body.style.overflow = 'auto';
             }, 300);
         }
-    }
-
-    updateNotifications() {
-        if (!auth.currentUser) return;
-        
-        const count = database.getUnreadNotificationsCount(auth.currentUser.id);
-        const badge = document.getElementById('notification-badge');
-        
-        if (badge) {
-            if (count > 0) {
-                badge.textContent = count > 99 ? '99+' : count;
-                badge.classList.remove('hidden');
-            } else {
-                badge.classList.add('hidden');
-            }
-        }
-    }
-
-    loadNotifications() {
-        if (!auth.currentUser) return;
-        
-        const notifications = database.getUserNotifications(auth.currentUser.id);
-        const container = document.getElementById('notifications-list');
-        
-        if (!container) return;
-        
-        container.innerHTML = notifications.length > 0 ? 
-            notifications.map(notification => `
-                <div class="notification-item ${notification.read ? '' : 'unread'}">
-                    <div class="notification-icon ${notification.type}">
-                        <i class="fas fa-${this.getNotificationIcon(notification.type)}"></i>
-                    </div>
-                    <div class="notification-content">
-                        <p><strong>${notification.title}</strong> ${notification.message}</p>
-                        <span class="notification-time">${this.formatTime(notification.date)}</span>
-                        ${!notification.read ? `
-                            <div class="notification-actions">
-                                <button class="btn btn-sm" data-mark-read="${notification.id}">Marcar como lida</button>
-                            </div>
-                        ` : ''}
-                    </div>
-                </div>
-            `).join('') :
-            `<div class="empty-state">
-                <i class="fas fa-bell-slash"></i>
-                <p>Nenhuma notificação</p>
-            </div>`;
-        
-        container.querySelectorAll('[data-mark-read]').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const notificationId = parseInt(e.target.dataset.markRead);
-                database.markNotificationAsRead(notificationId);
-                this.updateNotifications();
-                this.loadNotifications();
-            });
-        });
-    }
-
-    getNotificationIcon(type) {
-        const icons = {
-            'info': 'info-circle',
-            'success': 'check-circle',
-            'warning': 'exclamation-triangle',
-            'danger': 'exclamation-circle'
-        };
-        return icons[type] || 'bell';
-    }
-
-    formatTime(dateString) {
-        const date = new Date(dateString);
-        const now = new Date();
-        const diffMs = now - date;
-        const diffMins = Math.floor(diffMs / (1000 * 60));
-        const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-        const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-        
-        if (diffMins < 1) return 'Agora mesmo';
-        if (diffMins < 60) return `${diffMins} min atrás`;
-        if (diffHours < 24) return `${diffHours} h atrás`;
-        if (diffDays < 7) return `${diffDays} dias atrás`;
-        
-        return date.toLocaleDateString('pt-BR');
-    }
-
-    performSearch(query) {
-        const results = database.searchContent(query);
-        const container = document.getElementById('search-results');
-        
-        if (!container) return;
-        
-        container.innerHTML = '';
-        
-        if (results.courses.length === 0 && results.lessons.length === 0) {
-            container.innerHTML = '<div class="search-no-results">Nenhum resultado encontrado</div>';
-        } else {
-            results.courses.forEach(course => {
-                const element = document.createElement('div');
-                element.className = 'search-result-item';
-                element.innerHTML = `
-                    <div class="search-result-icon">
-                        <i class="fas fa-book"></i>
-                    </div>
-                    <div class="search-result-content">
-                        <h4>${course.title}</h4>
-                        <p>Curso • ${database.getCategoryById(course.categoryId)?.name || 'Geral'}</p>
-                    </div>
-                `;
-                element.addEventListener('click', () => {
-                    router.navigateTo('courses');
-                    container.classList.add('hidden');
-                });
-                container.appendChild(element);
-            });
-            
-            results.lessons.forEach(lesson => {
-                const course = database.getCourseById(lesson.courseId);
-                const element = document.createElement('div');
-                element.className = 'search-result-item';
-                element.innerHTML = `
-                    <div class="search-result-icon">
-                        <i class="fas fa-play-circle"></i>
-                    </div>
-                    <div class="search-result-content">
-                        <h4>${lesson.title}</h4>
-                        <p>Aula • ${course ? course.title : 'Curso'}</p>
-                    </div>
-                `;
-                element.addEventListener('click', () => {
-                    this.showLesson(lesson.id);
-                    container.classList.add('hidden');
-                });
-                container.appendChild(element);
-            });
-        }
-        
-        container.classList.remove('hidden');
     }
 
     showLesson(lessonId) {
