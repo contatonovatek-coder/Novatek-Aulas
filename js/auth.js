@@ -1,94 +1,114 @@
-// auth.js - Sistema de autenticação CORRIGIDO
+// auth.js - Integração com Supabase Auth
 class AuthSystem {
     constructor() {
         this.currentUser = null;
+        this.subscription = null;
+        this._authListenerUnsub = null;
         this.init();
     }
 
-    init() {
-        const savedUser = localStorage.getItem('novatek-current-user');
-        if (savedUser) {
-            this.currentUser = JSON.parse(savedUser);
-            this.updateUIAfterLogin();
+    async init() {
+        // Se houver um cliente Supabase disponível, obter usuário atual
+        try {
+            if (window.supabaseService) {
+                const res = await window.supabaseService.getUser();
+                if (res.success && res.user) {
+                    this.currentUser = this._mapDbUser(res.user);
+                    // buscar assinatura
+                    await this._refreshSubscription();
+                    // sincronizar cache local para compatibilidade com código existente
+                    if (window.supabaseService && window.supabaseService.syncCache) {
+                        await window.supabaseService.syncCache();
+                    }
+                    this.updateUIAfterLogin();
+                }
+
+                // Inscrever em mudanças de estado de autenticação (recebe registro da tabela `users` ou null)
+                this._authListenerUnsub = window.supabaseService.onAuthStateChange(async (event, dbUser) => {
+                    if (!dbUser) {
+                        // logout
+                        this.currentUser = null;
+                        this.subscription = null;
+                        this.updateUIAfterLogout();
+                    } else {
+                        this.currentUser = this._mapDbUser(dbUser);
+                        await this._refreshSubscription();
+                        if (window.supabaseService && window.supabaseService.syncCache) {
+                            await window.supabaseService.syncCache();
+                        }
+                        this.updateUIAfterLogin();
+                    }
+                });
+            }
+        } catch (err) {
+            console.warn('Auth init error:', err);
+        }
+    }
+
+    _mapDbUser(dbUser) {
+        if (!dbUser) return null;
+        const name = dbUser.nome || dbUser.name || '';
+        const email = dbUser.email || '';
+        return {
+            id: dbUser.id,
+            email: email,
+            name: name,
+            avatar: dbUser.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(name || email)}`,
+            role: (dbUser.tipo || 'estudante'),
+            plan: dbUser.plano || null,
+            status: dbUser.status || null,
+            created_at: dbUser.created_at || null,
+            ultimo_login: dbUser.ultimo_login || null,
+            // compatibilidade com código existente (camelCase)
+            createdAt: dbUser.created_at || null,
+            lastLogin: dbUser.ultimo_login || null
+        };
+    }
+
+    async _refreshSubscription() {
+        if (!this.currentUser || !window.supabaseService) return;
+        const subRes = await window.supabaseService.fetchSubscriptionByUser(this.currentUser.id);
+        if (subRes.success) {
+            this.subscription = subRes.subscription;
+        } else {
+            this.subscription = null;
         }
     }
 
     async login(email, password) {
-        const user = database.getUserByEmail(email);
-        
-        if (!user) {
-            return { success: false, message: "Usuário não encontrado" };
+        if (!window.supabaseService) return { success: false, message: 'Serviço de autenticação indisponível' };
+        const res = await window.supabaseService.signIn(email, password);
+        if (!res.success) {
+            if (res.error?.message) return { success: false, message: res.error.message };
+            return { success: false, message: 'Erro ao autenticar' };
         }
-        
-        if (user.password !== password) {
-            return { success: false, message: "Senha incorreta" };
+
+        // Obter usuário atual (registro da tabela `users`)
+        const userRes = await window.supabaseService.getUser();
+        if (userRes.success && userRes.user) {
+            this.currentUser = this._mapDbUser(userRes.user);
+            await this._refreshSubscription();
+            this.updateUIAfterLogin();
+            return { success: true, user: this.currentUser };
         }
-        
-        // Verificar status da assinatura
-        if (user.status === 'pending_payment') {
-            return { 
-                success: false, 
-                redirectToPayment: true,
-                user,
-                message: "Complete seu pagamento para acessar a plataforma" 
-            };
-        }
-        
-        // Atualizar último login
-        user.lastLogin = new Date().toISOString();
-        database.updateUser(user.id, { lastLogin: user.lastLogin });
-        
-        // Salvar usuário atual
-        this.currentUser = user;
-        localStorage.setItem('novatek-current-user', JSON.stringify(user));
-        
-        // Atualizar UI
-        this.updateUIAfterLogin();
-        
-        // Adicionar notificação
-        database.addNotification(user.id, {
-            title: "Login realizado",
-            message: "Bem-vindo de volta à NOVATEK DEV!",
-            type: "info"
-        });
-        
-        database.addActivity({
-            type: 'user_login',
-            message: `Usuário logado: ${user.name}`
-        });
-        
-        return { success: true, user };
+
+        return { success: false, message: 'Falha ao obter dados do usuário' };
     }
 
     async register(userData) {
-        // Validar dados
+        // Manter fluxo anterior: não criar usuário até confirmação de pagamento
         if (!userData.name || !userData.email || !userData.password || !userData.confirmPassword) {
-            return { success: false, message: "Preencha todos os campos" };
+            return { success: false, message: 'Preencha todos os campos' };
         }
-        
         if (userData.password !== userData.confirmPassword) {
-            return { success: false, message: "As senhas não coincidem" };
+            return { success: false, message: 'As senhas não coincidem' };
         }
-        
         if (userData.password.length < 6) {
-            return { success: false, message: "A senha deve ter pelo menos 6 caracteres" };
+            return { success: false, message: 'A senha deve ter pelo menos 6 caracteres' };
         }
-        
-        // Verificar se email já existe
-        if (database.getUserByEmail(userData.email)) {
-            return { success: false, message: "Este e-mail já está cadastrado" };
-        }
-        
-        // Validar plano selecionado
-        if (!userData.plan) {
-            return { success: false, message: "Selecione um plano" };
-        }
-        
-        // Não criar nem autenticar o usuário agora — aguardaremos confirmação do pagamento
-        // Salvar plano selecionado para o fluxo de pagamento
-        localStorage.setItem('selected-plan', userData.plan);
+        if (!userData.plan) return { success: false, message: 'Selecione um plano' };
 
-        // Retornar os dados preenchidos para que a UI abra o modal de pagamento
+        localStorage.setItem('selected-plan', userData.plan);
         return {
             success: true,
             userData: {
@@ -98,183 +118,98 @@ class AuthSystem {
                 plan: userData.plan
             },
             redirectToPayment: true,
-            message: "Cadastro recebido. Complete seu pagamento."
+            message: 'Cadastro recebido. Complete seu pagamento.'
         };
     }
 
-    // Cria o usuário após confirmação do pagamento e inicia sessão
     async completeRegistrationAfterPayment(userData) {
+        // A criação do usuário deverá ser feita via backend ou usando supabase.auth.signUp
+        // Para manter a política do front-end (não decidir permissões), recomenda-se criar o usuário via backend
+        // Aqui mantemos o comportamento local como fallback (sem autenticar automaticamente)
         if (!userData || !userData.email) return { success: false };
-
-        const newUser = database.createUser({
-            name: userData.name,
-            email: userData.email,
-            password: userData.password,
-            plan: userData.plan,
-            status: 'active',
-            createdAt: new Date().toISOString()
-        });
-
-        // Atualizar sessão local e UI
-        this.currentUser = newUser;
-        localStorage.setItem('novatek-current-user', JSON.stringify(newUser));
-        this.updateUIAfterLogin();
-
-        database.addActivity({
-            type: 'user_registered_and_paid',
-            message: `Usuário criado após pagamento: ${newUser.email}`
-        });
-
-        return { success: true, user: newUser };
+        // fallback local creation (kept for compatibility)
+        if (window.database && window.database.createUser) {
+            const newUser = window.database.createUser({
+                name: userData.name,
+                email: userData.email,
+                password: userData.password,
+                plan: userData.plan,
+                status: 'active',
+                createdAt: new Date().toISOString()
+            });
+            this.currentUser = newUser;
+            localStorage.setItem('novatek-current-user', JSON.stringify(newUser));
+            this.updateUIAfterLogin();
+            return { success: true, user: newUser };
+        }
+        return { success: false, message: 'Não foi possível criar usuário' };
     }
 
-    logout() {
-        // Adicionar atividade
-        if (this.currentUser) {
-            database.addActivity({
-                type: 'user_logout',
-                message: `Usuário deslogado: ${this.currentUser.name}`
-            });
+    async logout() {
+        if (window.supabaseService) {
+            await window.supabaseService.signOut();
         }
-        
-        // Limpar dados
         this.currentUser = null;
+        this.subscription = null;
         localStorage.removeItem('novatek-current-user');
         localStorage.removeItem('selected-plan');
-        
-        // Atualizar UI
+        if (this._authListenerUnsub) {
+            try { this._authListenerUnsub(); } catch (e) {}
+            this._authListenerUnsub = null;
+        }
         this.updateUIAfterLogout();
-        
-        // Fechar todos os modais
-        document.querySelectorAll('.modal').forEach(modal => {
-            modal.classList.add('hidden');
-        });
-        
         return { success: true };
     }
 
     updateUIAfterLogin() {
-        // Esconder login screen
         const loginScreen = document.getElementById('login-screen');
-        if (loginScreen) {
-            loginScreen.classList.add('hidden');
-        }
-        
-        // Mostrar Painel do Aluno
+        if (loginScreen) loginScreen.classList.add('hidden');
         const painel = document.getElementById('painel-do-aluno');
-        if (painel) {
-            painel.classList.remove('hidden');
-        }
-        
+        if (painel) painel.classList.remove('hidden');
+
         if (this.currentUser) {
             this.updateUserInfo();
-            
-            // Se o usuário precisa pagar, redirecionar para pagamento
-            if (this.currentUser.status === 'pending_payment') {
-                setTimeout(() => {
-                    router.navigateTo('payment');
-                }, 100);
+            if (!this.hasActiveSubscription()) {
+                setTimeout(() => router.navigateTo('subscription'), 100);
             } else {
-                // Se já pagou, ir para Painel do Aluno
-                setTimeout(() => {
-                    router.navigateTo('painel-do-aluno');
-                }, 100);
+                setTimeout(() => router.navigateTo('painel-do-aluno'), 100);
             }
         }
     }
 
     updateUIAfterLogout() {
-        // Mostrar login screen
         const loginScreen = document.getElementById('login-screen');
         if (loginScreen) {
             loginScreen.classList.remove('hidden');
-            // Resetar formulário
             const loginForm = document.getElementById('login-form');
-            if (loginForm) {
-                loginForm.reset();
-            }
+            if (loginForm) loginForm.reset();
         }
-        
-        // Esconder Painel do Aluno
         const painel = document.getElementById('painel-do-aluno');
-        if (painel) {
-            painel.classList.add('hidden');
-        }
-        
-        // Resetar sidebar mobile
+        if (painel) painel.classList.add('hidden');
         const sidebar = document.querySelector('.sidebar');
-        if (sidebar) {
-            sidebar.classList.remove('active');
-        }
-        
-        // Fechar menus abertos
-        const userMenu = document.getElementById('user-menu-dropdown');
-        if (userMenu) {
-            userMenu.classList.add('hidden');
-        }
-        
-        const notifications = document.getElementById('notifications-dropdown');
-        if (notifications) {
-            notifications.classList.add('hidden');
-        }
+        if (sidebar) sidebar.classList.remove('active');
+        const userMenu = document.getElementById('user-menu-dropdown'); if (userMenu) userMenu.classList.add('hidden');
+        const notifications = document.getElementById('notifications-dropdown'); if (notifications) notifications.classList.add('hidden');
     }
 
     updateUserInfo() {
         const user = this.currentUser;
         if (!user) return;
-
-        // Atualizar nome do usuário
         const userNameElements = document.querySelectorAll('#user-name, #welcome-message');
         userNameElements.forEach(element => {
-            if (element.id === 'welcome-message') {
-                element.textContent = `Bem-vindo, ${user.name.split(' ')[0]}!`;
-            } else {
-                element.textContent = user.name;
-            }
+            if (element.id === 'welcome-message') element.textContent = `Bem-vindo, ${user.name.split(' ')[0]}!`;
+            else element.textContent = user.name;
         });
-
-        // Atualizar avatares
         const avatarElements = document.querySelectorAll('#header-user-avatar, #user-avatar-img');
-        avatarElements.forEach(element => {
-            element.src = user.avatar;
-        });
-
-        // Atualizar role
-        const roleElement = document.getElementById('user-role');
-        if (roleElement) {
-            roleElement.textContent = user.role === 'admin' ? 'Administrador' : 'Estudante';
-        }
-
-        // Atualizar data atual
-        const dateElement = document.getElementById('current-date');
-        if (dateElement) {
-            const now = new Date();
-            dateElement.textContent = now.toLocaleDateString('pt-BR', {
-                weekday: 'long',
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric'
-            });
-        }
-
-        // Mostrar/ocultar menu admin
-        const adminMenu = document.getElementById('admin-menu');
-        if (adminMenu) {
-            if (user.role === 'admin') {
-                adminMenu.classList.remove('hidden');
-            } else {
-                adminMenu.classList.add('hidden');
-            }
-        }
-
-        // Atualizar notificações
-        if (window.ui && window.ui.updateNotifications) {
-            window.ui.updateNotifications();
-        }
+        avatarElements.forEach(el => el.src = user.avatar || el.src);
+        const roleElement = document.getElementById('user-role'); if (roleElement) roleElement.textContent = user.role === 'admin' ? 'Administrador' : 'Estudante';
+        const dateElement = document.getElementById('current-date'); if (dateElement) dateElement.textContent = new Date().toLocaleDateString('pt-BR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+        const adminMenu = document.getElementById('admin-menu'); if (adminMenu) { if (user.role === 'admin') adminMenu.classList.remove('hidden'); else adminMenu.classList.add('hidden'); }
+        if (window.ui && window.ui.updateNotifications) window.ui.updateNotifications();
     }
 
     isAuthenticated() {
-        return this.currentUser !== null;
+        return !!this.currentUser;
     }
 
     isAdmin() {
@@ -282,22 +217,36 @@ class AuthSystem {
     }
 
     hasActiveSubscription() {
-        return this.currentUser && this.currentUser.status === 'active';
+        if (!this.subscription) return false;
+        const status = (this.subscription.status || '').toLowerCase();
+        return status === 'ativo' || status === 'active' || status === 'active_payment' || status === 'paid';
     }
 
     getCurrentUser() {
         return this.currentUser;
     }
 
-    updateUserProfile(updates) {
+    async updateUserProfile(updates) {
         if (!this.currentUser) return null;
-        
-        const updatedUser = database.updateUser(this.currentUser.id, updates);
-        if (updatedUser) {
-            this.currentUser = updatedUser;
-            localStorage.setItem('novatek-current-user', JSON.stringify(updatedUser));
-            this.updateUserInfo();
-            return updatedUser;
+        try {
+            if (window.supabaseClient) {
+                // Tentar atualizar perfil na tabela `profiles` (se existir)
+                const supabase = window.supabaseClient;
+                if (updates.name || updates.avatar || updates.role) {
+                    await supabase.from('profiles').upsert({ id: this.currentUser.id, full_name: updates.name, avatar_url: updates.avatar, role: updates.role });
+                }
+                // Atualizar dados de autenticação se necessário
+                if (updates.email || updates.password) {
+                    await supabase.auth.updateUser({ email: updates.email, password: updates.password });
+                }
+                // Atualizar info local
+                Object.assign(this.currentUser, updates);
+                this.updateUserInfo();
+                return this.currentUser;
+            }
+        } catch (err) {
+            console.warn('Falha ao atualizar perfil:', err);
+            return null;
         }
         return null;
     }

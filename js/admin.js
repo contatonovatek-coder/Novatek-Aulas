@@ -283,131 +283,188 @@ class AdminSystem {
         return texts[level] || level;
     }
 
-    renderAdminUsers() {
-        if (!auth.isAdmin()) {
-            router.navigateTo('painel-do-aluno');
-            return;
-        }
+    async renderAdminUsers() {
+    if (!auth.isAdmin()) {
+        router.navigateTo('painel-do-aluno');
+        return;
+    }
 
-        const users = database.getAllUsers();
-        const content = document.getElementById('painel-do-aluno-content');
+    const content = document.getElementById('painel-do-aluno-content');
 
-        content.innerHTML = `
-            <div class="admin-users">
-                <div class="admin-hero section-header">
-                    <div class="hero-left">
-                        <h2>Gerenciar Usuários</h2>
-                        <p class="hero-sub">Crie, edite e gerencie contas de usuários</p>
-                    </div>
-                    <div class="hero-right">
-                        <div class="filter-group">
-                            <input type="text" id="admin-users-search" placeholder="Pesquisar por nome ou e-mail" class="filter-select" style="width:260px;">
-                            <select id="admin-filter-plan" class="filter-select">
-                                <option value="">Todos os Planos</option>
-                                <option value="junior">Júnior</option>
-                                <option value="pleno">Pleno</option>
-                                <option value="senior">Sênior</option>
-                            </select>
-                            <select id="admin-filter-status" class="filter-select">
-                                <option value="">Todos os Status</option>
-                                <option value="active">Ativo</option>
-                                <option value="pending_payment">Pagamento Pendente</option>
-                                <option value="inactive">Inativo</option>
-                            </select>
-                            <button class="btn btn-ghost" id="export-users"><i class="fas fa-file-export"></i> Exportar</button>
-                            <button class="btn btn-primary" id="add-user-btn"><i class="fas fa-user-plus"></i> Novo Usuário</button>
-                        </div>
-                    </div>
+    content.innerHTML = `
+        <div class="admin-users">
+            <div class="admin-hero section-header">
+                <div class="hero-left">
+                    <h2>Gerenciar Usuários</h2>
+                    <p class="hero-sub">Crie, edite e gerencie contas de usuários</p>
                 </div>
-
-                <div class="admin-table-container">
-                    <table class="admin-table">
-                        <thead>
-                            <tr>
-                                <th>Usuário</th>
-                                <th>Plano</th>
-                                <th>Função</th>
-                                <th>Cadastro</th>
-                                <th>Status</th>
-                                <th style="width:150px">Ações</th>
-                            </tr>
-                        </thead>
-                        <tbody id="admin-users-tbody"></tbody>
-                    </table>
+                <div class="hero-right">
+                    <div class="filter-group">
+                        <input type="text" id="admin-users-search" placeholder="Pesquisar por nome ou e-mail" class="filter-select" style="width:260px;">
+                        <select id="admin-filter-plan" class="filter-select">
+                            <option value="">Todos os Planos</option>
+                            <option value="Júnior">Júnior</option>
+                            <option value="Pleno">Pleno</option>
+                            <option value="Sênior">Sênior</option>
+                        </select>
+                        <select id="admin-filter-status" class="filter-select">
+                            <option value="">Todos os Status</option>
+                            <option value="Ativo">Ativo</option>
+                            <option value="Inativo">Inativo</option>
+                        </select>
+                        <button class="btn btn-ghost" id="export-users">
+                            <i class="fas fa-file-export"></i> Exportar
+                        </button>
+                        <button class="btn btn-primary" id="add-user-btn">
+                            <i class="fas fa-user-plus"></i> Novo Usuário
+                        </button>
+                    </div>
                 </div>
             </div>
-        `;
 
-        const tbody = document.getElementById('admin-users-tbody');
+            <div class="admin-table-container">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>Usuário</th>
+                            <th>Plano</th>
+                            <th>Função</th>
+                            <th>Cadastro</th>
+                            <th>Status</th>
+                            <th style="width:150px">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="admin-users-tbody"></tbody>
+                </table>
+            </div>
+        </div>
+    `;
 
-        const renderRows = (list) => {
-            tbody.innerHTML = list.map(user => `
-                <tr>
-                    <td>
-                        <div style="display:flex; align-items:center; gap:12px">
-                            <img src="${user.avatar}" alt="${user.name}" width="48" height="48" style="border-radius:9999px; object-fit:cover;">
-                            <div>
-                                <div style="font-weight:700; color:var(--dark-color)">${user.name}</div>
-                                <div style="font-size:0.9rem; color:var(--gray-color)">${user.email}</div>
+    // 🔹 BUSCA REAL NO SUPABASE
+    const { data: users, error } = await supabase
+        .from('users')
+        .select('id, nome, email, plano, tipo, status, created_at')
+        .order('created_at', { ascending: false });
+
+    if (error) {
+        console.error('Erro ao buscar usuários:', error);
+        return;
+    }
+
+    const tbody = document.getElementById('admin-users-tbody');
+
+    const renderRows = (list) => {
+        tbody.innerHTML = list.map(user => `
+            <tr>
+                <td>
+                    <div style="display:flex; align-items:center; gap:12px">
+                        <img 
+                            src="/avatar-default.png" 
+                            alt="${user.nome}" 
+                            width="48" 
+                            height="48" 
+                            style="border-radius:9999px; object-fit:cover;"
+                        >
+                        <div>
+                            <div style="font-weight:700; color:var(--dark-color)">
+                                ${user.nome}
+                            </div>
+                            <div style="font-size:0.9rem; color:var(--gray-color)">
+                                ${user.email}
                             </div>
                         </div>
-                    </td>
-                    <td><span class="badge ${this.getPlanBadgeClass(user.plan)}">${this.getPlanText(user.plan)}</span></td>
-                    <td><span class="badge ${user.role === 'admin' ? 'badge-danger' : 'badge-primary'}">${user.role === 'admin' ? 'Administrador' : 'Estudante'}</span></td>
-                    <td>${new Date(user.joinDate).toLocaleDateString('pt-BR')}</td>
-                    <td><span class="badge ${user.status === 'active' ? 'badge-accent' : user.status === 'pending_payment' ? 'badge-warning' : 'badge-danger'}">${this.getStatusText(user.status)}</span></td>
-                    <td class="actions">
-                        <button class="btn btn-sm btn-outline" data-action="edit-user" data-id="${user.id}"><i class="fas fa-edit"></i></button>
-                        ${user.id !== auth.currentUser.id ? `<button class="btn btn-sm btn-danger" data-action="delete-user" data-id="${user.id}"><i class="fas fa-trash"></i></button>` : ''}
-                    </td>
-                </tr>
-            `).join('');
+                    </div>
+                </td>
 
-            this.addUserManagementListeners();
-        };
+                <td>
+                    <span class="badge ${this.getPlanBadgeClass(user.plano)}">
+                        ${user.plano}
+                    </span>
+                </td>
 
-        // initial render
-        renderRows(users);
+                <td>
+                    <span class="badge ${user.tipo === 'admin' ? 'badge-danger' : 'badge-primary'}">
+                        ${user.tipo === 'admin' ? 'Administrador' : 'Estudante'}
+                    </span>
+                </td>
 
-        // Wire up filters and search
-        const searchInput = document.getElementById('admin-users-search');
-        const planFilter = document.getElementById('admin-filter-plan');
-        const statusFilter = document.getElementById('admin-filter-status');
-        const exportBtn = document.getElementById('export-users');
+                <td>
+                    ${new Date(user.created_at).toLocaleDateString('pt-BR')}
+                </td>
 
-        const applyFilters = () => {
-            const q = searchInput.value.trim().toLowerCase();
-            const plan = planFilter.value;
-            const status = statusFilter.value;
+                <td>
+                    <span class="badge ${user.status === 'Ativo' ? 'badge-accent' : 'badge-danger'}">
+                        ${user.status}
+                    </span>
+                </td>
 
-            const filtered = users.filter(u => {
-                if (q && !(u.name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q))) return false;
-                if (plan && u.plan !== plan) return false;
-                if (status && u.status !== status) return false;
-                return true;
-            });
+                <td class="actions">
+                    <button class="btn btn-sm btn-outline" data-action="edit-user" data-id="${user.id}">
+                        <i class="fas fa-edit"></i>
+                    </button>
 
-            renderRows(filtered);
-        };
+                    ${user.id !== auth.currentUser.id ? `
+                        <button class="btn btn-sm btn-danger" data-action="delete-user" data-id="${user.id}">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    ` : ''}
+                </td>
+            </tr>
+        `).join('');
 
-        searchInput.addEventListener('input', applyFilters);
-        planFilter.addEventListener('change', applyFilters);
-        statusFilter.addEventListener('change', applyFilters);
+        this.addUserManagementListeners();
+    };
 
-        exportBtn.addEventListener('click', () => {
-            const data = users.map(u => ({ id: u.id, name: u.name, email: u.email, plan: u.plan, role: u.role, status: u.status }));
-            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'users-export.json';
-            document.body.appendChild(a);
-            a.click();
-            a.remove();
-            URL.revokeObjectURL(url);
+    // render inicial
+    renderRows(users);
+
+    // 🔹 filtros
+    const searchInput = document.getElementById('admin-users-search');
+    const planFilter = document.getElementById('admin-filter-plan');
+    const statusFilter = document.getElementById('admin-filter-status');
+    const exportBtn = document.getElementById('export-users');
+
+    const applyFilters = () => {
+        const q = searchInput.value.trim().toLowerCase();
+        const plan = planFilter.value;
+        const status = statusFilter.value;
+
+        const filtered = users.filter(u => {
+            if (q && !(u.nome.toLowerCase().includes(q) || u.email.toLowerCase().includes(q))) return false;
+            if (plan && u.plano !== plan) return false;
+            if (status && u.status !== status) return false;
+            return true;
         });
 
-    }
+        renderRows(filtered);
+    };
+
+    searchInput.addEventListener('input', applyFilters);
+    planFilter.addEventListener('change', applyFilters);
+    statusFilter.addEventListener('change', applyFilters);
+
+    // 🔹 export
+    exportBtn.addEventListener('click', () => {
+        const data = users.map(u => ({
+            id: u.id,
+            nome: u.nome,
+            email: u.email,
+            plano: u.plano,
+            tipo: u.tipo,
+            status: u.status
+        }));
+
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'users-export.json';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+    });
+}
 
     getPlanBadgeClass(plan) {
         const classes = {
@@ -593,13 +650,18 @@ class AdminSystem {
             const type = modal.querySelector('#notification-type').value;
             
             const users = database.getAllUsers();
-            users.forEach(user => {
-                database.addNotification(user.id, {
-                    title,
-                    message,
-                    type
+            if (window.supabaseService) {
+                // enviar notificações para cada usuário via Supabase
+                (async () => {
+                    for (const user of users) {
+                        await window.supabaseService.addNotificationRecord({ user_id: user.id, title, message, type });
+                    }
+                })();
+            } else {
+                users.forEach(user => {
+                    database.addNotification(user.id, { title, message, type });
                 });
-            });
+            }
             
             ui.showAlert('Notificação enviada para todos os usuários!', 'success');
             modal.remove();

@@ -529,156 +529,210 @@ class UI {
         }
     }
 
-    showLesson(lessonId) {
-        const lesson = database.getLessonById(lessonId);
+    async showLesson(lessonId) {
+        // Busca a lesson via Supabase se disponível, senão fallback local
+        let lesson = null;
+        if (window.supabaseService) {
+            const lres = await window.supabaseService.fetchLessonById(lessonId);
+            if (lres.success) lesson = lres.lesson;
+            else {
+                if (lres.accessDenied) {
+                    this.showAlert('Acesso negado à aula (RLS).', 'danger');
+                    return;
+                }
+                // fallback para local
+            }
+        }
+
+        if (!lesson && window.database) {
+            lesson = window.database.getLessonById(lessonId);
+        }
+
         if (!lesson) return;
-        
-        const course = database.getCourseById(lesson.courseId);
+
+        // course
+        let course = null;
+        if (window.supabaseService) {
+            const cres = await window.supabaseService.fetchCourseById(lesson.courseId);
+            if (cres.success) course = cres.course;
+        }
+        if (!course && window.database) course = window.database.getCourseById(lesson.courseId);
+
         const user = auth.getCurrentUser();
-        const progress = user ? database.getUserProgress(user.id, lesson.courseId) : null;
+        const progress = user ? (window.database ? window.database.getUserProgress(user.id, lesson.courseId) : null) : null;
         const isCompleted = progress?.completedLessons?.includes(lesson.id) || false;
-        
+
         const modalContent = document.getElementById('lesson-modal-content');
         const modalTitle = document.getElementById('lesson-modal-title');
-        
-        if (modalContent && modalTitle) {
-            modalTitle.textContent = `${course ? course.title + ' — ' : ''}${lesson.title}`;
 
-            // compute lesson index/progress
-            const allLessons = database.getLessonsByCourseId(lesson.courseId) || [];
-            const lessonIndex = allLessons.findIndex(l => l.id === lesson.id);
-            const lessonNumber = lessonIndex !== -1 ? (lessonIndex + 1) : 1;
-            const totalLessons = allLessons.length;
+        if (!modalContent || !modalTitle) return;
 
-            const statusLabel = isCompleted ? 'Concluída' : (progress && progress.lastAccessed && (progress.lastAccessed !== null) ? 'Em andamento' : 'Não iniciada');
-            const statusClass = isCompleted ? 'badge-accent' : (statusLabel === 'Em andamento' ? 'badge-warning' : 'badge-primary');
+        modalTitle.textContent = `${course ? course.title + ' — ' : ''}${lesson.title}`;
 
-            // conditional blocks
-            const hasVideo = !!lesson.videoUrl;
-            const hasLive = !!lesson.liveUrl || !!lesson.link;
-            const hasActivity = !!lesson.activity; // optional
-            const materials = lesson.resources || [];
+        // all lessons (ordered)
+        let allLessons = [];
+        if (window.supabaseService) {
+            const llist = await window.supabaseService.fetchLessonsByCourse(lesson.courseId);
+            if (llist.success) allLessons = llist.lessons || [];
+        }
+        if (!allLessons.length && window.database) allLessons = window.database.getLessonsByCourseId(lesson.courseId) || [];
 
-            modalContent.innerHTML = `
-                <div class="lesson-modal-content">
-                    <div class="lesson-top">
-                        <div class="lesson-status-badge ${statusClass}">
-                            <i class="fas ${isCompleted ? 'fa-check-circle' : (statusLabel === 'Em andamento' ? 'fa-spinner' : 'fa-circle')}"></i>
-                            <span>${statusLabel}</span>
-                        </div>
-                        <div class="lesson-progress-indicator">Aula ${lessonNumber} de ${totalLessons}</div>
+        const lessonIndex = allLessons.findIndex(l => l.id === lesson.id);
+        const lessonNumber = lessonIndex !== -1 ? (lessonIndex + 1) : 1;
+        const totalLessons = allLessons.length;
+
+        const statusLabel = isCompleted ? 'Concluída' : (progress && progress.lastAccessed ? 'Em andamento' : 'Não iniciada');
+        const statusClass = isCompleted ? 'badge-accent' : (statusLabel === 'Em andamento' ? 'badge-warning' : 'badge-primary');
+
+        const hasVideo = !!lesson.videoUrl;
+        const hasLive = !!lesson.liveUrl || !!lesson.link;
+        const hasActivity = !!lesson.activity;
+
+        // materials via supabase (RLS garante acesso)
+        let materials = [];
+        if (window.supabaseService) {
+            const mres = await window.supabaseService.fetchMaterialsByLesson(lesson.id);
+            if (mres.success) materials = mres.materials || [];
+            else if (mres.accessDenied) {
+                // usuário não tem acesso aos materiais
+                materials = null; // sinaliza acesso negado
+            }
+        }
+        if (materials && !materials.length && window.database) materials = lesson.resources || [];
+
+        // Se materials === null => acesso negado
+        const materialsBlock = (materials === null) ? `<div class="block block-materials"><p class="text-danger">Você não tem permissão para acessar os materiais desta aula.</p></div>` : (materials && materials.length ? `
+            <section class="block block-materials">
+                <h4 class="block-title">Material para leitura</h4>
+                <ul class="resources-list">
+                    ${materials.map(m => `<li><i class="fas fa-file-pdf"></i> <a href="${m}" target="_blank">${m}</a></li>`).join('')}
+                </ul>
+            </section>
+        ` : '');
+
+        modalContent.innerHTML = `
+            <div class="lesson-modal-content">
+                <div class="lesson-top">
+                    <div class="lesson-status-badge ${statusClass}">
+                        <i class="fas ${isCompleted ? 'fa-check-circle' : (statusLabel === 'Em andamento' ? 'fa-spinner' : 'fa-circle')}"></i>
+                        <span>${statusLabel}</span>
                     </div>
+                    <div class="lesson-progress-indicator">Aula ${lessonNumber} de ${totalLessons}</div>
+                </div>
 
-                    <h2 class="lesson-modal-title">${lesson.title}</h2>
+                <h2 class="lesson-modal-title">${lesson.title}</h2>
 
-                    <div class="lesson-main-grid">
-                        ${hasVideo ? `
-                            <section class="block block-video">
-                                <h4 class="block-title">Vídeo</h4>
-                                <div class="video-player-container">
-                                    <iframe src="${lesson.videoUrl}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-                                </div>
-                            </section>
-                        ` : ''}
+                <div class="lesson-main-grid">
+                    ${hasVideo ? `
+                        <section class="block block-video">
+                            <h4 class="block-title">Vídeo</h4>
+                            <div class="video-player-container">
+                                <iframe src="${lesson.videoUrl}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                            </div>
+                        </section>
+                    ` : ''}
 
-                        ${hasLive ? `
-                            <section class="block block-live">
-                                <h4 class="block-title">Aula ao vivo / Link</h4>
-                                <p class="text-sm text-gray">${lesson.liveDescription || 'Acesse a sessão ao vivo ou recurso externo.'}</p>
-                                <a class="btn btn-primary btn-lg live-enter" href="${lesson.liveUrl || lesson.link}" target="_blank" rel="noopener noreferrer">Entrar na aula</a>
-                            </section>
-                        ` : ''}
+                    ${hasLive ? `
+                        <section class="block block-live">
+                            <h4 class="block-title">Aula ao vivo / Link</h4>
+                            <p class="text-sm text-gray">${lesson.liveDescription || 'Acesse a sessão ao vivo ou recurso externo.'}</p>
+                            <a class="btn btn-primary btn-lg live-enter" href="${lesson.liveUrl || lesson.link}" target="_blank" rel="noopener noreferrer">Entrar na aula</a>
+                        </section>
+                    ` : ''}
 
-                        ${hasActivity ? `
-                            <section class="block block-activity">
-                                <h4 class="block-title">Atividade</h4>
-                                <p class="text-gray">${lesson.activity.description || lesson.activity}</p>
-                                <button class="btn btn-outline btn-block start-activity">Iniciar atividade</button>
-                            </section>
-                        ` : ''}
+                    ${hasActivity ? `
+                        <section class="block block-activity">
+                            <h4 class="block-title">Atividade</h4>
+                            <p class="text-gray">${lesson.activity?.description || lesson.activity}</p>
+                            <button class="btn btn-outline btn-block start-activity">Iniciar atividade</button>
+                        </section>
+                    ` : ''}
 
-                        ${materials && materials.length ? `
-                            <section class="block block-materials">
-                                <h4 class="block-title">Material para leitura</h4>
-                                <ul class="resources-list">
-                                    ${materials.map(m => `<li><i class="fas fa-file-pdf"></i> <a href="${m}" target="_blank">${m}</a></li>`).join('')}
-                                </ul>
-                            </section>
-                        ` : ''}
+                    ${materialsBlock}
+                </div>
+
+                <div class="lesson-actions-modal spaced">
+                    <div class="left-actions">
+                        <button class="btn btn-outline" id="prev-lesson"><i class="fas fa-chevron-left"></i> Aula anterior</button>
+                        <button class="btn btn-outline" id="next-lesson">Próxima aula <i class="fas fa-chevron-right"></i></button>
                     </div>
-
-                    <div class="lesson-actions-modal spaced">
-                        <div class="left-actions">
-                            <button class="btn btn-outline" id="prev-lesson"><i class="fas fa-chevron-left"></i> Aula anterior</button>
-                            <button class="btn btn-outline" id="next-lesson">Próxima aula <i class="fas fa-chevron-right"></i></button>
-                        </div>
-                        <div class="right-actions">
-                            <button class="btn ${isCompleted ? 'btn-outline-danger' : 'btn-accent'}" id="toggle-complete">
-                                <i class="fas ${isCompleted ? 'fa-times-circle' : 'fa-check'}"></i>
-                                ${isCompleted ? 'Marcar como não concluída' : 'Marcar como concluída'}
-                            </button>
-                            <button class="btn btn-primary" id="go-to-course"><i class="fas fa-external-link-alt"></i> Ir para o curso</button>
-                        </div>
+                    <div class="right-actions">
+                        <button class="btn ${isCompleted ? 'btn-outline-danger' : 'btn-accent'}" id="toggle-complete">
+                            <i class="fas ${isCompleted ? 'fa-times-circle' : 'fa-check'}"></i>
+                            ${isCompleted ? 'Marcar como não concluída' : 'Marcar como concluída'}
+                        </button>
+                        <button class="btn btn-primary" id="go-to-course"><i class="fas fa-external-link-alt"></i> Ir para o curso</button>
                     </div>
                 </div>
-            `;
+            </div>
+        `;
 
-            // event handlers
-            const prevBtn = modalContent.querySelector('#prev-lesson');
-            const nextBtn = modalContent.querySelector('#next-lesson');
-            const toggleBtn = modalContent.querySelector('#toggle-complete');
-            const goToCourseBtn = modalContent.querySelector('#go-to-course');
+        // event handlers
+        const prevBtn = modalContent.querySelector('#prev-lesson');
+        const nextBtn = modalContent.querySelector('#next-lesson');
+        const toggleBtn = modalContent.querySelector('#toggle-complete');
+        const goToCourseBtn = modalContent.querySelector('#go-to-course');
 
-            // prev/next logic
-            if (prevBtn) {
-                const prevLesson = allLessons[lessonIndex - 1];
-                if (!prevLesson) prevBtn.disabled = true;
-                prevBtn.addEventListener('click', () => {
-                    if (prevLesson) this.showLesson(prevLesson.id);
-                });
-            }
-            if (nextBtn) {
-                const nextLesson = allLessons[lessonIndex + 1];
-                if (!nextLesson) nextBtn.disabled = true;
-                nextBtn.addEventListener('click', () => {
-                    if (nextLesson) this.showLesson(nextLesson.id);
-                });
-            }
+        if (prevBtn) {
+            const prevLesson = allLessons[lessonIndex - 1];
+            if (!prevLesson) prevBtn.disabled = true;
+            prevBtn.addEventListener('click', () => { if (prevLesson) this.showLesson(prevLesson.id); });
+        }
+        if (nextBtn) {
+            const nextLesson = allLessons[lessonIndex + 1];
+            if (!nextLesson) nextBtn.disabled = true;
+            nextBtn.addEventListener('click', () => { if (nextLesson) this.showLesson(nextLesson.id); });
+        }
 
-            if (toggleBtn && user) {
-                toggleBtn.addEventListener('click', () => {
-                    if (!isCompleted) {
+        if (toggleBtn && user) {
+            toggleBtn.addEventListener('click', async () => {
+                if (!isCompleted) {
+                    if (window.supabaseService) {
+                        const upd = await window.supabaseService.updateUserProgress(user.id, lesson.courseId, lesson.id);
+                        if (!upd.success) {
+                            if (upd.accessDenied) return this.showAlert('Acesso negado ao marcar progresso.', 'danger');
+                            return this.showAlert('Erro ao atualizar progresso.', 'danger');
+                        }
+                        const note = await window.supabaseService.addNotificationRecord({ user_id: user.id, title: 'Aula concluída!', message: `Você completou: ${lesson.title}`, type: 'success' });
+                        if (!note.success) {
+                            if (note.accessDenied) return this.showAlert('Acesso negado ao adicionar notificação.', 'danger');
+                        }
+                    } else if (window.database) {
                         database.updateUserProgress(user.id, lesson.courseId, lesson.id);
                         database.addNotification(user.id, { title: 'Aula concluída!', message: `Você completou: ${lesson.title}`, type: 'success' });
-                    } else {
+                    }
+                } else {
+                    if (window.supabaseService) {
+                        const rem = await window.supabaseService.removeLessonFromProgress(user.id, lesson.courseId, lesson.id);
+                        if (!rem.success) {
+                            if (rem.accessDenied) return this.showAlert('Acesso negado ao atualizar progresso.', 'danger');
+                            return this.showAlert('Erro ao atualizar progresso.', 'danger');
+                        }
+                        const note = await window.supabaseService.addNotificationRecord({ user_id: user.id, title: 'Marcação removida', message: `A marcação de conclusão foi removida: ${lesson.title}`, type: 'info' });
+                        if (!note.success) {
+                            if (note.accessDenied) return this.showAlert('Acesso negado ao adicionar notificação.', 'danger');
+                        }
+                    } else if (window.database) {
                         database.removeLessonFromProgress(user.id, lesson.courseId, lesson.id);
                         database.addNotification(user.id, { title: 'Marcação removida', message: `A marcação de conclusão foi removida: ${lesson.title}`, type: 'info' });
                     }
-
-                    this.updateNotifications();
-                    // refresh view to reflect new state
-                    this.showLesson(lessonId);
-                });
-            }
-
-            if (goToCourseBtn) {
-                goToCourseBtn.addEventListener('click', () => {
-                    this.closeModal('lesson-modal');
-                    router.navigateTo('courses');
-                });
-            }
-
-            // start activity handler
-            const startActivityBtn = modalContent.querySelector('.start-activity');
-            if (startActivityBtn) {
-                startActivityBtn.addEventListener('click', () => {
-                    // open activity in a modal or navigate to activity; fallback to alert
-                    this.showAlert('Iniciando atividade...', 'info');
-                });
-            }
-
-            this.openModal('lesson-modal');
+                }
+                this.updateNotifications();
+                this.showLesson(lessonId);
+            });
         }
+
+        if (goToCourseBtn) {
+            goToCourseBtn.addEventListener('click', () => {
+                this.closeModal('lesson-modal');
+                router.navigateTo('courses');
+            });
+        }
+
+        const startActivityBtn = modalContent.querySelector('.start-activity');
+        if (startActivityBtn) startActivityBtn.addEventListener('click', () => this.showAlert('Iniciando atividade...', 'info'));
+
+        this.openModal('lesson-modal');
     }
 
     showAlert(message, type = 'info') {

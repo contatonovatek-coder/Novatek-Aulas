@@ -11,22 +11,34 @@ class PaymentSystem {
     }
 
     async createSubscription(userId, planId, paymentMethod = 'credit_card') {
-        const user = database.getUserById(userId);
+        let user = null;
+        if (window.supabaseService) {
+            const u = await window.supabaseService.getUser();
+            user = u.user || null;
+        }
+        if (!user && window.database) user = database.getUserById(userId);
         const plan = CONFIG.PLANS[planId.toUpperCase()];
         
         if (!user || !plan) {
             throw new Error('Usuário ou plano inválido');
         }
 
-        // Criar registro de pagamento
-        const payment = database.createPayment({
-            userId: user.id,
-            amount: plan.price,
-            plan: plan.id,
-            status: 'pending',
-            paymentMethod,
-            description: `Assinatura ${plan.name} - NOVATEK DEV`
-        });
+        // Criar registro de pagamento (Supabase quando disponível)
+        let payment = null;
+        if (window.supabaseService) {
+            const p = await window.supabaseService.createPaymentRecord({ user_id: user.id, amount: plan.price, plan: plan.id, status: 'pending', payment_method: paymentMethod, description: `Assinatura ${plan.name} - NOVATEK DEV` });
+            payment = p.success ? p.payment : null;
+        }
+        if (!payment && window.database) {
+            payment = database.createPayment({
+                userId: user.id,
+                amount: plan.price,
+                plan: plan.id,
+                status: 'pending',
+                paymentMethod,
+                description: `Assinatura ${plan.name} - NOVATEK DEV`
+            });
+        }
 
         this.currentPayment = payment;
 
@@ -48,7 +60,11 @@ class PaymentSystem {
             console.error('Erro ao criar assinatura:', error);
             
             // Atualizar status do pagamento
-            database.updateUser(user.id, { status: 'payment_failed' });
+            if (window.supabaseService) {
+                await window.supabaseService.updateUserRecord(user.id, { status: 'payment_failed' });
+            } else if (window.database) {
+                database.updateUser(user.id, { status: 'payment_failed' });
+            }
             
             return { 
                 success: false, 
@@ -68,48 +84,52 @@ class PaymentSystem {
             return { success: false, error: 'Parâmetros inválidos' };
         }
 
-        // Extrair IDs
-        const match = externalReference.match(/user_(\d+)_payment_(\d+)/);
+        // Extrair IDs (aceita UUIDs/alphanum)
+        const match = externalReference.match(/user_([\w-]+)_payment_([\w-]+)/);
         if (!match) {
             return { success: false, error: 'Referência inválida' };
         }
 
-        const userId = parseInt(match[1]);
-        const paymentIdDb = parseInt(match[2]);
+        const userId = match[1];
+        const paymentIdDb = match[2];
 
         // Obter status do pagamento do Mercado Pago
         const paymentStatus = await mercadoPago.getPaymentStatus(paymentId);
         
         // Atualizar status do usuário
         if (paymentStatus.status === 'approved') {
-            // Criar assinatura
-            database.createSubscription({
-                userId: userId,
-                plan: paymentStatus.external_reference?.split('_')[2] || 'junior',
-                paymentId: paymentIdDb,
-                status: 'active',
-                startDate: new Date().toISOString(),
-                endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
-            });
+            // Criar assinatura (Supabase quando disponível)
+            const planName = paymentStatus.external_reference?.split('_')[2] || 'junior';
+            if (window.supabaseService) {
+                await window.supabaseService.createSubscriptionRecord({ user_id: userId, plan: planName, payment_id: paymentIdDb, status: 'active', start_date: new Date().toISOString(), end_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() });
+                await window.supabaseService.updateUserRecord(userId, { status: 'active', plan: planName });
+                await window.supabaseService.addNotificationRecord({ user_id: userId, title: 'Assinatura ativada!', message: 'Sua assinatura foi ativada com sucesso. Bem-vindo à NOVATEK DEV!', type: 'success' });
+            } else {
+                database.createSubscription({
+                    userId: userId,
+                    plan: paymentStatus.external_reference?.split('_')[2] || 'junior',
+                    paymentId: paymentIdDb,
+                    status: 'active',
+                    startDate: new Date().toISOString(),
+                    endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+                });
 
-            // Atualizar usuário
-            database.updateUser(userId, {
-                status: 'active',
-                plan: paymentStatus.external_reference?.split('_')[2] || 'junior'
-            });
+                database.updateUser(userId, {
+                    status: 'active',
+                    plan: paymentStatus.external_reference?.split('_')[2] || 'junior'
+                });
 
-            // Adicionar notificação
-            database.addNotification(userId, {
-                title: 'Assinatura ativada!',
-                message: 'Sua assinatura foi ativada com sucesso. Bem-vindo à NOVATEK DEV!',
-                type: 'success'
-            });
+                database.addNotification(userId, {
+                    title: 'Assinatura ativada!',
+                    message: 'Sua assinatura foi ativada com sucesso. Bem-vindo à NOVATEK DEV!',
+                    type: 'success'
+                });
 
-            // Adicionar atividade
-            database.addActivity({
-                type: 'subscription_activated',
-                message: `Nova assinatura ativada: ${user.name}`
-            });
+                database.addActivity({
+                    type: 'subscription_activated',
+                    message: `Nova assinatura ativada: ${user ? user.name : userId}`
+                });
+            }
 
             return { success: true, status: 'approved' };
         } else {

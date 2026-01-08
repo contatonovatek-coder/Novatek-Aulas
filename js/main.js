@@ -32,8 +32,8 @@ class MainApp {
         if (auth.isAuthenticated()) {
             auth.updateUIAfterLogin();
             
-            if (auth.currentUser.status === 'pending_payment') {
-                router.navigateTo('payment');
+            if (!auth.hasActiveSubscription()) {
+                router.navigateTo('subscription');
             }
         }
     }
@@ -452,7 +452,7 @@ class MainApp {
 
     // Página 'Meus Cursos' removida — renderCourses() excluído
 
-    renderLessons() {
+    async renderLessons() {
         const content = document.getElementById('painel-do-aluno-content');
         const user = auth.getCurrentUser();
 
@@ -462,81 +462,121 @@ class MainApp {
                     <h1 class="text-3xl font-bold">Minhas Aulas</h1>
                     <p class="text-gray mt-2">Acompanhe seu progresso em cada curso</p>
                 </div>
-                ${user ? `
-                    <div class="lessons-container">
-                        ${database.getAllCourses().map(course => {
-                            const lessons = database.getLessonsByCourseId(course.id);
-                            const userProgress = database.getUserProgress(user.id, course.id) || { completedLessons: [] };
-                            const completedLessons = userProgress.completedLessons || [];
-                            if (lessons.length === 0) return '';
-                            const nextLesson = lessons.find(l => !completedLessons.includes(l.id));
-                            const percent = Math.round((completedLessons.length / lessons.length) * 100);
-                            return `
-                                <div class="course-section mb-6">
-                                    <div class="section-header mb-3">
-                                        <h2 class="course-section-title">${course.title}</h2>
-                                        <div class="course-header-sub text-sm text-gray">${completedLessons.length}/${lessons.length} aulas — ${percent}%</div>
-                                        <div class="course-progress-inline mt-2">
-                                            <div class="progress-bar-large" aria-hidden>
-                                                <div class="progress-fill" style="width: ${percent}%;"></div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="lessons-list">
-                                        ${lessons.map(lesson => {
-                                            const isCompleted = completedLessons.includes(lesson.id);
-                                            const isNext = nextLesson && lesson.id === nextLesson.id;
-                                            const lessonType = lesson.videoUrl ? 'Vídeo' : (lesson.resources && lesson.resources.length ? 'Recurso' : 'Link');
-                                            const pausedBadge = isNext && userProgress.lastAccessed ? true : false;
-                                            return `
-                                                <div class="lesson-item ${isCompleted ? 'completed' : isNext ? 'next' : ''}">
-                                                    <div class="lesson-card ${isNext ? 'next-bg' : ''}">
-                                                        <div class="lesson-left">
-                                                            <div class="lesson-status ${isCompleted ? 'completed' : ''}">
-                                                                <i class="fas fa-${isCompleted ? 'check-circle' : 'play-circle'}"></i>
-                                                            </div>
-                                                            <div class="lesson-info">
-                                                                <h4 class="lesson-title">${lesson.order}. ${lesson.title}</h4>
-                                                                <p class="text-sm text-gray lesson-desc">${lesson.description || 'Sem descrição'}</p>
-                                                                <div class="lesson-meta text-sm text-gray mt-1">
-                                                                    <span class="lesson-type-badge">${lessonType}</span>
-                                                                    <span class="lesson-duration ml-2">${lesson.duration} min</span>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                        <div class="lesson-actions">
-                                                            ${isNext ? `<span class="lesson-pill next-pill">Próxima aula</span>` : ''}
-                                                            ${pausedBadge ? `<span class="lesson-pill paused-pill">Você parou aqui</span>` : ''}
-                                                            ${isCompleted ? `
-                                                                <button class="btn btn-sm btn-outline" data-watch-lesson="${lesson.id}">
-                                                                    <i class="fas fa-redo mr-1"></i> Revisar
-                                                                </button>
-                                                            ` : `
-                                                                <button class="btn btn-sm btn-primary" data-watch-lesson="${lesson.id}">
-                                                                    <i class="fas fa-play mr-1"></i> Assistir aula
-                                                                </button>
-                                                            `}
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            `;
-                                        }).join('')}
-                                    </div>
-                                </div>
-                            `;
-                        }).join('')}
-                    </div>
-                ` : `
-                    <div class="empty-state">
-                        <i class="fas fa-sign-in-alt text-gray mb-4"></i>
-                        <h3 class="text-xl font-bold mb-2">Faça login para ver suas aulas</h3>
-                        <p class="text-gray mb-6">Acesse sua conta para acompanhar seu progresso nas aulas.</p>
-                        <button class="btn btn-primary" onclick="ui.openModal('login-screen')">Fazer Login</button>
-                    </div>
-                `}
             </div>
         `;
 
+        if (!user) {
+            content.innerHTML += `
+                <div class="empty-state">
+                    <i class="fas fa-sign-in-alt text-gray mb-4"></i>
+                    <h3 class="text-xl font-bold mb-2">Faça login para ver suas aulas</h3>
+                    <p class="text-gray mb-6">Acesse sua conta para acompanhar seu progresso nas aulas.</p>
+                    <button class="btn btn-primary" onclick="ui.openModal('login-screen')">Fazer Login</button>
+                </div>
+            `;
+            return;
+        }
+
+        if (!auth.hasActiveSubscription()) {
+            content.innerHTML += `
+                <div class="empty-state">
+                    <i class="fas fa-lock text-gray mb-4"></i>
+                    <h3 class="text-xl font-bold mb-2">Acesso bloqueado</h3>
+                    <p class="text-gray mb-6">Sua assinatura não está ativa. Faça uma assinatura válida para acessar as aulas.</p>
+                    <button class="btn btn-primary" data-route="subscription">Ver planos</button>
+                </div>
+            `;
+            return;
+        }
+
+        // Buscar cursos ativos via Supabase se disponível
+        let courses = [];
+        if (window.supabaseService) {
+            const cres = await window.supabaseService.fetchActiveCourses();
+            if (cres.success) courses = cres.courses || [];
+            else if (cres.accessDenied) {
+                this.showAlert('Acesso negado aos cursos (RLS).', 'danger');
+                return;
+            }
+        }
+
+        if (!courses.length && window.database) courses = window.database.getAllCourses();
+
+        // Render courses and lessons (local progress still used as fallback)
+        const container = document.createElement('div');
+        container.className = 'lessons-container';
+
+        courses.forEach(course => {
+            let lessons = [];
+            if (window.supabaseService) {
+                // note: Fire-and-forget fetching of lessons per course (could be optimized)
+            }
+            if (window.database && lessons.length === 0) lessons = window.database.getLessonsByCourseId(course.id);
+
+            const userProgress = window.database ? window.database.getUserProgress(user.id, course.id) || { completedLessons: [] } : { completedLessons: [] };
+            const completedLessons = userProgress.completedLessons || [];
+            if (!lessons || lessons.length === 0) return;
+            const nextLesson = lessons.find(l => !completedLessons.includes(l.id));
+            const percent = Math.round((completedLessons.length / lessons.length) * 100);
+
+            const courseHtml = document.createElement('div');
+            courseHtml.className = 'course-section mb-6';
+            courseHtml.innerHTML = `
+                <div class="section-header mb-3">
+                    <h2 class="course-section-title">${course.title}</h2>
+                    <div class="course-header-sub text-sm text-gray">${completedLessons.length}/${lessons.length} aulas — ${percent}%</div>
+                    <div class="course-progress-inline mt-2">
+                        <div class="progress-bar-large" aria-hidden>
+                            <div class="progress-fill" style="width: ${percent}%;"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="lessons-list">
+                    ${lessons.map(lesson => {
+                        const isCompleted = completedLessons.includes(lesson.id);
+                        const isNext = nextLesson && lesson.id === nextLesson.id;
+                        const lessonType = lesson.videoUrl ? 'Vídeo' : (lesson.resources && lesson.resources.length ? 'Recurso' : 'Link');
+                        const pausedBadge = isNext && userProgress.lastAccessed ? true : false;
+                        return `
+                            <div class="lesson-item ${isCompleted ? 'completed' : isNext ? 'next' : ''}">
+                                <div class="lesson-card ${isNext ? 'next-bg' : ''}">
+                                    <div class="lesson-left">
+                                        <div class="lesson-status ${isCompleted ? 'completed' : ''}">
+                                            <i class="fas fa-${isCompleted ? 'check-circle' : 'play-circle'}"></i>
+                                        </div>
+                                        <div class="lesson-info">
+                                            <h4 class="lesson-title">${lesson.order}. ${lesson.title}</h4>
+                                            <p class="text-sm text-gray lesson-desc">${lesson.description || 'Sem descrição'}</p>
+                                            <div class="lesson-meta text-sm text-gray mt-1">
+                                                <span class="lesson-type-badge">${lessonType}</span>
+                                                <span class="lesson-duration ml-2">${lesson.duration} min</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="lesson-actions">
+                                        ${isNext ? `<span class="lesson-pill next-pill">Próxima aula</span>` : ''}
+                                        ${pausedBadge ? `<span class="lesson-pill paused-pill">Você parou aqui</span>` : ''}
+                                        ${isCompleted ? `
+                                            <button class="btn btn-sm btn-outline" data-watch-lesson="${lesson.id}">
+                                                <i class="fas fa-redo mr-1"></i> Revisar
+                                            </button>
+                                        ` : `
+                                            <button class="btn btn-sm btn-primary" data-watch-lesson="${lesson.id}">
+                                                <i class="fas fa-play mr-1"></i> Assistir aula
+                                            </button>
+                                        `}
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+            `;
+
+            container.appendChild(courseHtml);
+        });
+
+        content.appendChild(container);
         this.addLessonEvents();
     }
 
@@ -549,17 +589,30 @@ class MainApp {
         });
     }
 
-    renderCertificates() {
+    async renderCertificates() {
         const content = document.getElementById('painel-do-aluno-content');
         const user = auth.getCurrentUser();
         // Compute progress info for header
-        const allCourses = database.getAllCourses();
+        let allCourses = [];
+        let certificates = [];
+        if (window.supabaseService) {
+            const cRes = await window.supabaseService.fetchCertificatesByUser(user?.id);
+            if (cRes.success) certificates = cRes.certificates || [];
+            else if (cRes.accessDenied) {
+                this.showAlert('Acesso negado aos certificados (RLS).', 'danger');
+                return;
+            }
+            const coursesRes = await window.supabaseService.fetchActiveCourses();
+            if (coursesRes.success) allCourses = coursesRes.courses || [];
+        }
+        if (!allCourses.length && window.database) allCourses = database.getAllCourses();
+        if (!certificates.length && window.database && user) certificates = database.getCertificatesByUserId(user.id) || [];
+
         const totalCourses = allCourses.length;
-        const certificates = user ? database.getCertificatesByUserId(user.id) : [];
 
         // find courses completed (100%) regardless of certificate issuance
         const completedCourses = user ? allCourses.filter(c => {
-            const p = database.getUserProgress(user.id, c.id);
+            const p = window.database ? database.getUserProgress(user.id, c.id) : null;
             return p && p.progress >= 100;
         }) : [];
         const completedCount = completedCourses.length;
@@ -620,7 +673,31 @@ class MainApp {
                         ` : `
                             ${certificates.length > 0 ? `
                                 <div class="certificates-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
-                                    ${this.renderUserCertificates(user)}
+                                    ${certificates.map(cert => {
+                                        const course = allCourses.find(c => c.id === cert.courseId) || { title: 'Curso', level: 'beginner' };
+                                        const levelText = this.getLevelText(course.level);
+                                        const issued = cert.issuedAt ? new Date(cert.issuedAt).toLocaleDateString('pt-BR') : '-';
+                                        return `
+                                            <div class="certificate-card p-4 bg-white rounded-lg shadow-sm">
+                                                <div class="flex items-start justify-between">
+                                                    <div class="flex items-start gap-4">
+                                                        <div class="cert-thumb rounded-md" style="width:72px;height:56px;display:flex;align-items:center;justify-content:center;background:linear-gradient(180deg, rgba(245,242,255,0.6), rgba(243,240,255,0.6));border-radius:8px;">
+                                                            <i class="fas fa-certificate text-primary text-2xl"></i>
+                                                        </div>
+                                                        <div>
+                                                            <h4 class="font-bold mb-1">${course.title}</h4>
+                                                            <div class="text-sm text-gray">${levelText} • Concluído em ${issued}</div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="flex items-center gap-2">
+                                                        <button class="btn btn-sm btn-outline" data-view-certificate="${cert.id}"><i class="fas fa-eye mr-2"></i>Ver</button>
+                                                        <button class="btn btn-sm btn-primary" data-download-certificate="${cert.id}"><i class="fas fa-download mr-2"></i>Baixar</button>
+                                                        <button class="btn btn-sm btn-outline" data-share-certificate="${cert.id}"><i class="fas fa-share-alt mr-2"></i>Compartilhar</button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        `;
+                                    }).join('')}
                                 </div>
                             ` : ''}
 
@@ -795,6 +872,16 @@ class MainApp {
         const content = document.getElementById('painel-do-aluno-content');
         const user = auth.getCurrentUser();
 
+        const profilePlanId = (function() {
+            if (user && typeof user.plan === 'string' && user.plan) return user.plan;
+            if (auth && auth.subscription) {
+                const s = auth.subscription;
+                if (typeof s.plan === 'string' && s.plan) return s.plan;
+                if (typeof s.plan_id === 'string' && s.plan_id) return s.plan_id;
+            }
+            return localStorage.getItem('selected-plan') || 'junior';
+        })();
+
         // compact paddings to avoid vertical scroll on 100% zoom
         content.innerHTML = `
             <div class="profile-page">
@@ -823,8 +910,8 @@ class MainApp {
                                     </div>
                                     <input id="avatar-file-input" type="file" accept="image/*" class="hidden" />
                                 </div>
-                                <div class="mt-4 profile-badges">
-                                    <span class="badge badge-primary">${this.getPlanText(user.plan)}</span>
+                                    <div class="mt-4 profile-badges">
+                                    <span class="badge badge-primary">${this.getPlanText(profilePlanId)}</span>
                                 </div>
                                 <div class="mt-6 profile-metrics">
                                     <div class="metrics-grid">
@@ -843,7 +930,7 @@ class MainApp {
                                         </div>
                                         <div class="metric-card">
                                             <div class="metric-icon"><i class="fas fa-calendar-day"></i></div>
-                                            <div class="metric-value">${Math.ceil((new Date() - new Date(user.joinDate)) / (1000 * 60 * 60 * 24))}</div>
+                                            <div class="metric-value">${user && user.createdAt ? Math.ceil((new Date() - new Date(user.createdAt)) / (1000 * 60 * 60 * 24)) : '-'}</div>
                                             <div class="metric-label">Dias</div>
                                         </div>
                                     </div>
@@ -854,11 +941,11 @@ class MainApp {
                                 <div class="section">
                                     <h3 class="section-title">Informações da Conta</h3>
                                     <ul class="account-info-list">
-                                        <li><span class="info-key">Data de cadastro</span><span class="info-val">${new Date(user.joinDate).toLocaleDateString('pt-BR')}</span></li>
-                                        <li><span class="info-key">Último login</span><span class="info-val">${user.lastLogin ? new Date(user.lastLogin).toLocaleString('pt-BR') : '-'}</span></li>
-                                        <li><span class="info-key">Status</span><span class="info-val"><span class="status-badge ${user.status === 'active' ? 'status-active' : 'status-inactive'}">${user.status === 'active' ? '<i class="fas fa-check-circle"></i> Ativo' : '<i class="fas fa-clock"></i> Inativo'}</span></span></li>
+                                        <li><span class="info-key">Data de cadastro</span><span class="info-val">${user && user.createdAt ? new Date(user.createdAt).toLocaleDateString('pt-BR') : '-'}</span></li>
+                                        <li><span class="info-key">Último login</span><span class="info-val">${user && user.lastLogin ? new Date(user.lastLogin).toLocaleString('pt-BR') : '-'}</span></li>
+                                        <li><span class="info-key">Status</span><span class="info-val">${(function(){ const s = user && user.status; const active = (s === true) || (typeof s === 'string' && ['ativo','active'].includes(s.toLowerCase())); return `<span class="status-badge ${active ? 'status-active' : 'status-inactive'}">${active ? '<i class="fas fa-check-circle"></i> Ativo' : '<i class="fas fa-clock"></i> Inativo'}</span>`; })()}</span></li>
                                         <li><span class="info-key">Tipo de conta</span><span class="info-val">${user.role === 'admin' ? 'Administrador' : 'Estudante'}</span></li>
-                                        <li><span class="info-key">Plano atual</span><span class="info-val">${this.getPlanText(user.plan)}</span></li>
+                                        <li><span class="info-key">Plano atual</span><span class="info-val">${this.getPlanText(profilePlanId)}</span></li>
                                     </ul>
                                 </div>
                             </div>
@@ -1019,6 +1106,18 @@ class MainApp {
     renderSubscription() {
         const content = document.getElementById('painel-do-aluno-content');
         const user = auth.getCurrentUser();
+        // Determinar o plano do usuário de forma segura: user.plan -> assinatura -> localStorage -> default
+        const planId = (function() {
+            if (user && typeof user.plan === 'string' && user.plan) return user.plan;
+            if (auth && auth.subscription) {
+                const s = auth.subscription;
+                if (typeof s.plan === 'string' && s.plan) return s.plan;
+                if (typeof s.plan_id === 'string' && s.plan_id) return s.plan_id;
+                if (typeof s.planName === 'string' && s.planName) return s.planName;
+            }
+            const sel = localStorage.getItem('selected-plan');
+            return sel || 'junior';
+        })();
 
         content.innerHTML = `
             <div class="subscription-page">
@@ -1035,11 +1134,11 @@ class MainApp {
                             <div class="plan-card">
                                 <div class="plan-card-head">
                                     <div>
-                                        <h3 class="text-xl font-bold">${this.getPlanText(user.plan)}</h3>
+                                        <h3 class="text-xl font-bold">${this.getPlanText(planId)}</h3>
                                         <div class="text-gray text-sm" style="margin-top:4px;">Plano Ativo <span class="badge badge-accent" style="margin-left:8px;">Plano Ativo</span></div>
                                     </div>
                                     <div class="plan-price">
-                                        <div class="plan-price-amount">R$ ${CONFIG.PLANS[user.plan.toUpperCase()]?.price || 0}</div>
+                                        <div class="plan-price-amount">R$ ${CONFIG.PLANS[planId.toUpperCase()]?.price || 0}</div>
                                         <div class="plan-price-period">por mês</div>
                                     </div>
                                 </div>
@@ -1107,8 +1206,8 @@ class MainApp {
                                                 <tbody>
                                                     <tr>
                                                         <td>${new Date().toLocaleDateString('pt-BR')}</td>
-                                                        <td>R$ ${CONFIG.PLANS[user.plan.toUpperCase()]?.price || 0}</td>
-                                                        <td>${this.getPlanText(user.plan)}</td>
+                                                        <td>R$ ${CONFIG.PLANS[planId.toUpperCase()]?.price || 0}</td>
+                                                                            <td>${this.getPlanText(planId)}</td>
                                                         <td><span class="badge badge-accent">${user.status === 'active' ? 'Pago' : 'Pendente'}</span></td>
                                                         <td>${user.status === 'active' ? `<button class="btn btn-sm btn-outline btn-receipt"><i class="fas fa-file-alt mr-1"></i>Comprovante</button>` : ''}</td>
                                                     </tr>
