@@ -315,7 +315,6 @@ class UI {
 
     handlePlanSelection(planId) {
         localStorage.setItem('selected-plan', planId);
-        
         document.querySelectorAll('.plan-card').forEach(card => {
             card.classList.remove('selected');
         });
@@ -324,38 +323,62 @@ class UI {
         if (selectedCard) {
             selectedCard.classList.add('selected');
         }
+
+        // Atualizar campo oculto para compatibilidade com o formulário de registro
+        try {
+            const hidden = document.getElementById('register-plan');
+            if (hidden) hidden.value = planId;
+        } catch (e) {}
     }
 
     async handleLogin() {
-        const email = document.getElementById('email').value;
-        const password = document.getElementById('password').value;
-        
+        const emailEl = document.getElementById('email');
+        const passwordEl = document.getElementById('password');
+        const email = emailEl?.value?.trim();
+        const password = passwordEl?.value || '';
+
         if (!email || !password) {
             this.showAlert('Por favor, preencha todos os campos', 'warning');
             return;
         }
-        
+
         const loginBtn = document.querySelector('.btn-login');
-        const originalText = loginBtn.innerHTML;
-        loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Entrando...';
-        loginBtn.disabled = true;
-        
+        const originalText = loginBtn ? loginBtn.innerHTML : null;
+        if (loginBtn) {
+            loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Entrando...';
+            loginBtn.disabled = true;
+        }
+
+        // Timeout para evitar spinner infinito caso a chamada trave
+        const timeoutMs = 15000;
         try {
-            const result = await auth.login(email, password);
-            
-            if (result.redirectToPayment) {
+            const loginPromise = auth.login(email, password);
+            const result = await Promise.race([
+                loginPromise,
+                new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), timeoutMs))
+            ]);
+
+            if (result && result.redirectToPayment) {
                 this.closeModal('register-modal');
                 this.showPaymentScreen(result.user);
-            } else if (result.success) {
+            } else if (result && result.success) {
                 this.showAlert('Login realizado com sucesso!', 'success');
+            } else if (result && !result.success) {
+                this.showAlert(result.message || 'Erro no login', 'danger');
             } else {
-                this.showAlert(result.message, 'danger');
+                this.showAlert('Erro ao fazer login. Tente novamente.', 'danger');
             }
         } catch (error) {
-            this.showAlert('Erro ao fazer login. Tente novamente.', 'danger');
+            if (error && error.message === 'timeout') {
+                this.showAlert('Tempo de resposta esgotado. Verifique sua conexão.', 'warning');
+            } else {
+                this.showAlert('Erro ao fazer login. Tente novamente.', 'danger');
+            }
         } finally {
-            loginBtn.innerHTML = originalText;
-            loginBtn.disabled = false;
+            if (loginBtn) {
+                loginBtn.innerHTML = originalText || '<i class="fas fa-sign-in-alt"></i> Entrar';
+                loginBtn.disabled = false;
+            }
         }
     }
 
@@ -489,6 +512,29 @@ class UI {
         const mm = String(Math.floor(seconds / 60)).padStart(2, '0');
         const ss = String(seconds % 60).padStart(2, '0');
         return `${mm}:${ss}`;
+    }
+
+    formatTime(time) {
+        if (!time) return '';
+
+        // aceitar timestamps em segundos ou milissegundos e strings ISO
+        const date = (typeof time === 'number' && String(time).length === 10) ? new Date(time * 1000) : new Date(time);
+        if (isNaN(date.getTime())) return '';
+
+        const diffMs = Date.now() - date.getTime();
+        const sec = Math.floor(diffMs / 1000);
+        if (sec < 60) return 'agora';
+
+        const min = Math.floor(sec / 60);
+        if (min < 60) return `há ${min} minuto${min > 1 ? 's' : ''}`;
+
+        const hrs = Math.floor(min / 60);
+        if (hrs < 24) return `há ${hrs} hora${hrs > 1 ? 's' : ''}`;
+
+        const days = Math.floor(hrs / 24);
+        if (days < 7) return `há ${days} dia${days > 1 ? 's' : ''}`;
+
+        return date.toLocaleDateString('pt-BR') + ' ' + date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
     }
 
     async processPayment(planId) {
@@ -807,3 +853,5 @@ class UI {
 
 // Instância global da UI
 const ui = new UI();
+// garantir disponibilidade via window (scripts podem esperar window.ui)
+try { window.ui = ui; } catch (e) {}

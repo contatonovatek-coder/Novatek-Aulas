@@ -141,6 +141,79 @@ const SupabaseService = (function(){
         return { success: true, user: data };
     }
 
+    // Buscar usuário por id e normalizar formato esperado pelo frontend
+    async function fetchUserById(userId) {
+        try {
+            const res = await fetchUserFromDB(userId);
+            if (!res.success) return res;
+            const norm = normalizeDbUser(res.user);
+            return { success: true, user: norm };
+        } catch (err) {
+            return { success: false, error: err.message || err };
+        }
+    }
+
+    // Lista todos os usuários (normalizado) — usa relacionamento `planos` para obter o nome do plano
+    async function getAllUsers() {
+        const supabase = ensureClient();
+        try {
+            const { data, error } = await supabase
+                .from('users')
+                .select(`
+                    id,
+                    nome,
+                    email,
+                    role,
+                    status,
+                    created_at,
+                    planos (
+                        nome
+                    )
+                `)
+                .order('created_at', { ascending: false });
+
+            if (error) throw error;
+
+            return {
+                success: true,
+                data: (data || []).map(u => ({
+                    id: u.id,
+                    name: u.nome || u.name || '',
+                    email: u.email || '',
+                    planName: (u.planos && u.planos.length) ? u.planos[0].nome : null,
+                    role: u.role || u.tipo || '',
+                    status: u.status || '',
+                    createdAt: u.created_at || u.createdAt || null
+                }))
+            };
+        } catch (err) {
+            // fallback: tentar select('*') e procurar relacionamento em diferentes formatos
+            try {
+                const { data, error } = await supabase.from('users').select('*').order('created_at', { ascending: false });
+                if (error) throw error;
+
+                return {
+                    success: true,
+                    data: (data || []).map(u => {
+                        const norm = normalizeDbUser(u) || {};
+                        const planName = (u.planos && u.planos.length) ? u.planos[0].nome : (u.plano_nome || u.planoName || norm.plan || norm.plano || null);
+                        return {
+                            id: u.id,
+                            name: norm.name || norm.nome || '',
+                            email: norm.email || '',
+                            planName: planName || null,
+                            role: norm.role || norm.tipo || '',
+                            status: norm.status || '',
+                            createdAt: norm.createdAt || norm.created_at || null
+                        };
+                    })
+                };
+            } catch (err2) {
+                return { success: false, error: err2.message || err.message };
+            }
+        }
+    }
+
     // Subscriptions
     async function fetchSubscriptionByUser(userId) {
         const supabase = ensureClient();
@@ -317,15 +390,18 @@ const SupabaseService = (function(){
         signIn,
         signOut,
         getUser,
+        fetchUserById,
         onAuthStateChange,
         fetchSubscriptionByUser,
         fetchActiveCourses,
         fetchCourseById,
         fetchLessonsByCourse,
         fetchLessonById,
+        updateUserRecord,
         fetchMaterialsByLesson,
         fetchCertificatesByUser,
-        fetchCourseTitle
+        fetchCourseTitle,
+        getAllUsers
     };
 })();
 

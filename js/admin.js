@@ -284,187 +284,203 @@ class AdminSystem {
     }
 
     async renderAdminUsers() {
-    if (!auth.isAdmin()) {
-        router.navigateTo('painel-do-aluno');
-        return;
-    }
+        if (!auth.isAdmin()) {
+            router.navigateTo('painel-do-aluno');
+            return;
+        }
 
-    const content = document.getElementById('painel-do-aluno-content');
+        const content = document.getElementById('painel-do-aluno-content');
 
-    content.innerHTML = `
-        <div class="admin-users">
-            <div class="admin-hero section-header">
-                <div class="hero-left">
-                    <h2>Gerenciar Usuários</h2>
-                    <p class="hero-sub">Crie, edite e gerencie contas de usuários</p>
-                </div>
-                <div class="hero-right">
-                    <div class="filter-group">
-                        <input type="text" id="admin-users-search" placeholder="Pesquisar por nome ou e-mail" class="filter-select" style="width:260px;">
-                        <select id="admin-filter-plan" class="filter-select">
-                            <option value="">Todos os Planos</option>
-                            <option value="Júnior">Júnior</option>
-                            <option value="Pleno">Pleno</option>
-                            <option value="Sênior">Sênior</option>
-                        </select>
-                        <select id="admin-filter-status" class="filter-select">
-                            <option value="">Todos os Status</option>
-                            <option value="Ativo">Ativo</option>
-                            <option value="Inativo">Inativo</option>
-                        </select>
-                        <button class="btn btn-ghost" id="export-users">
-                            <i class="fas fa-file-export"></i> Exportar
-                        </button>
-                        <button class="btn btn-primary" id="add-user-btn">
-                            <i class="fas fa-user-plus"></i> Novo Usuário
-                        </button>
+        content.innerHTML = `
+            <div class="admin-users">
+                <div class="admin-hero section-header">
+                    <div class="hero-left">
+                        <h2>Gerenciar Usuários</h2>
+                        <p class="hero-sub">Crie, edite e gerencie contas de usuários</p>
                     </div>
-                </div>
-            </div>
-
-            <div class="admin-table-container">
-                <table class="admin-table">
-                    <thead>
-                        <tr>
-                            <th>Usuário</th>
-                            <th>Plano</th>
-                            <th>Função</th>
-                            <th>Cadastro</th>
-                            <th>Status</th>
-                            <th style="width:150px">Ações</th>
-                        </tr>
-                    </thead>
-                    <tbody id="admin-users-tbody"></tbody>
-                </table>
-            </div>
-        </div>
-    `;
-
-    // 🔹 BUSCA REAL NO SUPABASE
-    const { data: users, error } = await supabase
-        .from('users')
-        .select('id, nome, email, plano, tipo, status, created_at')
-        .order('created_at', { ascending: false });
-
-    if (error) {
-        console.error('Erro ao buscar usuários:', error);
-        return;
-    }
-
-    const tbody = document.getElementById('admin-users-tbody');
-
-    const renderRows = (list) => {
-        tbody.innerHTML = list.map(user => `
-            <tr>
-                <td>
-                    <div style="display:flex; align-items:center; gap:12px">
-                        <img 
-                            src="/avatar-default.png" 
-                            alt="${user.nome}" 
-                            width="48" 
-                            height="48" 
-                            style="border-radius:9999px; object-fit:cover;"
-                        >
-                        <div>
-                            <div style="font-weight:700; color:var(--dark-color)">
-                                ${user.nome}
-                            </div>
-                            <div style="font-size:0.9rem; color:var(--gray-color)">
-                                ${user.email}
-                            </div>
+                    <div class="hero-right">
+                        <div class="filter-group">
+                            <input type="text" id="admin-users-search" placeholder="Pesquisar por nome ou e-mail" class="filter-select" style="width:260px;">
+                            <select id="admin-filter-plan" class="filter-select">
+                                <option value="">Todos os Planos</option>
+                                <option value="Júnior">Júnior</option>
+                                <option value="Pleno">Pleno</option>
+                                <option value="Sênior">Sênior</option>
+                            </select>
+                            <select id="admin-filter-status" class="filter-select">
+                                <option value="">Todos os Status</option>
+                                <option value="Ativo">Ativo</option>
+                                <option value="Inativo">Inativo</option>
+                            </select>
+                            <button class="btn btn-ghost" id="export-users">
+                                <i class="fas fa-file-export"></i> Exportar
+                            </button>
+                            <button class="btn btn-primary" id="add-user-btn">
+                                <i class="fas fa-user-plus"></i> Novo Usuário
+                            </button>
                         </div>
                     </div>
-                </td>
+                </div>
 
-                <td>
-                    <span class="badge ${this.getPlanBadgeClass(user.plano)}">
-                        ${user.plano}
-                    </span>
-                </td>
+                <div class="admin-table-container">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Usuário</th>
+                                <th>Plano</th>
+                                <th>Função</th>
+                                <th>Cadastro</th>
+                                <th>Status</th>
+                                <th style="width:150px">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="admin-users-tbody"></tbody>
+                    </table>
+                </div>
+            </div>
+        `;
 
-                <td>
-                    <span class="badge ${user.tipo === 'admin' ? 'badge-danger' : 'badge-primary'}">
-                        ${user.tipo === 'admin' ? 'Administrador' : 'Estudante'}
-                    </span>
-                </td>
+        if (!window.supabaseService || typeof window.supabaseService.getAllUsers !== 'function') {
+            ui.showAlert('Serviço de usuários indisponível. Tente novamente mais tarde.', 'danger');
+            const tb = document.getElementById('admin-users-tbody');
+            if (tb) tb.innerHTML = '<tr><td colspan="6" style="text-align:center">Serviço indisponível.</td></tr>';
+            return;
+        }
 
-                <td>
-                    ${new Date(user.created_at).toLocaleDateString('pt-BR')}
-                </td>
+        const res = await window.supabaseService.getAllUsers();
+        const tbody = document.getElementById('admin-users-tbody');
 
-                <td>
-                    <span class="badge ${user.status === 'Ativo' ? 'badge-accent' : 'badge-danger'}">
-                        ${user.status}
-                    </span>
-                </td>
+        const renderRows = (list) => {
+            if (!tbody) return;
+            if (!list || !list.length) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center">Nenhum usuário encontrado.</td></tr>';
+                this.addUserManagementListeners();
+                return;
+            }
 
-                <td class="actions">
-                    <button class="btn btn-sm btn-outline" data-action="edit-user" data-id="${user.id}">
-                        <i class="fas fa-edit"></i>
-                    </button>
+            tbody.innerHTML = list.map(user => `
+                <tr>
+                    <td>
+                        <div style="display:flex; align-items:center; gap:12px">
+                            <img
+                                src="/avatar-default.png"
+                                alt="${user.name || user.email}"
+                                width="48"
+                                height="48"
+                                style="border-radius:9999px; object-fit:cover;"
+                            >
+                            <div>
+                                <div style="font-weight:700; color:var(--dark-color)">
+                                    ${user.name || ''}
+                                </div>
+                                <div style="font-size:0.9rem; color:var(--gray-color)">
+                                    ${user.email || ''}
+                                </div>
+                            </div>
+                        </div>
+                    </td>
 
-                    ${user.id !== auth.currentUser.id ? `
+                    <td>
+                        ${/* preparar chave do plano sem acentos para classes */ ''}
+                        ${(() => {
+                            const raw = user.planName || '';
+                            const key = raw.normalize ? raw.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase() : (raw || '').toLowerCase();
+                            return `
+                                <span class="badge ${this.getPlanBadgeClass(key)}">
+                                    ${raw || '-'}
+                                </span>
+                            `;
+                        })()}
+                    </td>
+
+                    <td>
+                        <span class="badge ${user.role === 'admin' ? 'badge-danger' : 'badge-primary'}">
+                            ${user.role === 'admin' ? 'Administrador' : 'Estudante'}
+                        </span>
+                    </td>
+
+                    <td>
+                        ${user.createdAt ? new Date(user.createdAt).toLocaleDateString('pt-BR') : '-'}
+                    </td>
+
+                    <td>
+                        <span class="badge ${String(user.status || '').toLowerCase() === 'ativo' || String(user.status || '').toLowerCase() === 'active' ? 'badge-accent' : 'badge-danger'}">
+                            ${user.status || ''}
+                        </span>
+                    </td>
+
+                    <td class="actions">
+                        <button class="btn btn-sm btn-outline" data-action="edit-user" data-id="${user.id}">
+                            <i class="fas fa-edit"></i>
+                        </button>
                         <button class="btn btn-sm btn-danger" data-action="delete-user" data-id="${user.id}">
                             <i class="fas fa-trash"></i>
                         </button>
-                    ` : ''}
-                </td>
-            </tr>
-        `).join('');
+                    </td>
+                </tr>
+            `).join('');
 
-        this.addUserManagementListeners();
-    };
+            this.addUserManagementListeners();
+        };
 
-    // render inicial
-    renderRows(users);
+        if (!res.success) {
+            ui.showAlert('Erro ao carregar usuários: ' + (res.error || 'erro desconhecido'), 'danger');
+            if (tbody) tbody.innerHTML = '<tr><td colspan="6" style="text-align:center">Erro ao carregar usuários.</td></tr>';
+            return;
+        }
 
-    // 🔹 filtros
-    const searchInput = document.getElementById('admin-users-search');
-    const planFilter = document.getElementById('admin-filter-plan');
-    const statusFilter = document.getElementById('admin-filter-status');
-    const exportBtn = document.getElementById('export-users');
+        const users = res.data || [];
 
-    const applyFilters = () => {
-        const q = searchInput.value.trim().toLowerCase();
-        const plan = planFilter.value;
-        const status = statusFilter.value;
+        // render inicial
+        renderRows(users);
 
-        const filtered = users.filter(u => {
-            if (q && !(u.nome.toLowerCase().includes(q) || u.email.toLowerCase().includes(q))) return false;
-            if (plan && u.plano !== plan) return false;
-            if (status && u.status !== status) return false;
-            return true;
+        // filtros
+        const searchInput = document.getElementById('admin-users-search');
+        const planFilter = document.getElementById('admin-filter-plan');
+        const statusFilter = document.getElementById('admin-filter-status');
+        const exportBtn = document.getElementById('export-users');
+
+        const applyFilters = () => {
+            const q = (searchInput?.value || '').trim().toLowerCase();
+            const plan = (planFilter?.value || '').trim();
+            const status = (statusFilter?.value || '').trim();
+
+            const filtered = users.filter(u => {
+                if (q && !((u.name || '').toLowerCase().includes(q) || (u.email || '').toLowerCase().includes(q))) return false;
+                if (plan && ((u.planName || '') !== plan)) return false;
+                if (status && (u.status || '') !== status) return false;
+                return true;
+            });
+
+            renderRows(filtered);
+        };
+
+        searchInput?.addEventListener('input', applyFilters);
+        planFilter?.addEventListener('change', applyFilters);
+        statusFilter?.addEventListener('change', applyFilters);
+
+        // export
+        exportBtn?.addEventListener('click', () => {
+            const data = users.map(u => ({
+                id: u.id,
+                nome: u.name,
+                email: u.email,
+                plano: u.planName || '-',
+                tipo: u.role,
+                status: u.status
+            }));
+
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'users-export.json';
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            URL.revokeObjectURL(url);
         });
-
-        renderRows(filtered);
-    };
-
-    searchInput.addEventListener('input', applyFilters);
-    planFilter.addEventListener('change', applyFilters);
-    statusFilter.addEventListener('change', applyFilters);
-
-    // 🔹 export
-    exportBtn.addEventListener('click', () => {
-        const data = users.map(u => ({
-            id: u.id,
-            nome: u.nome,
-            email: u.email,
-            plano: u.plano,
-            tipo: u.tipo,
-            status: u.status
-        }));
-
-        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'users-export.json';
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        URL.revokeObjectURL(url);
-    });
-}
+    }
 
     getPlanBadgeClass(plan) {
         const classes = {
@@ -642,27 +658,44 @@ class AdminSystem {
         });
 
         const form = modal.querySelector('#notification-form');
-        form.addEventListener('submit', (e) => {
+        form.addEventListener('submit', async (e) => {
             e.preventDefault();
-            
+
             const title = modal.querySelector('#notification-title').value;
             const message = modal.querySelector('#notification-message').value;
             const type = modal.querySelector('#notification-type').value;
-            
-            const users = database.getAllUsers();
-            if (window.supabaseService) {
-                // enviar notificações para cada usuário via Supabase
-                (async () => {
-                    for (const user of users) {
-                        await window.supabaseService.addNotificationRecord({ user_id: user.id, title, message, type });
-                    }
-                })();
-            } else {
-                users.forEach(user => {
-                    database.addNotification(user.id, { title, message, type });
-                });
+
+            if (!window.supabaseService || typeof window.supabaseService.getAllUsers !== 'function') {
+                ui.showAlert('Serviço de usuários indisponível. Não foi possível enviar notificações.', 'danger');
+                return;
             }
-            
+
+            const usersRes = await window.supabaseService.getAllUsers();
+            if (!usersRes.success) {
+                ui.showAlert('Erro ao buscar usuários: ' + (usersRes.error || 'erro desconhecido'), 'danger');
+                return;
+            }
+
+            const users = usersRes.data || [];
+            if (!users.length) {
+                ui.showAlert('Nenhum usuário encontrado para envio.', 'info');
+                modal.remove();
+                return;
+            }
+
+            if (typeof window.supabaseService.addNotificationRecord !== 'function') {
+                ui.showAlert('Serviço de notificações indisponível.', 'danger');
+                return;
+            }
+
+            for (const user of users) {
+                try {
+                    await window.supabaseService.addNotificationRecord({ user_id: user.id, title, message, type });
+                } catch (err) {
+                    // ignorar falhas pontuais por usuário para não interromper todo envio
+                }
+            }
+
             ui.showAlert('Notificação enviada para todos os usuários!', 'success');
             modal.remove();
         });
@@ -856,8 +889,9 @@ class AdminSystem {
         document.querySelectorAll('[data-action]').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 const action = e.currentTarget.dataset.action;
-                const id = parseInt(e.currentTarget.dataset.id);
-                
+                const rawId = e.currentTarget.dataset.id;
+                const id = (/^\d+$/.test(String(rawId))) ? parseInt(rawId) : rawId;
+
                 switch(action) {
                     case 'edit-user':
                         this.editUser(id);
@@ -912,7 +946,7 @@ class AdminSystem {
                                     <div class="form-group">
                                         <label for="user-password">${user ? 'Nova Senha (opcional)' : 'Senha *'}</label>
                                         <div class="input-with-icon">
-                                            <input type="password" id="user-password" ${user ? '' : 'required'}>
+                                            <input type="password" id="user-password" ${user ? '' : 'required'} autocomplete="new-password">
                                             <button type="button" class="password-toggle" aria-label="Mostrar senha"><i class="fas fa-eye"></i></button>
                                         </div>
                                     </div>
@@ -1019,7 +1053,7 @@ class AdminSystem {
 
         // Form submit: create or update user via database
         const form = modal.querySelector('#user-form');
-        form.addEventListener('submit', (e) => {
+        form.addEventListener('submit', async (e) => {
             e.preventDefault();
 
             const name = modal.querySelector('#user-name').value.trim();
@@ -1035,40 +1069,103 @@ class AdminSystem {
                 return;
             }
 
-            if (user) {
-                const updates = { name, email, role, plan, status, avatar };
-                if (password) updates.password = password;
-                const updated = database.updateUser(user.id, updates);
-                if (updated) {
-                    ui.showAlert('Usuário atualizado com sucesso!', 'success');
-                    this.renderAdminUsers();
-                    modal.remove();
-                } else {
-                    ui.showAlert('Erro ao atualizar usuário.', 'danger');
-                }
-            } else {
-                if (database.getUserByEmail(email)) {
-                    ui.showAlert('Já existe um usuário com este e-mail.', 'warning');
-                    return;
-                }
+            const submitBtn = modal.querySelector('button[type="submit"]');
+            const origText = submitBtn ? submitBtn.innerHTML : null;
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Salvando...';
+            }
 
-                const newUser = database.createUser({ name, email, password, role, plan, status, avatar });
-                if (newUser) {
-                    ui.showAlert('Usuário criado com sucesso!', 'success');
-                    this.renderAdminUsers();
-                    modal.remove();
+            try {
+                if (user) {
+                    const updates = { name, email, role, plan, status, avatar };
+                    if (password) updates.password = password;
+
+                    // Atualizar localmente se existir
+                    const localExists = !!database.getUserById(user.id);
+                    if (localExists) {
+                        const updated = database.updateUser(user.id, updates);
+                        if (updated) {
+                            ui.showAlert('Usuário atualizado com sucesso!', 'success');
+                            this.renderAdminUsers();
+                            modal.remove();
+                        } else {
+                            ui.showAlert('Erro ao atualizar usuário localmente.', 'danger');
+                        }
+                    } else if (window.supabaseService && typeof window.supabaseService.updateUserRecord === 'function') {
+                        // tentar atualização remota via supabaseService
+                        const res = await window.supabaseService.updateUserRecord(user.id, updates);
+                        if (res.success) {
+                            ui.showAlert('Usuário atualizado com sucesso no servidor!', 'success');
+                            // opcional: atualizar cache local se existir
+                            if (window.database && typeof window.database.saveDatabase === 'function') {
+                                // tentar inserir/atualizar entrada simples no cache local
+                                try {
+                                    const existing = window.database.getUserById(user.id);
+                                    if (existing) window.database.updateUser(user.id, updates);
+                                    else {
+                                        // criar registro local mínimo — manter mesma estrutura esperada
+                                        const created = window.database.createUser({ id: user.id, name, email, password: password || '', role, plan, status, avatar });
+                                        // se createUser não aceita id, ignore
+                                    }
+                                } catch (err) {}
+                            }
+                            this.renderAdminUsers();
+                            modal.remove();
+                        } else {
+                            ui.showAlert('Falha ao atualizar no servidor: ' + (res.error || res.message || ''), 'danger');
+                        }
+                    } else {
+                        ui.showAlert('Serviço de atualização indisponível.', 'danger');
+                    }
                 } else {
-                    ui.showAlert('Erro ao criar usuário.', 'danger');
+                    // criação local
+                    if (database.getUserByEmail(email)) {
+                        ui.showAlert('Já existe um usuário com este e-mail.', 'warning');
+                        return;
+                    }
+
+                    const newUser = database.createUser({ name, email, password, role, plan, status, avatar });
+                    if (newUser) {
+                        ui.showAlert('Usuário criado com sucesso!', 'success');
+                        this.renderAdminUsers();
+                        modal.remove();
+                    } else {
+                        ui.showAlert('Erro ao criar usuário.', 'danger');
+                    }
+                }
+            } catch (err) {
+                ui.showAlert('Erro ao salvar usuário: ' + (err.message || err), 'danger');
+            } finally {
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = origText || (user ? 'Atualizar' : 'Salvar');
                 }
             }
         });
     }
 
     editUser(id) {
-        const user = database.getUserById(id);
+        // Tentar buscar localmente; se não existir (caso venham de Supabase), tentar via supabaseService
+        let user = database.getUserById(id);
         if (user) {
             this.showUserForm(user);
+            return;
         }
+
+        if (window.supabaseService && typeof window.supabaseService.fetchUserById === 'function') {
+            (async () => {
+                const res = await window.supabaseService.fetchUserById(id);
+                if (res.success && res.user) {
+                    this.showUserForm(res.user);
+                } else {
+                    ui.showAlert('Não foi possível carregar os dados do usuário para edição.', 'danger');
+                }
+            })();
+            return;
+        }
+
+        ui.showAlert('Usuário não encontrado.', 'warning');
     }
 
     viewUser(id) {

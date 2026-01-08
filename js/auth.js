@@ -20,7 +20,10 @@ class AuthSystem {
                     if (window.supabaseService && window.supabaseService.syncCache) {
                         await window.supabaseService.syncCache();
                     }
-                    this.updateUIAfterLogin();
+                    // Respeitar preferência de auto-login: somente atualizar UI automaticamente
+                    // se o usuário tiver permitido auto-login (por exemplo em login manual anterior).
+                    const allowAuto = localStorage.getItem('novatek-allow-auto-login') === 'true';
+                    if (allowAuto) this.updateUIAfterLogin();
                 }
 
                 // Inscrever em mudanças de estado de autenticação (recebe registro da tabela `users` ou null)
@@ -36,7 +39,9 @@ class AuthSystem {
                         if (window.supabaseService && window.supabaseService.syncCache) {
                             await window.supabaseService.syncCache();
                         }
-                        this.updateUIAfterLogin();
+                        // Respeitar preferência do usuário sobre auto-login
+                        const allowAuto = localStorage.getItem('novatek-allow-auto-login') === 'true';
+                        if (allowAuto) this.updateUIAfterLogin();
                     }
                 });
             }
@@ -88,6 +93,8 @@ class AuthSystem {
         if (userRes.success && userRes.user) {
             this.currentUser = this._mapDbUser(userRes.user);
             await this._refreshSubscription();
+            // permitir auto-login em próximos carregamentos
+            try { localStorage.setItem('novatek-allow-auto-login', 'true'); } catch (e) {}
             this.updateUIAfterLogin();
             return { success: true, user: this.currentUser };
         }
@@ -152,6 +159,7 @@ class AuthSystem {
         this.currentUser = null;
         this.subscription = null;
         localStorage.removeItem('novatek-current-user');
+        try { localStorage.setItem('novatek-allow-auto-login', 'false'); } catch (e) {}
         localStorage.removeItem('selected-plan');
         if (this._authListenerUnsub) {
             try { this._authListenerUnsub(); } catch (e) {}
@@ -169,11 +177,8 @@ class AuthSystem {
 
         if (this.currentUser) {
             this.updateUserInfo();
-            if (!this.hasActiveSubscription()) {
-                setTimeout(() => router.navigateTo('subscription'), 100);
-            } else {
-                setTimeout(() => router.navigateTo('painel-do-aluno'), 100);
-            }
+            // Sempre abrir o painel do aluno como primeira tela após login
+            setTimeout(() => router.navigateTo('painel-do-aluno'), 100);
         }
     }
 
