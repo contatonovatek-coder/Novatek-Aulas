@@ -153,41 +153,57 @@ const SupabaseService = (function(){
         }
     }
 
-    // Lista todos os usuários (normalizado) — usa relacionamento `planos` para obter o nome do plano
+    // Lista todos os usuários (normalizado) — busca users e relaciona com subscriptions -> plans quando possível
     async function getAllUsers() {
         const supabase = ensureClient();
         try {
-            const { data, error } = await supabase
-                .from('users')
-                .select(`
-                    id,
-                    nome,
-                    email,
-                    role,
-                    status,
-                    created_at,
-                    planos (
-                        nome
-                    )
-                `)
-                .order('created_at', { ascending: false });
+            const { data: users, error: usersErr } = await supabase.from('users').select('*').order('created_at', { ascending: false });
+            if (usersErr) throw usersErr;
 
-            if (error) throw error;
+            const userIds = (users || []).map(u => u.id).filter(Boolean);
+            const subsMap = {};
 
-            return {
-                success: true,
-                data: (data || []).map(u => ({
+            if (userIds.length) {
+                try {
+                    const { data: subs, error: subsErr } = await supabase
+                        .from('subscriptions')
+                        .select('user_id, plan_id, created_at, plan:plans(id, nome)')
+                        .in('user_id', userIds);
+                    if (!subsErr && subs && subs.length) {
+                        subs.forEach(s => {
+                            const uid = s.user_id;
+                            if (!subsMap[uid] || new Date(s.created_at) > new Date(subsMap[uid].created_at)) {
+                                subsMap[uid] = s;
+                            }
+                        });
+                    }
+                } catch (err) {
+                    // ignore subscriptions join failure — fallback later
+                }
+            }
+
+            const mapped = (users || []).map(u => {
+                const norm = normalizeDbUser(u) || {};
+                let planName = null;
+                const s = subsMap[u.id];
+                if (s && s.plan && s.plan.nome) planName = s.plan.nome;
+                // tentar extrair de propriedades alternativas se necessário
+                if (!planName) planName = u.plano_nome || u.planoName || norm.plan || norm.plano || null;
+
+                return {
                     id: u.id,
-                    name: u.nome || u.name || '',
-                    email: u.email || '',
-                    planName: (u.planos && u.planos.length) ? u.planos[0].nome : null,
-                    role: u.role || u.tipo || '',
-                    status: u.status || '',
-                    createdAt: u.created_at || u.createdAt || null
-                }))
-            };
+                    name: norm.name || norm.nome || '',
+                    email: norm.email || '',
+                    planName: planName || null,
+                    role: norm.role || norm.tipo || '',
+                    status: norm.status || '',
+                    createdAt: norm.createdAt || norm.created_at || null
+                };
+            });
+
+            return { success: true, data: mapped };
         } catch (err) {
-            // fallback: tentar select('*') e procurar relacionamento em diferentes formatos
+            // fallback: tentar select('*') e usar normalização antiga
             try {
                 const { data, error } = await supabase.from('users').select('*').order('created_at', { ascending: false });
                 if (error) throw error;
@@ -380,10 +396,84 @@ const SupabaseService = (function(){
 
     async function updateUserRecord(userId, updates) {
         const supabase = ensureClient();
-        // try update profiles table
-        const { data, error, status } = await supabase.from('profiles').upsert({ id: userId, ...updates }).select();
+        // Map frontend fields to DB columns used in your schema
+        const payload = {};
+        if (updates.name !== undefined) payload.nome = updates.name;
+        if (updates.email !== undefined) payload.email = updates.email;
+        if (updates.role !== undefined) payload.funcao = updates.role;
+        if (updates.status !== undefined) payload.status = updates.status;
+        if (updates.avatar !== undefined) payload.avatar = updates.avatar;
+        payload.updated_at = new Date().toISOString();
+
+        const { data, error, status } = await supabase.from('users').upsert([{ id: userId, ...payload }]).select();
         if (error) return handleError(error, status);
-        return { success: true, profile: data && data[0] };
+        return { success: true, user: data && data[0] };
+    }
+
+    async function createUserRecord(payload) {
+        // IMPORTANT: Do NOT attempt to create auth user or insert into public.users from the browser directly.
+        // This function delegates to a secure backend endpoint which must perform the service_role operations.
+        try {
+            const supabase = ensureClient();
+            let accessToken = null;
+            try {
+                const sessionRes = await supabase.auth.getSession();
+                accessToken = sessionRes.data?.session?.access_token || null;
+            } catch (e) {
+                // ignore
+            }
+
+            // allow overriding the API URL from the page (useful in dev)
+            const apiUrl = window.CREATE_USER_API_URL || '/api/create-user' || (location.hostname === 'localhost' ? 'http://localhost:8787/api/create-user' : '/api/create-user');
+
+            const headers = { 'Content-Type': 'application/json' };
+            if (accessToken) headers['Authorization'] = `Bearer ${accessToken}`;
+
+            const resp = await fetch(apiUrl, {
+                method: 'POST',
+                headers,
+                body: JSON.stringify({
+                    email: payload.email,
+                    password: payload.password,
+                    name: payload.name,
+                    funcao: payload.role || payload.funcao,
+                    status: payload.status || 'ativo',
+                    avatar: payload.avatar || null
+                })
+            });
+
+            // try to parse JSON; if not JSON, read text
+            let body = null;
+            const contentType = resp.headers.get('content-type') || '';
+            if (contentType.includes('application/json')) {
+                try {
+                    body = await resp.json();
+                } catch (parseErr) {
+                    const txt = await resp.text().catch(() => null);
+                    console.error('createUserRecord: failed to parse JSON, raw text:', txt, parseErr);
+                    return { success: false, status: resp.status, error: 'Invalid JSON response from create-user endpoint', raw: txt };
+                }
+            } else {
+                body = await resp.text().catch(() => null);
+            }
+
+            if (!resp.ok) {
+                console.error('createUserRecord: endpoint returned error', resp.status, body);
+                return { success: false, status: resp.status, error: body || 'Request failed' };
+            }
+
+            return body;
+        } catch (err) {
+            console.error('createUserRecord: unexpected error', err);
+            return { success: false, error: err.message || String(err) };
+        }
+    }
+
+    async function deleteUserRecord(userId) {
+        const supabase = ensureClient();
+        const { data, error, status } = await supabase.from('users').delete().eq('id', userId).select();
+        if (error) return handleError(error, status);
+        return { success: true };
     }
 
     return {
@@ -402,6 +492,7 @@ const SupabaseService = (function(){
         fetchCertificatesByUser,
         fetchCourseTitle,
         getAllUsers
+        ,createUserRecord, deleteUserRecord
     };
 })();
 

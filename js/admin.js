@@ -4,6 +4,8 @@ class AdminSystem {
         this.init();
         this._lessonAddHandlerAttached = false;
         this._lessonActionDelegated = false;
+        this._userAddHandlerAttached = false;
+        this._userActionDelegated = false;
     }
 
     init() {
@@ -882,14 +884,24 @@ class AdminSystem {
     }
 
     addUserManagementListeners() {
-        document.getElementById('add-user-btn')?.addEventListener('click', () => {
-            this.showUserForm();
-        });
+        if (!this._userActionDelegated) {
+            document.addEventListener('click', (e) => {
+                const adminRoot = document.querySelector('.admin-users');
+                if (!adminRoot) return; // only handle when admin users view is present
 
-        document.querySelectorAll('[data-action]').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const action = e.currentTarget.dataset.action;
-                const rawId = e.currentTarget.dataset.id;
+                const addBtn = e.target.closest('#add-user-btn');
+                if (addBtn && adminRoot.contains(addBtn)) {
+                    // ensure only one modal is shown per click
+                    this.showUserForm();
+                    return;
+                }
+
+                const btn = e.target.closest('[data-action]');
+                if (!btn) return;
+                if (!adminRoot.contains(btn)) return; // ignore actions outside admin-users
+
+                const action = btn.dataset.action;
+                const rawId = btn.dataset.id;
                 const id = (/^\d+$/.test(String(rawId))) ? parseInt(rawId) : rawId;
 
                 switch(action) {
@@ -901,7 +913,8 @@ class AdminSystem {
                         break;
                 }
             });
-        });
+            this._userActionDelegated = true;
+        }
     }
 
     showUserForm(user = null) {
@@ -953,7 +966,7 @@ class AdminSystem {
                                     <div class="form-group">
                                         <label for="user-role">Função *</label>
                                         <select id="user-role" required>
-                                            <option value="student" ${user?.role === 'student' ? 'selected' : ''}>Estudante</option>
+                                            <option value="estudante" ${user?.role === 'estudante' || user?.role === 'student' ? 'selected' : ''}>Estudante</option>
                                             <option value="admin" ${user?.role === 'admin' ? 'selected' : ''}>Administrador</option>
                                         </select>
                                     </div>
@@ -972,9 +985,9 @@ class AdminSystem {
                                     <div class="form-group">
                                         <label for="user-status">Status</label>
                                         <select id="user-status">
-                                            <option value="active" ${user?.status === 'active' ? 'selected' : ''}>Ativo</option>
+                                            <option value="ativo" ${user?.status === 'ativo' || user?.status === 'active' ? 'selected' : ''}>Ativo</option>
                                             <option value="pending_payment" ${user?.status === 'pending_payment' ? 'selected' : ''}>Pagamento Pendente</option>
-                                            <option value="inactive" ${user?.status === 'inactive' ? 'selected' : ''}>Inativo</option>
+                                            <option value="inativo" ${user?.status === 'inativo' || user?.status === 'inactive' ? 'selected' : ''}>Inativo</option>
                                         </select>
                                     </div>
                                 </div>
@@ -1113,25 +1126,44 @@ class AdminSystem {
                             this.renderAdminUsers();
                             modal.remove();
                         } else {
-                            ui.showAlert('Falha ao atualizar no servidor: ' + (res.error || res.message || ''), 'danger');
+                            const err = res && (res.error || res.message) ? (typeof (res.error || res.message) === 'string' ? (res.error || res.message) : (res.error && res.error.message ? res.error.message : JSON.stringify(res.error || res.message))) : 'Erro desconhecido';
+                            console.error('updateUserRecord failed:', res);
+                            ui.showAlert('Falha ao atualizar no servidor: ' + err, 'danger');
                         }
                     } else {
                         ui.showAlert('Serviço de atualização indisponível.', 'danger');
                     }
                 } else {
-                    // criação local
-                    if (database.getUserByEmail(email)) {
-                        ui.showAlert('Já existe um usuário com este e-mail.', 'warning');
-                        return;
-                    }
-
-                    const newUser = database.createUser({ name, email, password, role, plan, status, avatar });
-                    if (newUser) {
-                        ui.showAlert('Usuário criado com sucesso!', 'success');
-                        this.renderAdminUsers();
-                        modal.remove();
+                    // criação remota se disponível, senão local
+                    if (window.supabaseService && typeof window.supabaseService.createUserRecord === 'function') {
+                        const payload = { name, email, password, role, plan, status, avatar };
+                        const res = await window.supabaseService.createUserRecord(payload);
+                        if (res && res.success) {
+                            ui.showAlert('Usuário criado com sucesso no servidor!', 'success');
+                            // tentar atualizar cache local quando possível
+                            try { if (window.database && typeof window.database.saveDatabase === 'function') window.database.data.users = window.database.data.users || []; } catch (err) {}
+                            this.renderAdminUsers();
+                            modal.remove();
+                        } else {
+                            const err = res && (res.error || res.message) ? (typeof (res.error || res.message) === 'string' ? (res.error || res.message) : (res.error && res.error.message ? res.error.message : JSON.stringify(res.error || res.message))) : 'Erro desconhecido';
+                            console.error('createUserRecord failed:', res);
+                            ui.showAlert('Falha ao criar usuário remoto: ' + err, 'danger');
+                        }
                     } else {
-                        ui.showAlert('Erro ao criar usuário.', 'danger');
+                        // criação local
+                        if (database.getUserByEmail(email)) {
+                            ui.showAlert('Já existe um usuário com este e-mail.', 'warning');
+                            return;
+                        }
+
+                        const newUser = database.createUser({ name, email, password, role, plan, status, avatar });
+                        if (newUser) {
+                            ui.showAlert('Usuário criado com sucesso!', 'success');
+                            this.renderAdminUsers();
+                            modal.remove();
+                        } else {
+                            ui.showAlert('Erro ao criar usuário.', 'danger');
+                        }
                     }
                 }
             } catch (err) {
@@ -1208,7 +1240,19 @@ class AdminSystem {
         modal.querySelectorAll('.modal-close').forEach(btn => btn.addEventListener('click', () => modal.remove()));
         modal.addEventListener('click', (e) => { if (e.target === modal) modal.remove(); });
 
-        modal.querySelector('#confirm-delete-user').addEventListener('click', () => {
+        modal.querySelector('#confirm-delete-user').addEventListener('click', async () => {
+            // tentar exclusão remota primeiro quando disponível
+            if (window.supabaseService && typeof window.supabaseService.deleteUserRecord === 'function') {
+                const res = await window.supabaseService.deleteUserRecord(user.id);
+                if (res && res.success) {
+                    ui.showAlert('Usuário excluído no servidor!', 'success');
+                    modal.remove();
+                    this.renderAdminUsers();
+                    return;
+                }
+                // se falhar, cair para exclusão local
+            }
+
             // remove user and related data from simulated database
             database.data.users = database.data.users.filter(u => u.id !== user.id);
             database.data.notifications = database.data.notifications.filter(n => n.userId !== user.id);
