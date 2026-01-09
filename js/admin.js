@@ -365,11 +365,12 @@ class AdminSystem {
                     <td>
                         <div style="display:flex; align-items:center; gap:12px">
                             <img
-                                src="/avatar-default.png"
+                                src="${(user.avatar && user.avatar.trim()) ? user.avatar : `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name || user.email || 'Usuário')}&background=4F46E5&color=fff&size=128` }"
                                 alt="${user.name || user.email}"
                                 width="48"
                                 height="48"
                                 style="border-radius:9999px; object-fit:cover;"
+                                onerror="this.onerror=null;this.src='/IMG/logo.jpg';"
                             >
                             <div>
                                 <div style="font-weight:700; color:var(--dark-color)">
@@ -903,6 +904,7 @@ class AdminSystem {
                 const action = btn.dataset.action;
                 const rawId = btn.dataset.id;
                 const id = (/^\d+$/.test(String(rawId))) ? parseInt(rawId) : rawId;
+                console.debug('admin-users action:', action, 'id:', id);
 
                 switch(action) {
                     case 'edit-user':
@@ -914,6 +916,24 @@ class AdminSystem {
                 }
             });
             this._userActionDelegated = true;
+        }
+
+        // Garantir que botões de editar existentes abram o modal (fix para casos onde delegação falha)
+        try {
+            const editButtons = document.querySelectorAll('.admin-users [data-action="edit-user"]');
+            editButtons.forEach(btn => {
+                if (btn.dataset.listenerAttached) return;
+                btn.addEventListener('click', (ev) => {
+                    ev.stopPropagation();
+                    const rawId = btn.dataset.id;
+                    const id = (/^\d+$/.test(String(rawId))) ? parseInt(rawId) : rawId;
+                    console.debug('direct edit click id:', id);
+                    this.editUser(id);
+                });
+                btn.dataset.listenerAttached = '1';
+            });
+        } catch (err) {
+            // noop
         }
     }
 
@@ -1178,6 +1198,7 @@ class AdminSystem {
     }
 
     editUser(id) {
+        console.debug('editUser called with id:', id);
         // Tentar buscar localmente; se não existir (caso venham de Supabase), tentar via supabaseService
         let user = database.getUserById(id);
         if (user) {
@@ -1207,10 +1228,29 @@ class AdminSystem {
         }
     }
 
-    deleteUser(id) {
-        const user = database.getUserById(id);
-        if (!user) return;
-        this.showDeleteUserModal(user);
+    async deleteUser(id) {
+        // Tenta buscar localmente
+        let user = database.getUserById(id);
+        if (user) {
+            this.showDeleteUserModal(user);
+            return;
+        }
+
+        // Se não existir localmente, tenta buscar no supabaseService (quando disponível)
+        if (window.supabaseService && typeof window.supabaseService.fetchUserById === 'function') {
+            try {
+                const res = await window.supabaseService.fetchUserById(id);
+                if (res && res.success && res.user) {
+                    this.showDeleteUserModal(res.user);
+                    return;
+                }
+            } catch (err) {
+                // prosseguir para fallback
+            }
+        }
+
+        // Fallback: criar um objeto mínimo para permitir confirmação da exclusão (será tentada remotamente no modal)
+        this.showDeleteUserModal({ id, name: 'Usuário' });
     }
 
     showDeleteUserModal(user) {
