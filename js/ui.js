@@ -579,15 +579,8 @@ class UI {
         // Busca a lesson via Supabase se disponível, senão fallback local
         let lesson = null;
         if (window.supabaseService) {
-            const lres = await window.supabaseService.fetchLessonById(lessonId);
+            const lres = await window.supabaseService.getLessonById(lessonId);
             if (lres.success) lesson = lres.lesson;
-            else {
-                if (lres.accessDenied) {
-                    this.showAlert('Acesso negado à aula (RLS).', 'danger');
-                    return;
-                }
-                // fallback para local
-            }
         }
 
         if (!lesson && window.database) {
@@ -599,14 +592,15 @@ class UI {
         // course
         let course = null;
         if (window.supabaseService) {
-            const cres = await window.supabaseService.fetchCourseById(lesson.courseId);
+            const cres = await window.supabaseService.getCourseById(lesson.course_id || lesson.courseId);
             if (cres.success) course = cres.course;
         }
         if (!course && window.database) course = window.database.getCourseById(lesson.courseId);
 
         const user = auth.getCurrentUser();
-        const progress = user ? (window.database ? window.database.getUserProgress(user.id, lesson.courseId) : null) : null;
-        const isCompleted = progress?.completedLessons?.includes(lesson.id) || false;
+        const progressRes = user ? await window.supabaseService.getUserProgress(user.id, lesson.course_id || lesson.courseId) : { success: false };
+        const progress = progressRes.success ? progressRes.progress : (window.database ? window.database.getUserProgress(user.id, lesson.courseId) : null);
+        const isCompleted = progress?.completed_lessons?.includes(lesson.id) || false;
 
         const modalContent = document.getElementById('lesson-modal-content');
         const modalTitle = document.getElementById('lesson-modal-title');
@@ -618,7 +612,7 @@ class UI {
         // all lessons (ordered)
         let allLessons = [];
         if (window.supabaseService) {
-            const llist = await window.supabaseService.fetchLessonsByCourse(lesson.courseId);
+            const llist = await window.supabaseService.getLessonsByCourseId(lesson.course_id || lesson.courseId);
             if (llist.success) allLessons = llist.lessons || [];
         }
         if (!allLessons.length && window.database) allLessons = window.database.getLessonsByCourseId(lesson.courseId) || [];
@@ -734,12 +728,12 @@ class UI {
             toggleBtn.addEventListener('click', async () => {
                 if (!isCompleted) {
                     if (window.supabaseService) {
-                        const upd = await window.supabaseService.updateUserProgress(user.id, lesson.courseId, lesson.id);
+                        const upd = await window.supabaseService.updateUserProgress(user.id, lesson.course_id || lesson.courseId, lesson.id);
                         if (!upd.success) {
                             if (upd.accessDenied) return this.showAlert('Acesso negado ao marcar progresso.', 'danger');
                             return this.showAlert('Erro ao atualizar progresso.', 'danger');
                         }
-                        const note = await window.supabaseService.addNotificationRecord({ user_id: user.id, title: 'Aula concluída!', message: `Você completou: ${lesson.title}`, type: 'success' });
+                        const note = await window.supabaseService.addNotification(user.id, { title: 'Aula concluída!', message: `Você completou: ${lesson.title}`, type: 'success' });
                         if (!note.success) {
                             if (note.accessDenied) return this.showAlert('Acesso negado ao adicionar notificação.', 'danger');
                         }
@@ -749,12 +743,12 @@ class UI {
                     }
                 } else {
                     if (window.supabaseService) {
-                        const rem = await window.supabaseService.removeLessonFromProgress(user.id, lesson.courseId, lesson.id);
+                        const rem = await window.supabaseService.removeLessonFromProgress(user.id, lesson.course_id || lesson.courseId, lesson.id);
                         if (!rem.success) {
                             if (rem.accessDenied) return this.showAlert('Acesso negado ao atualizar progresso.', 'danger');
                             return this.showAlert('Erro ao atualizar progresso.', 'danger');
                         }
-                        const note = await window.supabaseService.addNotificationRecord({ user_id: user.id, title: 'Marcação removida', message: `A marcação de conclusão foi removida: ${lesson.title}`, type: 'info' });
+                        const note = await window.supabaseService.addNotification(user.id, { title: 'Marcação removida', message: `A marcação de conclusão foi removida: ${lesson.title}`, type: 'info' });
                         if (!note.success) {
                             if (note.accessDenied) return this.showAlert('Acesso negado ao adicionar notificação.', 'danger');
                         }

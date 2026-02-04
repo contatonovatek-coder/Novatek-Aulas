@@ -541,66 +541,292 @@ const SupabaseService = (function(){
 // Disponibilizar globalmente para uso simples em outros módulos
 window.supabaseService = SupabaseService;
 
-// Sincronização de cache para compatibilidade com o backend local existente
-SupabaseService.syncCache = async function() {
+// Funções para Courses
+async function getAllCourses() {
+    const supabase = ensureClient();
     try {
-        const supabase = ensureClient();
-        // buscar dados que o frontend espera em modo read-first
-        const [coursesRes, lessonsRes, materialsRes, categoriesRes, instructorsRes] = await Promise.all([
-            supabase.from('courses').select('*'),
-            supabase.from('lessons').select('*'),
-            supabase.from('lesson_materials').select('*'),
-            supabase.from('categories').select('*'),
-            supabase.from('instructors').select('*')
-        ]);
-
-        const user = (await SupabaseService.getUser()).user;
-
-        let subscriptionsRes = { data: [] };
-        let certificatesRes = { data: [] };
-        let paymentsRes = { data: [] };
-        let userProgressRes = { data: [] };
-        let notificationsRes = { data: [] };
-
-        if (user) {
-            subscriptionsRes = await supabase.from('subscriptions').select('*').eq('user_id', user.id);
-            certificatesRes = await supabase.from('certificates').select('*').eq('user_id', user.id);
-            paymentsRes = await supabase.from('payments').select('*').eq('user_id', user.id);
-            userProgressRes = await supabase.from('user_progress').select('*').eq('user_id', user.id);
-            notificationsRes = await supabase.from('notifications').select('*').eq('user_id', user.id);
-        }
-
-        // Merge into a structure compatible with local `database.data`
-        const remoteData = {
-            courses: coursesRes.data || [],
-            lessons: lessonsRes.data || [],
-            lesson_materials: materialsRes.data || [],
-            categories: categoriesRes.data || [],
-            instructors: instructorsRes.data || [],
-            subscriptions: subscriptionsRes.data || [],
-            certificates: certificatesRes.data || [],
-            payments: paymentsRes.data || [],
-            userProgress: userProgressRes.data || [],
-            notifications: notificationsRes.data || []
-        };
-
-        // Atualizar cache local `window.database.data` quando possível
-        if (window.database && window.database.data) {
-            // manter campos existentes e sobrescrever com dados remotos quando disponíveis
-            window.database.data.courses = remoteData.courses.length ? remoteData.courses : (window.database.data.courses || []);
-            window.database.data.lessons = remoteData.lessons.length ? remoteData.lessons : (window.database.data.lessons || []);
-            window.database.data.subscriptions = remoteData.subscriptions.length ? remoteData.subscriptions : (window.database.data.subscriptions || []);
-            window.database.data.certificates = remoteData.certificates.length ? remoteData.certificates : (window.database.data.certificates || []);
-            window.database.data.payments = remoteData.payments.length ? remoteData.payments : (window.database.data.payments || []);
-            window.database.data.userProgress = remoteData.userProgress.length ? remoteData.userProgress : (window.database.data.userProgress || []);
-            window.database.data.notifications = remoteData.notifications.length ? remoteData.notifications : (window.database.data.notifications || []);
-            window.database.data.categories = remoteData.categories.length ? remoteData.categories : (window.database.data.categories || []);
-            window.database.data.instructors = remoteData.instructors.length ? remoteData.instructors : (window.database.data.instructors || []);
-            window.database.data.lesson_materials = remoteData.lesson_materials.length ? remoteData.lesson_materials : (window.database.data.lesson_materials || []);
-        }
-
-        return { success: true, data: remoteData };
+        const { data, error } = await supabase
+            .from('courses')
+            .select('*')
+            .order('created_at', { ascending: false });
+        if (error) throw error;
+        return { success: true, courses: data || [] };
     } catch (err) {
-        return { success: false, error: err };
+        return { success: false, error: err.message || err };
     }
+}
+
+async function getCourseById(id) {
+    const supabase = ensureClient();
+    try {
+        const { data, error } = await supabase
+            .from('courses')
+            .select('*')
+            .eq('id', id)
+            .single();
+        if (error) throw error;
+        return { success: true, course: data };
+    } catch (err) {
+        return { success: false, error: err.message || err };
+    }
+}
+
+async function getFeaturedCourses() {
+    const supabase = ensureClient();
+    try {
+        const { data, error } = await supabase
+            .from('courses')
+            .select('*')
+            .eq('featured', true)
+            .order('rating', { ascending: false })
+            .limit(6);
+        if (error) throw error;
+        return { success: true, courses: data || [] };
+    } catch (err) {
+        return { success: false, error: err.message || err };
+    }
+}
+
+async function fetchActiveCourses() {
+    const supabase = ensureClient();
+    try {
+        const { data, error } = await supabase
+            .from('courses')
+            .select('*')
+            .eq('status', 'active')
+            .order('created_at', { ascending: false });
+        if (error) throw error;
+        return { success: true, courses: data || [] };
+    } catch (err) {
+        return { success: false, error: err.message || err };
+    }
+}
+
+// Funções para Lessons
+async function getLessonsByCourseId(courseId) {
+    const supabase = ensureClient();
+    try {
+        const { data, error } = await supabase
+            .from('lessons')
+            .select('*')
+            .eq('course_id', courseId)
+            .order('order', { ascending: true });
+        if (error) throw error;
+        return { success: true, lessons: data || [] };
+    } catch (err) {
+        return { success: false, error: err.message || err };
+    }
+}
+
+async function getLessonById(id) {
+    const supabase = ensureClient();
+    try {
+        const { data, error } = await supabase
+            .from('lessons')
+            .select('*')
+            .eq('id', id)
+            .single();
+        if (error) throw error;
+        return { success: true, lesson: data };
+    } catch (err) {
+        return { success: false, error: err.message || err };
+    }
+}
+
+// Funções para Categories
+async function getAllCategories() {
+    const supabase = ensureClient();
+    try {
+        const { data, error } = await supabase
+            .from('categories')
+            .select('*')
+            .order('name', { ascending: true });
+        if (error) throw error;
+        return { success: true, categories: data || [] };
+    } catch (err) {
+        return { success: false, error: err.message || err };
+    }
+}
+
+async function getCategoryById(id) {
+    const supabase = ensureClient();
+    try {
+        const { data, error } = await supabase
+            .from('categories')
+            .select('*')
+            .eq('id', id)
+            .single();
+        if (error) throw error;
+        return { success: true, category: data };
+    } catch (err) {
+        return { success: false, error: err.message || err };
+    }
+}
+
+// Funções para Instructors
+async function getAllInstructors() {
+    const supabase = ensureClient();
+    try {
+        const { data, error } = await supabase
+            .from('instructors')
+            .select('*')
+            .order('name', { ascending: true });
+        if (error) throw error;
+        return { success: true, instructors: data || [] };
+    } catch (err) {
+        return { success: false, error: err.message || err };
+    }
+}
+
+async function getInstructorById(id) {
+    const supabase = ensureClient();
+    try {
+        const { data, error } = await supabase
+            .from('instructors')
+            .select('*')
+            .eq('id', id)
+            .single();
+        if (error) throw error;
+        return { success: true, instructor: data };
+    } catch (err) {
+        return { success: false, error: err.message || err };
+    }
+}
+
+// Funções para User Progress
+async function getUserProgress(userId, courseId) {
+    const supabase = ensureClient();
+    try {
+        const { data, error } = await supabase
+            .from('user_progress')
+            .select('*')
+            .eq('user_id', userId)
+            .eq('course_id', courseId)
+            .single();
+        if (error && error.code !== 'PGRST116') throw error; // PGRST116 is "not found"
+        return { success: true, progress: data };
+    } catch (err) {
+        return { success: false, error: err.message || err };
+    }
+}
+
+async function getAllUserProgress(userId) {
+    const supabase = ensureClient();
+    try {
+        const { data, error } = await supabase
+            .from('user_progress')
+            .select('*')
+            .eq('user_id', userId)
+            .order('last_accessed', { ascending: false });
+        if (error) throw error;
+        return { success: true, progresses: data || [] };
+    } catch (err) {
+        return { success: false, error: err.message || err };
+    }
+}
+
+async function updateUserProgress(userId, courseId, lessonId) {
+    const supabase = ensureClient();
+    try {
+        // First, get current progress
+        const progressRes = await getUserProgress(userId, courseId);
+        let progress = progressRes.progress || { user_id: userId, course_id: courseId, completed_lessons: [] };
+
+        if (!progress.completed_lessons) progress.completed_lessons = [];
+        if (!progress.completed_lessons.includes(lessonId)) {
+            progress.completed_lessons.push(lessonId);
+            progress.last_accessed = new Date().toISOString();
+        }
+
+        const { data, error } = await supabase
+            .from('user_progress')
+            .upsert(progress, { onConflict: 'user_id,course_id' });
+        if (error) throw error;
+        return { success: true, progress: data };
+    } catch (err) {
+        return { success: false, error: err.message || err };
+    }
+}
+
+async function removeLessonFromProgress(userId, courseId, lessonId) {
+    const supabase = ensureClient();
+    try {
+        const progressRes = await getUserProgress(userId, courseId);
+        if (!progressRes.success || !progressRes.progress) return { success: false, error: 'Progress not found' };
+
+        let progress = progressRes.progress;
+        progress.completed_lessons = progress.completed_lessons.filter(id => id !== lessonId);
+
+        const { data, error } = await supabase
+            .from('user_progress')
+            .upsert(progress, { onConflict: 'user_id,course_id' });
+        if (error) throw error;
+        return { success: true, progress: data };
+    } catch (err) {
+        return { success: false, error: err.message || err };
+    }
+}
+
+// Funções para Notifications
+async function addNotification(userId, notification) {
+    const supabase = ensureClient();
+    try {
+        const { data, error } = await supabase
+            .from('notifications')
+            .insert({
+                user_id: userId,
+                title: notification.title,
+                message: notification.message,
+                type: notification.type || 'info',
+                created_at: new Date().toISOString()
+            });
+        if (error) throw error;
+        return { success: true, notification: data };
+    } catch (err) {
+        return { success: false, error: err.message || err };
+    }
+}
+
+async function getUserNotifications(userId) {
+    const supabase = ensureClient();
+    try {
+        const { data, error } = await supabase
+            .from('notifications')
+            .select('*')
+            .eq('user_id', userId)
+            .order('created_at', { ascending: false });
+        if (error) throw error;
+        return { success: true, notifications: data || [] };
+    } catch (err) {
+        return { success: false, error: err.message || err };
+    }
+}
+
+// Expor funções no window.supabaseService
+window.supabaseService = {
+    signIn,
+    signOut,
+    getUser,
+    onAuthStateChange,
+    fetchUserById,
+    getAllUsers,
+    fetchSubscriptionByUser,
+    syncCache,
+    // Novas funções
+    getAllCourses,
+    getCourseById,
+    getFeaturedCourses,
+    fetchActiveCourses,
+    getLessonsByCourseId,
+    getLessonById,
+    getAllCategories,
+    getCategoryById,
+    getAllInstructors,
+    getInstructorById,
+    getUserProgress,
+    getAllUserProgress,
+    updateUserProgress,
+    removeLessonFromProgress,
+    addNotification,
+    getUserNotifications
 };

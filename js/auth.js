@@ -17,9 +17,9 @@ class AuthSystem {
                     // buscar assinatura
                     await this._refreshSubscription();
                     // sincronizar cache local para compatibilidade com código existente
-                    if (window.supabaseService && window.supabaseService.syncCache) {
-                        await window.supabaseService.syncCache();
-                    }
+                    // if (window.supabaseService && window.supabaseService.syncCache) {
+                    //     await window.supabaseService.syncCache();
+                    // }
                     // Respeitar preferência de auto-login: somente atualizar UI automaticamente
                     // se o usuário tiver permitido auto-login (por exemplo em login manual anterior).
                     const allowAuto = localStorage.getItem('novatek-allow-auto-login') === 'true';
@@ -36,9 +36,9 @@ class AuthSystem {
                     } else {
                         this.currentUser = this._mapDbUser(dbUser);
                         await this._refreshSubscription();
-                        if (window.supabaseService && window.supabaseService.syncCache) {
-                            await window.supabaseService.syncCache();
-                        }
+                        // if (window.supabaseService && window.supabaseService.syncCache) {
+                        //     await window.supabaseService.syncCache();
+                        // }
                         // Respeitar preferência do usuário sobre auto-login
                         const allowAuto = localStorage.getItem('novatek-allow-auto-login') === 'true';
                         if (allowAuto) this.updateUIAfterLogin();

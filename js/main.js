@@ -67,7 +67,7 @@ class MainApp {
         });
     }
 
-    renderPainelDoAluno() {
+    async renderPainelDoAluno() {
         if (!auth.isAuthenticated() || !auth.hasActiveSubscription()) {
             if (auth.currentUser?.status === 'pending_payment') {
                 router.navigateTo('payment');
@@ -76,19 +76,23 @@ class MainApp {
         }
 
         const content = document.getElementById('painel-do-aluno-content');
-        const courses = database.getFeaturedCourses();
+        const coursesRes = await window.supabaseService.getFeaturedCourses();
+        const courses = coursesRes.success ? coursesRes.courses : [];
         const user = auth.getCurrentUser();
 
         // personalized summary data
         let greeting = '';
         let lastActivityText = 'Nenhuma atividade recente';
         if (user) {
-            const progresses = database.data.userProgress.filter(p => p.userId === user.id);
+            const progressRes = await window.supabaseService.getAllUserProgress(user.id);
+            const progresses = progressRes.success ? progressRes.progresses : [];
             if (progresses.length > 0) {
-                const last = progresses.slice().sort((a, b) => new Date(b.lastAccessed) - new Date(a.lastAccessed))[0];
-                const lastCourse = last ? database.getCourseById(last.courseId) : null;
-                const lessons = last ? database.getLessonsByCourseId(last.courseId) || [] : [];
-                const nextLesson = last ? lessons.find(l => !last.completedLessons?.includes(l.id)) : null;
+                const last = progresses[0]; // Já ordenado por last_accessed desc
+                const lastCourseRes = await window.supabaseService.getCourseById(last.course_id);
+                const lastCourse = lastCourseRes.success ? lastCourseRes.course : null;
+                const lessonsRes = lastCourse ? await window.supabaseService.getLessonsByCourseId(last.course_id) : { lessons: [] };
+                const lessons = lessonsRes.lessons || [];
+                const nextLesson = lessons.find(l => !last.completed_lessons?.includes(l.id));
                 if (lastCourse) {
                     greeting = `Olá, ${user.name.split(' ')[0]}! Você parou em <strong>${lastCourse.title}</strong>`;
                 } else {
@@ -506,16 +510,18 @@ class MainApp {
         const container = document.createElement('div');
         container.className = 'lessons-container';
 
-        courses.forEach(course => {
+        for (const course of courses) {
             let lessons = [];
             if (window.supabaseService) {
-                // note: Fire-and-forget fetching of lessons per course (could be optimized)
+                const lres = await window.supabaseService.getLessonsByCourseId(course.id);
+                if (lres.success) lessons = lres.lessons;
             }
-            if (window.database && lessons.length === 0) lessons = window.database.getLessonsByCourseId(course.id);
+            if (lessons.length === 0 && window.database) lessons = window.database.getLessonsByCourseId(course.id);
 
-            const userProgress = window.database ? window.database.getUserProgress(user.id, course.id) || { completedLessons: [] } : { completedLessons: [] };
-            const completedLessons = userProgress.completedLessons || [];
-            if (!lessons || lessons.length === 0) return;
+            const userProgressRes = window.supabaseService ? await window.supabaseService.getUserProgress(user.id, course.id) : { success: false };
+            const userProgress = userProgressRes.success ? userProgressRes.progress : (window.database ? window.database.getUserProgress(user.id, course.id) || { completed_lessons: [] } : { completed_lessons: [] });
+            const completedLessons = userProgress.completed_lessons || [];
+            if (!lessons || lessons.length === 0) continue;
             const nextLesson = lessons.find(l => !completedLessons.includes(l.id));
             const percent = Math.round((completedLessons.length / lessons.length) * 100);
 
@@ -535,8 +541,8 @@ class MainApp {
                     ${lessons.map(lesson => {
                         const isCompleted = completedLessons.includes(lesson.id);
                         const isNext = nextLesson && lesson.id === nextLesson.id;
-                        const lessonType = lesson.videoUrl ? 'Vídeo' : (lesson.resources && lesson.resources.length ? 'Recurso' : 'Link');
-                        const pausedBadge = isNext && userProgress.lastAccessed ? true : false;
+                        const lessonType = lesson.video_url ? 'Vídeo' : (lesson.resources && lesson.resources.length ? 'Recurso' : 'Link');
+                        const pausedBadge = isNext && userProgress.last_accessed ? true : false;
                         return `
                             <div class="lesson-item ${isCompleted ? 'completed' : isNext ? 'next' : ''}">
                                 <div class="lesson-card ${isNext ? 'next-bg' : ''}">
@@ -574,7 +580,7 @@ class MainApp {
             `;
 
             container.appendChild(courseHtml);
-        });
+        }
 
         content.appendChild(container);
         this.addLessonEvents();
