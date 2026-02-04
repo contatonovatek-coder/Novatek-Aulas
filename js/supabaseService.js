@@ -17,6 +17,7 @@ const SupabaseService = (function(){
         const status = dbUser.status || dbUser.statu || null;
         const tipo = dbUser.tipo || dbUser.role || dbUser.funcao || dbUser.function || null;
         const plano = dbUser.plano || dbUser.plan || dbUser.subscription_plan || null;
+        const planId = dbUser.plan_id || dbUser.planId || null;
         const createdAt = dbUser.created_at || dbUser.createdAt || dbUser.joinDate || null;
         const lastLogin = dbUser.ultimo_login || dbUser.last_login || dbUser.lastLogin || dbUser.lastLoginAt || null;
         return {
@@ -29,6 +30,7 @@ const SupabaseService = (function(){
             role: tipo,
             plano: plano,
             plan: plano,
+            plan_id: planId,
             avatar: dbUser.avatar || dbUser.avatar_url || null,
             created_at: createdAt,
             ultimo_login: lastLogin,
@@ -153,7 +155,7 @@ const SupabaseService = (function(){
         }
     }
 
-    // Lista todos os usuários (normalizado) — busca users e relaciona com subscriptions -> plans quando possível
+    // Lista todos os usuários (normalizado) — relaciona users.plan_id com plans (LEFT JOIN behavior)
     async function getAllUsers() {
         const supabase = ensureClient();
         try {
@@ -162,6 +164,23 @@ const SupabaseService = (function(){
 
             const userIds = (users || []).map(u => u.id).filter(Boolean);
             const subsMap = {};
+
+            // Tentar buscar planos referenciados diretamente na tabela users via plan_id
+            const planIds = (users || []).map(u => (u.plan_id ?? u.plano ?? u.plan)).filter(Boolean).map(String);
+            let plansMap = {};
+            if (planIds.length) {
+                try {
+                    const { data: plans, error: plansErr } = await supabase
+                        .from('plans')
+                        .select('id, nome')
+                        .in('id', planIds);
+                    if (!plansErr && plans && plans.length) {
+                        plans.forEach(p => { plansMap[String(p.id)] = p; });
+                    }
+                } catch (err) {
+                    // ignore plans failure — fallback later
+                }
+            }
 
             if (userIds.length) {
                 try {
@@ -185,9 +204,18 @@ const SupabaseService = (function(){
             const mapped = (users || []).map(u => {
                 const norm = normalizeDbUser(u) || {};
                 let planName = null;
+
+                // Priorizar nome do plano vindo de users.plan_id -> plans.id
+                const userPlanId = (u.plan_id ?? u.plano ?? norm.plan ?? null);
+                if (userPlanId && plansMap[String(userPlanId)] && plansMap[String(userPlanId)].nome) {
+                    planName = plansMap[String(userPlanId)].nome;
+                }
+
+                // Fallback: subscription join
                 const s = subsMap[u.id];
-                if (s && s.plan && s.plan.nome) planName = s.plan.nome;
-                // tentar extrair de propriedades alternativas se necessário
+                if (!planName && s && s.plan && s.plan.nome) planName = s.plan.nome;
+
+                // Fallback final: propriedades antigas
                 if (!planName) planName = u.plano_nome || u.planoName || norm.plan || norm.plano || null;
 
                 return {
@@ -317,6 +345,14 @@ const SupabaseService = (function(){
         return { success: true, title: res.course?.title || null };
     }
 
+    // Plans
+    async function fetchPlans() {
+        const supabase = ensureClient();
+        const { data, error, status } = await supabase.from('plans').select('id, nome').order('id', { ascending: true });
+        if (error) return handleError(error, status);
+        return { success: true, plans: data || [] };
+    }
+
     function handleError(error, status) {
         // Tratar erros RLS/permisionamento como acesso negado
         if (status === 401 || status === 403) {
@@ -403,6 +439,14 @@ const SupabaseService = (function(){
         if (updates.role !== undefined) payload.funcao = updates.role;
         if (updates.status !== undefined) payload.status = updates.status;
         if (updates.avatar !== undefined) payload.avatar = updates.avatar;
+        // aceitar tanto updates.plan_id (numérico) quanto updates.plan (string ou id)
+        if (updates.plan_id !== undefined) payload.plan_id = updates.plan_id;
+        else if (updates.plan !== undefined) {
+            // se for numérico, usar plan_id; caso contrário, manter campo legacy `plan`/`plano`
+            const maybeNum = Number(updates.plan);
+            if (!isNaN(maybeNum) && String(updates.plan).trim() !== '') payload.plan_id = maybeNum;
+            else payload.plan = updates.plan;
+        }
         payload.updated_at = new Date().toISOString();
 
         const { data, error, status } = await supabase.from('users').upsert([{ id: userId, ...payload }]).select();
@@ -410,24 +454,30 @@ const SupabaseService = (function(){
         return { success: true, user: data && data[0] };
     }
 
-    async function createUserRecord(payload) {
-        // IMPORTANT: Do NOT attempt to create auth user or insert into public.users from the browser directly.
-        // This function delegates to a secure backend endpoint which must perform the service_role operations.
+   async function createUserRecord(payload) {
         try {
             const supabase = ensureClient();
+
             let accessToken = null;
             try {
                 const sessionRes = await supabase.auth.getSession();
                 accessToken = sessionRes.data?.session?.access_token || null;
-            } catch (e) {
-                // ignore
+            } catch (e) {}
+
+            const apiUrl =
+                window.CREATE_USER_API_URL ||
+                (window.SUPABASE_URL
+                    ? String(window.SUPABASE_URL).replace(/\/$/, '') + '/functions/v1/create-user'
+                    : '/api/create-user');
+
+            const headers = {
+                'Content-Type': 'application/json'
+            };
+
+            // opcional, mas ok manter
+            if (accessToken) {
+                headers['Authorization'] = `Bearer ${accessToken}`;
             }
-
-            // allow overriding the API URL from the page (useful in dev)
-            const apiUrl = window.CREATE_USER_API_URL || '/api/create-user' || (location.hostname === 'localhost' ? 'http://localhost:8787/api/create-user' : '/api/create-user');
-
-            const headers = { 'Content-Type': 'application/json' };
-            if (accessToken) headers['Authorization'] = `Bearer ${accessToken}`;
 
             const resp = await fetch(apiUrl, {
                 method: 'POST',
@@ -437,32 +487,23 @@ const SupabaseService = (function(){
                     password: payload.password,
                     name: payload.name,
                     funcao: payload.role || payload.funcao,
-                    status: payload.status || 'ativo',
-                    avatar: payload.avatar || null
+                    status: payload.status ?? true,
+                    plan_id: payload.plan_id ?? null
                 })
             });
 
-            // try to parse JSON; if not JSON, read text
-            let body = null;
             const contentType = resp.headers.get('content-type') || '';
-            if (contentType.includes('application/json')) {
-                try {
-                    body = await resp.json();
-                } catch (parseErr) {
-                    const txt = await resp.text().catch(() => null);
-                    console.error('createUserRecord: failed to parse JSON, raw text:', txt, parseErr);
-                    return { success: false, status: resp.status, error: 'Invalid JSON response from create-user endpoint', raw: txt };
-                }
-            } else {
-                body = await resp.text().catch(() => null);
-            }
+            const body = contentType.includes('application/json')
+                ? await resp.json()
+                : await resp.text();
 
             if (!resp.ok) {
                 console.error('createUserRecord: endpoint returned error', resp.status, body);
-                return { success: false, status: resp.status, error: body || 'Request failed' };
+                return { success: false, status: resp.status, error: body };
             }
 
             return body;
+
         } catch (err) {
             console.error('createUserRecord: unexpected error', err);
             return { success: false, error: err.message || String(err) };
@@ -487,6 +528,7 @@ const SupabaseService = (function(){
         fetchCourseById,
         fetchLessonsByCourse,
         fetchLessonById,
+        fetchPlans,
         updateUserRecord,
         fetchMaterialsByLesson,
         fetchCertificatesByUser,

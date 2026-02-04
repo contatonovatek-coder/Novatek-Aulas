@@ -937,265 +937,146 @@ class AdminSystem {
         }
     }
 
-    showUserForm(user = null) {
-        const modal = document.createElement('div');
-        modal.className = 'modal admin-user-modal';
-        modal.innerHTML = `
-            <div class="modal-content" style="max-width:760px;">
-                <div class="modal-header">
-                    <h2>${user ? 'Editar Usuário' : 'Novo Usuário'}</h2>
-                    <button class="modal-close">&times;</button>
-                </div>
-                <div class="modal-body">
+    async showUserForm(user = null) {
+    // Buscar planos
+    let plansList = [];
+    try {
+        if (window.supabaseService?.fetchPlans) {
+            const res = await window.supabaseService.fetchPlans();
+            if (res?.success && Array.isArray(res.plans)) {
+                plansList = res.plans;
+            }
+        }
+    } catch (_) {}
+
+    // Montar options de plano (UUID)
+    const plansHtml = plansList.length
+        ? plansList.map(p => `
+            <option value="${p.id}" ${user?.plan_id === p.id ? 'selected' : ''}>
+                ${p.nome}
+            </option>
+        `).join('')
+        : `<option value="">Nenhum plano disponível</option>`;
+
+    const modal = document.createElement('div');
+    modal.className = 'modal admin-user-modal';
+    modal.innerHTML = `
+        <div class="modal-content" style="max-width:760px;">
+            <div class="modal-header">
+                <h2>${user ? 'Editar Usuário' : 'Novo Usuário'}</h2>
+                <button class="modal-close">&times;</button>
+            </div>
+
+            <div class="modal-body">
+                <form id="user-form">
                     <div class="form-row">
-                        <div class="avatar-column">
-                            <div class="avatar-preview">
-                                <img id="user-avatar-preview" src="${user?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.name || 'Novo Usuario')}&background=4F46E5&color=fff`}" alt="avatar">
-                            </div>
-                            <div class="avatar-uploader">
-                                <label class="avatar-upload-btn btn btn-outline">
-                                    <input type="file" id="user-avatar-file" accept="image/*" style="display:none">
-                                    <i class="fas fa-upload"></i> Fazer upload
-                                </label>
-                                <input type="hidden" id="user-avatar-data" value="${user?.avatar || ''}">
-                                <small class="muted">PNG/JPG — máximo 2MB</small>
-                            </div>
+                        <div class="form-group">
+                            <label>Nome *</label>
+                            <input id="user-name" type="text" value="${user?.name || ''}" required>
                         </div>
 
-                        <div class="form-column">
-                            <form id="user-form">
-                                <div class="form-row">
-                                    <div class="form-group">
-                                        <label for="user-name">Nome *</label>
-                                        <input type="text" id="user-name" value="${user?.name || ''}" required>
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="user-email">E-mail *</label>
-                                        <input type="email" id="user-email" value="${user?.email || ''}" required>
-                                    </div>
-                                </div>
-
-                                <div class="form-row">
-                                    <div class="form-group">
-                                        <label for="user-password">${user ? 'Nova Senha (opcional)' : 'Senha *'}</label>
-                                        <div class="input-with-icon">
-                                            <input type="password" id="user-password" ${user ? '' : 'required'} autocomplete="new-password">
-                                            <button type="button" class="password-toggle" aria-label="Mostrar senha"><i class="fas fa-eye"></i></button>
-                                        </div>
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="user-role">Função *</label>
-                                        <select id="user-role" required>
-                                            <option value="estudante" ${user?.role === 'estudante' || user?.role === 'student' ? 'selected' : ''}>Estudante</option>
-                                            <option value="admin" ${user?.role === 'admin' ? 'selected' : ''}>Administrador</option>
-                                        </select>
-                                    </div>
-                                </div>
-
-                                <div class="form-row">
-                                    <div class="form-group">
-                                        <label for="user-plan">Plano</label>
-                                        <select id="user-plan">
-                                            <option value="junior" ${user?.plan === 'junior' ? 'selected' : ''}>Júnior</option>
-                                            <option value="pleno" ${user?.plan === 'pleno' ? 'selected' : ''}>Pleno</option>
-                                            <option value="senior" ${user?.plan === 'senior' ? 'selected' : ''}>Sênior</option>
-                                        </select>
-                                    </div>
-
-                                    <div class="form-group">
-                                        <label for="user-status">Status</label>
-                                        <select id="user-status">
-                                            <option value="ativo" ${user?.status === 'ativo' || user?.status === 'active' ? 'selected' : ''}>Ativo</option>
-                                            <option value="pending_payment" ${user?.status === 'pending_payment' ? 'selected' : ''}>Pagamento Pendente</option>
-                                            <option value="inativo" ${user?.status === 'inativo' || user?.status === 'inactive' ? 'selected' : ''}>Inativo</option>
-                                        </select>
-                                    </div>
-                                </div>
-
-                                <div class="modal-actions">
-                                    <button type="button" class="btn btn-outline modal-close">Cancelar</button>
-                                    <button type="submit" class="btn btn-primary">${user ? 'Atualizar' : 'Salvar'}</button>
-                                </div>
-                            </form>
+                        <div class="form-group">
+                            <label>E-mail *</label>
+                            <input id="user-email" type="email" value="${user?.email || ''}" required>
                         </div>
                     </div>
-                </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>${user ? 'Nova senha (opcional)' : 'Senha *'}</label>
+                            <input id="user-password" type="password" ${user ? '' : 'required'}>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Função *</label>
+                            <select id="user-role">
+                                <option value="estudante" ${user?.role === 'estudante' ? 'selected' : ''}>Estudante</option>
+                                <option value="admin" ${user?.role === 'admin' ? 'selected' : ''}>Administrador</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Plano</label>
+                            <select id="user-plan">
+                                <option value="">Sem plano</option>
+                                ${plansHtml}
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Status</label>
+                            <select id="user-status">
+                                <option value="ativo" ${user?.status === 'ativo' ? 'selected' : ''}>Ativo</option>
+                                <option value="pending_payment" ${user?.status === 'pending_payment' ? 'selected' : ''}>Pagamento pendente</option>
+                                <option value="inativo" ${user?.status === 'inativo' ? 'selected' : ''}>Inativo</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="modal-actions">
+                        <button type="button" class="modal-close btn btn-outline">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">
+                            ${user ? 'Atualizar' : 'Salvar'}
+                        </button>
+                    </div>
+                </form>
             </div>
-        `;
+        </div>
+    `;
 
-        document.body.appendChild(modal);
+    document.body.appendChild(modal);
 
-        // Close handlers
-        modal.querySelectorAll('.modal-close').forEach(btn => btn.addEventListener('click', () => modal.remove()));
-        modal.addEventListener('click', (e) => { if (e.target === modal) modal.remove(); });
+    // Fechar modal
+    modal.querySelectorAll('.modal-close').forEach(b =>
+        b.addEventListener('click', () => modal.remove())
+    );
 
-        // Avatar upload + preview
-        const fileInput = modal.querySelector('#user-avatar-file');
-        const hiddenAvatar = modal.querySelector('#user-avatar-data');
-        const avatarPreview = modal.querySelector('#user-avatar-preview');
-        const nameInput = modal.querySelector('#user-name');
+    // Submit
+    modal.querySelector('#user-form').addEventListener('submit', async e => {
+        e.preventDefault();
 
-        function setPreviewFromData(dataUrl) {
-            avatarPreview.src = dataUrl;
-            hiddenAvatar.value = dataUrl;
+        const payload = {
+            name: modal.querySelector('#user-name').value.trim(),
+            email: modal.querySelector('#user-email').value.trim(),
+            password: modal.querySelector('#user-password').value,
+            role: modal.querySelector('#user-role').value,
+            status: modal.querySelector('#user-status').value,
+            plan_id: modal.querySelector('#user-plan').value || null
+        };
+
+        if (!payload.name || !payload.email) {
+            ui.showAlert('Nome e e-mail são obrigatórios', 'warning');
+            return;
         }
 
-        // update preview when typing name (if no uploaded avatar)
-        nameInput.addEventListener('input', () => {
-            if (!hiddenAvatar.value) {
-                avatarPreview.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(nameInput.value || 'Novo Usuario')}&background=4F46E5&color=fff`;
-            }
-        });
+        try {
+            if (user) {
+                // UPDATE
+                if (!payload.password) delete payload.password;
 
-        fileInput.addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            if (!file) return;
-            if (!file.type.startsWith('image/')) {
-                ui.showAlert('Formato inválido. Envie uma imagem.', 'warning');
-                return;
-            }
-            if (file.size > 2 * 1024 * 1024) {
-                ui.showAlert('Imagem muito grande. Máx. 2MB.', 'warning');
-                return;
+                const res = await window.supabaseService.updateUserRecord(user.id, payload);
+                if (!res.success) throw new Error(res.error);
+
+                ui.showAlert('Usuário atualizado com sucesso', 'success');
+            } else {
+                // CREATE
+                const res = await window.supabaseService.createUserRecord(payload);
+                if (!res.success) throw new Error(res.error);
+
+                ui.showAlert('Usuário criado com sucesso', 'success');
             }
 
-            const reader = new FileReader();
-            reader.onload = function(ev) {
-                setPreviewFromData(ev.target.result);
-            };
-            reader.readAsDataURL(file);
-        });
-
-        // password toggle
-        const pwdToggle = modal.querySelector('.password-toggle');
-        if (pwdToggle) {
-            pwdToggle.addEventListener('click', () => {
-                const pw = modal.querySelector('#user-password');
-                const icon = pwdToggle.querySelector('i');
-                if (pw.type === 'password') {
-                    pw.type = 'text';
-                    icon.classList.remove('fa-eye');
-                    icon.classList.add('fa-eye-slash');
-                } else {
-                    pw.type = 'password';
-                    icon.classList.remove('fa-eye-slash');
-                    icon.classList.add('fa-eye');
-                }
-            });
+            this.renderAdminUsers();
+            modal.remove();
+        } catch (err) {
+            console.error(err);
+            ui.showAlert('Erro ao salvar usuário: ' + err.message, 'danger');
         }
+    });
+}
 
-        // Form submit: create or update user via database
-        const form = modal.querySelector('#user-form');
-        form.addEventListener('submit', async (e) => {
-            e.preventDefault();
-
-            const name = modal.querySelector('#user-name').value.trim();
-            const email = modal.querySelector('#user-email').value.trim();
-            const password = modal.querySelector('#user-password').value;
-            const role = modal.querySelector('#user-role').value;
-            const plan = modal.querySelector('#user-plan').value;
-            const status = modal.querySelector('#user-status').value;
-            const avatar = (hiddenAvatar && hiddenAvatar.value && hiddenAvatar.value.trim()) ? hiddenAvatar.value.trim() : `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=4F46E5&color=fff`;
-
-            if (!name || !email) {
-                ui.showAlert('Preencha nome e e-mail.', 'warning');
-                return;
-            }
-
-            const submitBtn = modal.querySelector('button[type="submit"]');
-            const origText = submitBtn ? submitBtn.innerHTML : null;
-            if (submitBtn) {
-                submitBtn.disabled = true;
-                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Salvando...';
-            }
-
-            try {
-                if (user) {
-                    const updates = { name, email, role, plan, status, avatar };
-                    if (password) updates.password = password;
-
-                    // Atualizar localmente se existir
-                    const localExists = !!database.getUserById(user.id);
-                    if (localExists) {
-                        const updated = database.updateUser(user.id, updates);
-                        if (updated) {
-                            ui.showAlert('Usuário atualizado com sucesso!', 'success');
-                            this.renderAdminUsers();
-                            modal.remove();
-                        } else {
-                            ui.showAlert('Erro ao atualizar usuário localmente.', 'danger');
-                        }
-                    } else if (window.supabaseService && typeof window.supabaseService.updateUserRecord === 'function') {
-                        // tentar atualização remota via supabaseService
-                        const res = await window.supabaseService.updateUserRecord(user.id, updates);
-                        if (res.success) {
-                            ui.showAlert('Usuário atualizado com sucesso no servidor!', 'success');
-                            // opcional: atualizar cache local se existir
-                            if (window.database && typeof window.database.saveDatabase === 'function') {
-                                // tentar inserir/atualizar entrada simples no cache local
-                                try {
-                                    const existing = window.database.getUserById(user.id);
-                                    if (existing) window.database.updateUser(user.id, updates);
-                                    else {
-                                        // criar registro local mínimo — manter mesma estrutura esperada
-                                        const created = window.database.createUser({ id: user.id, name, email, password: password || '', role, plan, status, avatar });
-                                        // se createUser não aceita id, ignore
-                                    }
-                                } catch (err) {}
-                            }
-                            this.renderAdminUsers();
-                            modal.remove();
-                        } else {
-                            const err = res && (res.error || res.message) ? (typeof (res.error || res.message) === 'string' ? (res.error || res.message) : (res.error && res.error.message ? res.error.message : JSON.stringify(res.error || res.message))) : 'Erro desconhecido';
-                            console.error('updateUserRecord failed:', res);
-                            ui.showAlert('Falha ao atualizar no servidor: ' + err, 'danger');
-                        }
-                    } else {
-                        ui.showAlert('Serviço de atualização indisponível.', 'danger');
-                    }
-                } else {
-                    // criação remota se disponível, senão local
-                    if (window.supabaseService && typeof window.supabaseService.createUserRecord === 'function') {
-                        const payload = { name, email, password, role, plan, status, avatar };
-                        const res = await window.supabaseService.createUserRecord(payload);
-                        if (res && res.success) {
-                            ui.showAlert('Usuário criado com sucesso no servidor!', 'success');
-                            // tentar atualizar cache local quando possível
-                            try { if (window.database && typeof window.database.saveDatabase === 'function') window.database.data.users = window.database.data.users || []; } catch (err) {}
-                            this.renderAdminUsers();
-                            modal.remove();
-                        } else {
-                            const err = res && (res.error || res.message) ? (typeof (res.error || res.message) === 'string' ? (res.error || res.message) : (res.error && res.error.message ? res.error.message : JSON.stringify(res.error || res.message))) : 'Erro desconhecido';
-                            console.error('createUserRecord failed:', res);
-                            ui.showAlert('Falha ao criar usuário remoto: ' + err, 'danger');
-                        }
-                    } else {
-                        // criação local
-                        if (database.getUserByEmail(email)) {
-                            ui.showAlert('Já existe um usuário com este e-mail.', 'warning');
-                            return;
-                        }
-
-                        const newUser = database.createUser({ name, email, password, role, plan, status, avatar });
-                        if (newUser) {
-                            ui.showAlert('Usuário criado com sucesso!', 'success');
-                            this.renderAdminUsers();
-                            modal.remove();
-                        } else {
-                            ui.showAlert('Erro ao criar usuário.', 'danger');
-                        }
-                    }
-                }
-            } catch (err) {
-                ui.showAlert('Erro ao salvar usuário: ' + (err.message || err), 'danger');
-            } finally {
-                if (submitBtn) {
-                    submitBtn.disabled = false;
-                    submitBtn.innerHTML = origText || (user ? 'Atualizar' : 'Salvar');
-                }
-            }
-        });
-    }
 
     editUser(id) {
         console.debug('editUser called with id:', id);
